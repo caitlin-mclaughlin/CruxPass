@@ -26,3 +26,5 @@ dist-ssr
 # Build
 ./backend/build/*
 ./backend/build
+
+./backend/.env

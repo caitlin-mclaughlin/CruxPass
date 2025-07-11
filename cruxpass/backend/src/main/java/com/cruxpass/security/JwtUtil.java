@@ -2,21 +2,28 @@ package com.cruxpass.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private final String secret = "secretsecretsecretsecretsecret123456"; // 32+ chars
+
     private final long jwtExpirationMs = 86400000; // 1 day
+    private final Key key;
 
-    private final Key key = Keys.hmacShaKeyFor(secret.getBytes());
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        byte[] decodedKey = Base64.getDecoder().decode(secret);
+        this.key = Keys.hmacShaKeyFor(decodedKey);
+    }
 
-    public String generateToken(String email) {
+    public String generateToken(String subject) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(subject)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key, SignatureAlgorithm.HS256)

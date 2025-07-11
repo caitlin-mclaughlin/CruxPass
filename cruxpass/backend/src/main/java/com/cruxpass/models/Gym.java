@@ -18,7 +18,11 @@ public class Gym {
     private Long id;
 
     private String name;
-    private String location;
+    private String username;
+    private String email;
+    private String phone;
+    private String passwordHash;
+    private Address address;
 
     @OneToMany(mappedBy = "gym")
     private List<Competition> competitions;

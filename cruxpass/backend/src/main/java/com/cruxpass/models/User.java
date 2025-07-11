@@ -1,5 +1,6 @@
 package com.cruxpass.models;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @NoArgsConstructor
+@Table(name = "app_user")
 public class User {
 
     @Id
@@ -18,13 +20,19 @@ public class User {
     private Long id;
 
     private String name;
+    private String username;
     private String email;
+    private String phone;
+    private LocalDate dob;
     private String passwordHash;
-    private String region;
+    private Address address;
+
+    private String series;
 
     @OneToMany(mappedBy = "user")
     private List<Registration> registrations;
 
     @OneToMany(mappedBy = "user")
     private List<Submission> submissions;
+
 }

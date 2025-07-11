@@ -1,6 +1,11 @@
 package com.cruxpass.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class AuthRequest {
-    public String email;
+    @NotBlank
+    public String emailOrUsername;
+
+    @NotBlank
     public String password;
 }

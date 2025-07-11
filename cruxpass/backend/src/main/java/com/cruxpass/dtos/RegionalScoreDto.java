@@ -2,12 +2,12 @@ package com.cruxpass.dtos;
 
 public class RegionalScoreDto {
     public String name;
-    public String region;
+    public String series;
     public int totalPoints;
 
-    public RegionalScoreDto(String name, String region, int totalPoints) {
+    public RegionalScoreDto(String name, String series, int totalPoints) {
         this.name = name;
-        this.region = region;
+        this.series = series;
         this.totalPoints = totalPoints;
     }
 }

@@ -1,4 +1,4 @@
-package cruxpass.backend.src.main.java.com.cruxpass.dtos;
+package com.cruxpass.dtos;
 
 import java.time.LocalDate;
 

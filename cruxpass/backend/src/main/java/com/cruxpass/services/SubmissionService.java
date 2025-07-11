@@ -143,7 +143,7 @@ public class SubmissionService {
                 )).toList();
     }
     
-    public List<RegionalScoreDto> getRegionalLeaderboard() {
+    public List<RegionalScoreDto> getSeriesalLeaderboard() {
         Map<User, Integer> pointsMap = new HashMap<>();
 
         List<Competition> competitions = compRepo.findAll();
@@ -165,7 +165,7 @@ public class SubmissionService {
         }
 
         return pointsMap.entrySet().stream()
-                .map(e -> new RegionalScoreDto(e.getKey().getName(), e.getKey().getRegion(), e.getValue()))
+                .map(e -> new RegionalScoreDto(e.getKey().getName(), e.getKey().getSeries(), e.getValue()))
                 .sorted((a, b) -> Integer.compare(b.totalPoints, a.totalPoints))
                 .toList();
     }

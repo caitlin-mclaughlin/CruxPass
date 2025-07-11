@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: cruxpass-db
+    restart: always
+    environment:
+      POSTGRES_DB: cruxpass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"  # host:container
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

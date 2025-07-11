@@ -22,6 +22,8 @@ public class Competition {
     private LocalDate date;
     private String category;
 
+    private String series;
+    
     @ManyToOne
     private Gym gym;
 

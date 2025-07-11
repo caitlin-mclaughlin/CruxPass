@@ -59,7 +59,7 @@ public class SubmissionController {
 
     @GetMapping("/leaderboard")
     public List<RegionalScoreDto> regionalLeaderboard() {
-        return submissionService.getRegionalLeaderboard();
+        return submissionService.getSeriesalLeaderboard();
     }
 
 }
