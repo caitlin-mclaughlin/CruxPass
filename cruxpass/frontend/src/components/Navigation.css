@@ -1,0 +1,46 @@
+.navigation-container {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: #1f2937; /* dark background */
+  color: theme('colors.base');
+  height: 100vh;
+  width: 200px;
+}
+
+.nav-links {
+  flex-grow: 1;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+}
+
+.nav-links li {
+  margin-bottom: 0.75rem;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+}
+
+.nav-links a.active {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.btn-search,
+.btn-logout {
+  background: theme('colors.accent'); /* blue */
+  color: theme('colors.bacgrounf');
+  border: none;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.btn-logout {
+  background: theme('colors.accent');
+}

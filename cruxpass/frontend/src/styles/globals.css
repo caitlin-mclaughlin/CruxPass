@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  input, select, textarea {
+    @apply bg-shadow text-base placeholder-prompt border border-base rounded p-2 w-full;
+  }
+
+  *::selection {
+    @apply bg-highlight text-background;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide default HTML5 validation tooltip on Chrome/Firefox/Edge */
+  input:invalid {
+    box-shadow: none !important;
+  }
+}
+
+@layer components {
+  .react-datepicker {
+    @apply bg-background border border-base rounded-xl shadow-xl;
+  }
+
+  .react-datepicker-popper,
+  .react-datepicker__header,
+  .react-datepicker__current-month,
+  .react-datepicker__day-names,
+  .react-datepicker__day-name  {
+    @apply bg-base text-background rounded;
+  }
+
+  .react-datepicker__navigation-icon::before {
+    @apply border-background hover:border-shadow;
+  }
+
+  .react-datepicker__month-container{
+    @apply bg-background text-base rounded;
+  }
+
+  .react-datepicker__day {
+    @apply bg-background text-base p-1 items-center justify-center hover:bg-accent hover:text-accent;
+  }
+
+  .react-datepicker__day:hover {
+    background-color: theme('colors.shadow') !important;
+    color: theme('colors.base') !important;
+  }
+
+  .react-datepicker__triangle {
+    fill: theme('colors.base') !important;
+    stroke: theme('colors.base') !important;
+    color: theme('colors.base') !important;
+  }
+
+  .react-datepicker__day--today {
+    background-color: theme('colors.base') !important;
+    color: theme('colors.background') !important;
+  }
+
+  .react-datepicker__day--today:hover {
+    background-color: theme('colors.select') !important;
+    color: theme('colors.background') !important;
+  }
+
+}
+
+@layer utilities {
+  /* Chrome/Safari */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    transition: background-color 9999s ease-out, color 9999s ease-out;
+    transition-delay: 9999s;
+  }
+
+  /* Firefox */
+  input:-moz-autofill {
+    box-shadow: 0 0 0px 1000px theme('colors.shadow') inset !important;
+    -webkit-text-fill-color: theme('colors.base') !important;
+  }
+
+}
+

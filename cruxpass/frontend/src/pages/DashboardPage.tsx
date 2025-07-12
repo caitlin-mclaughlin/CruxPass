@@ -24,7 +24,7 @@ export default function DashboardPage() {
   }, [token])
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-background text-base">
       <h1 className="text-2xl font-bold mb-4">Upcoming Competitions</h1>
       <div className="grid gap-4">
         {comps.map(comp => (
