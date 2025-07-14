@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/cruxpass
+    username: postgres
+    password: password
+
+jwt:
+  secret: ${JWT_SECRET}
+
+server:
+  address: 0.0.0.0

@@ -1,7 +1,6 @@
 package com.cruxpass.repositories;
 
 import com.cruxpass.models.Gym;
-import com.cruxpass.models.User;
 
 import java.util.Optional;
 

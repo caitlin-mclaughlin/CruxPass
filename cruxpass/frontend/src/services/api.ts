@@ -1,13 +1,18 @@
 // api.ts
 import axios from 'axios'
-import { useAuth } from '../context/AuthContext'
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
 })
 
-export function attachToken(token: string) {
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-}
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  console.log("Using token in request:", token)
+  if (token) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export default api

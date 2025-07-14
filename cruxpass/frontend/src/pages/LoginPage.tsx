@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
-import api from '../services/api'
+import { useAuth } from '@/context/AuthContext'
+import api from '@/services/api'
 import { useNavigate } from 'react-router-dom'
-import { AccountTypeSelect } from '../components/AccountTypeSelect'
-import { formatPhoneNumber, stripNonDigits } from '../utils/formatters'
+import { AccountTypeSelect } from '@/components/AccountTypeSelect'
+import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import DatePicker from "react-datepicker";
-import { datepickerCalendar, datepickerDay } from "../styles/classNames";
+import { datepickerCalendar, datepickerDay } from "@/styles/classNames";
 
 export default function Login() {
   const navigate = useNavigate()

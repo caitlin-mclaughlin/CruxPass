@@ -1,16 +1,16 @@
 package com.cruxpass.services;
 
-import com.cruxpass.dtos.RegisterRequest;
-import com.cruxpass.models.Address;
-import com.cruxpass.models.Gym;
-import com.cruxpass.repositories.GymRepository;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import com.cruxpass.dtos.RegisterRequest;
+import com.cruxpass.models.Address;
+import com.cruxpass.models.Gym;
+import com.cruxpass.repositories.GymRepository;
 
 @Service
 public class GymService {
@@ -28,7 +28,8 @@ public class GymService {
         } else if (repository.findByUsername(dto.username).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already in use");
         }
-        
+        System.out.println("Registering gym with email: " + dto.email);
+
         Gym gym = new Gym();
         gym.setName(dto.name);
         gym.setUsername(dto.username); // Or use a custom field if desired
@@ -57,7 +58,9 @@ public class GymService {
     }
 
     public Gym getByEmail(String email) {
-        return repository.findByEmail(email).orElse(null);
+        System.out.println("Looking for gym with email: " + email);
+        if (email == null) return null;
+        return repository.findByEmail(email.trim().toLowerCase()).orElse(null);
     }
 
     public Gym getByUsername(String username) {

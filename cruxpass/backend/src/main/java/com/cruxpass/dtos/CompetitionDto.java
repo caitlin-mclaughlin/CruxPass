@@ -1,11 +1,17 @@
 package com.cruxpass.dtos;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
+
+import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.CompetitionType;
+import com.cruxpass.enums.CompetitorGroup;
 
 public record CompetitionDto (
-  Long id,
-  String name,
-  LocalDate date,
-  String category,
-  String gymName
+    String name,
+    LocalDateTime date,
+    Set<CompetitionType> types,
+    CompetitionFormat format,
+    Set<CompetitorGroup> competitorGroups,
+    AddressDto location
 ) {}

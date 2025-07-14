@@ -20,12 +20,19 @@ public class CurrentUserService {
     }
 
     public String extractEmail(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("Auth header missing or invalid: " + authHeader);
+            return null;
+        }
 
-        String token = authHeader.replace("Bearer ", "");
-        if (!jwtUtil.validateToken(token)) return null;
+        String token = authHeader.substring(7); // remove "Bearer "
+        if (!jwtUtil.validateToken(token)) {
+            System.out.println("Invalid token: " + token);
+            return null;
+        }
 
         String email = jwtUtil.extractEmail(token);
+        System.out.println("Extracted email from auth header: " + email);
         return email;
     }
 }

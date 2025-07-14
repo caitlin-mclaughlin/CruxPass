@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LogOut, Search, Menu } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { useState } from 'react'
 
 export default function Navigation({ 
@@ -34,7 +34,7 @@ export default function Navigation({
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:relative top-0 left-0 z-40 h-full w-52 bg-base shadow-md transform transition-transform duration-200 text-background
+        className={`flex h-screen md:relative top-0 left-0 z-40 h-full w-52 bg-base shadow-md transform transition-transform duration-200 text-background
         ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:flex md:flex-col`}
       >
         <div className="flex flex-col h-full py-6 space-y-2 bg-base">

@@ -40,7 +40,6 @@ public class AuthController {
             @PathVariable String type,
             @Valid @RequestBody RegisterRequest dto
     ) {
-        String email = dto.email;
         switch (type.toLowerCase()) {
             case "user" -> userService.createUser(dto);
             case "gym" -> gymService.createGym(dto);
@@ -49,7 +48,15 @@ public class AuthController {
             }
         }
 
-        String token = jwtUtil.generateToken(email);
+        String email = switch (type.toLowerCase()) {
+            case "user" -> userService.getByUsername(dto.username).getEmail();
+            case "gym" -> gymService.getByUsername(dto.username).getEmail();
+            default -> null;
+        };
+
+        System.out.println("Generating token with email: " + email + " and role: " + type.toUpperCase());
+
+        String token = jwtUtil.generateToken(email, type.toUpperCase());
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
@@ -63,7 +70,7 @@ public class AuthController {
             if (!userService.passwordMatches(user, dto.password)) {
                 throw new IllegalArgumentException("Invalid password");
             }
-            String token = jwtUtil.generateToken(user.getEmail());
+            String token = jwtUtil.generateToken(user.getEmail(), "USER");
             return ResponseEntity.ok(new AuthResponse(token));
         }
 
@@ -73,13 +80,12 @@ public class AuthController {
             if (!gymService.passwordMatches(gym, dto.password)) {
                 throw new IllegalArgumentException("Invalid password");
             }
-            String token = jwtUtil.generateToken(gym.getEmail());
+            String token = jwtUtil.generateToken(gym.getEmail(), "GYM");
             return ResponseEntity.ok(new AuthResponse(token));
         }
 
         throw new IllegalArgumentException("Account not found");
     }
-
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {

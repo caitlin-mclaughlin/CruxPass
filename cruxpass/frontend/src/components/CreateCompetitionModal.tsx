@@ -1,0 +1,165 @@
+import { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+import {
+  COMPETITION_TYPES,
+  COMPETITION_FORMATS,
+  COMPETITOR_GROUPS,
+  CompetitionEnumMap
+} from '@/constants/competition'
+
+interface Props {
+  open: boolean
+  onClose: () => void
+  onSubmit: (data: any) => void
+  gymName: string
+  gymAddress: string // Expected format: "123 Main St, Madison, WI 53703"
+}
+
+export default function CreateCompetitionModal({ open, onClose, onSubmit, gymName, gymAddress }: Props) {
+  const [form, setForm] = useState({
+    name: '',
+    date: '',
+    time: '',
+    types: [] as string[],
+    format: '',
+    groups: [] as string[],
+  })
+
+  const toggleCheckbox = (field: 'types' | 'groups', value: string) => {
+    setForm(prev => {
+      const list = prev[field]
+      return {
+        ...prev,
+        [field]: list.includes(value) ? list.filter(v => v !== value) : [...list, value]
+      }
+    })
+  }
+
+  const handleSubmit = () => {
+    if (!form.name || !form.date || !form.time || !form.types.length || !form.format || !form.groups.length) {
+      alert('Please complete all required fields.')
+      return
+    }
+
+    const dateTime = `${form.date}T${form.time}:00`
+
+    const payload = {
+      name: form.name,
+      date: dateTime,
+      types: form.types,
+      format: form.format,
+      competitorGroups: form.groups,
+      location: parseAddress(gymAddress) // parse into structured fields
+    }
+
+    console.log("Submitting competition:", payload)
+    onSubmit(payload)
+    onClose()
+  }
+
+  const parseAddress = (address: string) => {
+    // Naive parser: assumes "123 Main St, Madison, WI 53703"
+    const parts = address.split(',')
+    const streetAddress = parts[0]?.trim() || ''
+    const city = parts[1]?.trim() || ''
+    const stateZip = parts[2]?.trim().split(' ') || []
+
+    return {
+      streetAddress,
+      apartmentNumber: null,
+      city,
+      state: stateZip[0] || '',
+      zipCode: stateZip[1] || ''
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="font-bold">Create Competition</DialogTitle>
+        </DialogHeader>
+
+        <Input
+          placeholder="Competition Name"
+          value={form.name}
+          onChange={e => setForm({ ...form, name: e.target.value })}
+        />
+
+        <div className="flex gap-4">
+          <Input
+            type="date"
+            value={form.date}
+            onChange={e => setForm({ ...form, date: e.target.value })}
+          />
+          <Input
+            type="time"
+            value={form.time}
+            onChange={e => setForm({ ...form, time: e.target.value })}
+          />
+        </div>
+
+        <div>
+          <p className="font-semibold mb-1">Type</p>
+          <div className="flex gap-4 flex-wrap px-2.5 py-2 rounded-md border border-base bg-shadow">
+            {COMPETITION_TYPES.map(typeKey => (
+              <label key={typeKey} className="flex items-center gap-1">
+                <Checkbox
+                  checked={form.types.includes(typeKey)}
+                  onCheckedChange={() => toggleCheckbox('types', typeKey)}
+                />
+                {CompetitionEnumMap[typeKey]}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="font-semibold mb-1">Format</p>
+          <Select value={form.format} onValueChange={value => setForm({ ...form, format: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select format" />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPETITION_FORMATS.map(format => (
+                <SelectItem key={format} value={format}>
+                  {CompetitionEnumMap[format]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <p className="font-semibold mb-1">Competitor Groups</p>
+          <div className="flex gap-4 flex-wrap px-2.5 py-2 rounded-md border border-base bg-shadow">
+            {COMPETITOR_GROUPS.map(group => (
+              <label key={group} className="flex items-center gap-1">
+                <Checkbox
+                  checked={form.groups.includes(group)}
+                  onCheckedChange={() => toggleCheckbox('groups', group)}
+                />
+                {CompetitionEnumMap[group]}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-2 border-t border-base pt-4">
+          <p className="font-semibold mb-1">Host Gym</p>
+          <div className="px-3 py-1 rounded border border-base bg-shadow">
+            <div>{gymName}</div>
+            <div>{gymAddress}</div>
+          </div>
+        </div>
+
+        <Button onClick={handleSubmit}>Submit</Button>
+      </DialogContent>
+    </Dialog>
+  )
+}

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @AllArgsConstructor
 @Data
 @Entity
@@ -24,6 +26,7 @@ public class Gym {
     private String passwordHash;
     private Address address;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "gym")
     private List<Competition> competitions;
 }

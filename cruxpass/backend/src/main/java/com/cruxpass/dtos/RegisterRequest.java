@@ -19,7 +19,7 @@ public class RegisterRequest {
     @Pattern(regexp = "^\\+?[0-9\\-\\s]*$", message = "Invalid phone number")
     public String phone;
 
-    // Optional for gym (nullable)
+    // Null if registering a gym
     public LocalDate dob;
 
     @Size(min = 6, message = "Password must be at least 6 characters")

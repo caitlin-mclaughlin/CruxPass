@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class Address {
 
     @NotBlank
-    private String streetAdress;
+    private String streetAddress;
     private String apartmentNumber;
     @NotBlank
     private String city;
@@ -25,7 +25,7 @@ public class Address {
     private String country;*/
 
     public Address(String streetAddress, String city, String state, String zipCode/* , String country */) {
-        this.streetAdress = streetAddress;
+        this.streetAddress = streetAddress;
         this.city = city;
         this.state = state;
         this.zipCode = zipCode;

@@ -1,6 +1,6 @@
 // AuthContext.tsx
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react'
-import api from '../services/api'
+import api from '@/services/api'
 
 interface AuthContextType {
   token: string | null
@@ -10,7 +10,7 @@ interface AuthContextType {
   guest: boolean
 }
 
-// ✅ Provide default (dummy) values to silence TS warning
+// Provide default (dummy) values to silence TS warning
 const AuthContext = createContext<AuthContextType>({
   token: null,
   login: () => {},
@@ -24,16 +24,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [guest, setGuest] = useState(false)
 
   useEffect(() => {
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    const saved = localStorage.getItem('token')
+    if (saved) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${saved}`
     } else {
       delete api.defaults.headers.common['Authorization']
     }
   }, [token])
     
   function login(newToken: string) {
-    setToken(newToken)
-    localStorage.setItem('token', newToken)
+    setToken(newToken);
+    localStorage.setItem("token", newToken);
+    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
   }
 
   function logout() {

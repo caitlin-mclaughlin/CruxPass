@@ -1,35 +1,30 @@
+# docker-compose.yml
 services:
   postgres:
     image: postgres:16
-    container_name: cruxpass-db
-    restart: always
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_DB: cruxpass
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-    ports:
-      - "5433:5432"  # host:container
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
   backend:
     build:
       context: ./backend
-    container_name: cruxpass-backend
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
     environment:
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cruxpass
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      JWT_SECRET: ${JWT_SECRET}
-    command: ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
+      JWT_SECRET: K1zXFjXWSgooykgSF795sDI1wF/+lXhQcuwfnHwUAvk=  # <-- new env var
+    depends_on:
+      - postgres
 
 volumes:
   postgres-data:
-
-# Inject a secret at runtime
-x-random-secret: &random-secret
-  JWT_SECRET: "${JWT_SECRET:-$(openssl rand -base64 32)}"

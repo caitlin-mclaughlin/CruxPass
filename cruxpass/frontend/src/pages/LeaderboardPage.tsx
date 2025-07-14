@@ -1,6 +1,6 @@
 // LeaderboardPage.tsx
 import { useEffect, useState } from 'react'
-import api from '../services/api'
+import api from '@/services/api'
 
 export default function LeaderboardPage() {
   const [leaders, setLeaders] = useState([])
@@ -10,7 +10,7 @@ export default function LeaderboardPage() {
   }, [])
 
   return (
-    <div className="p-8 bg-background text-base">
+    <div className="flex h-screen p-8 bg-background text-base">
       <h1 className="text-2xl font-bold mb-4">Leaderboards</h1>
       {leaders.map((entry: any, i) => (
         <div key={i} className="border-b p-2">
