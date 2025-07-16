@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import { AccountTypeSelect } from '@/components/AccountTypeSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import DatePicker from "react-datepicker";
-import { datepickerCalendar, datepickerDay } from "@/styles/classNames";
 
 export default function Login() {
   const navigate = useNavigate()
@@ -172,9 +171,7 @@ export default function Login() {
   }
 
   const inputClass = (field: string) => {
-    const base =
-      "rounded border p-2 w-full bg-shadow placeholder-prompt border-base text-base focus:outline-none focus:ring-0 \
-       text-base appearance-none selection:bg-highlight selection:text-background";
+    const base = "form-input"; // use a class that handles styling via global.css
 
     return invalidFields.has(field)
       ? `${base} border-accent text-accent placeholder-accent`
@@ -182,8 +179,8 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen px-4 bg-background text-base">
-      <h1 className="text-2xl font-bold mb-4">
+    <div className="flex flex-col items-center justify-center h-screen px-4 bg-background">
+      <h1 className="text-green text-2xl font-bold mb-4" >
         {isCreating ? "Create Account" : "Login"}
       </h1>
 
@@ -203,7 +200,7 @@ export default function Login() {
             <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" className={inputClass("password")}  required />
             {formData.accountType !== "gym" && (
               <div className="flex flex-col">
-                <label htmlFor="dob" className="mb-1 font-medium text-base" >
+                <label htmlFor="dob" className="mb-1 font-medium text-green" >
                   Date of Birth
                 </label>
                 <DatePicker
@@ -215,7 +212,7 @@ export default function Login() {
                   onChange={handleDobChange}
                   className={inputClass("dob")}
                   dayClassName={() =>
-                    "items-center justify-center rounded-md text-base bg-background hover:bg-accent hover:text-background"
+                    "items-center justify-center rounded-md text-green bg-background hover:bg-accent hover:text-background"
                   }
                 />
               </div>
@@ -241,7 +238,7 @@ export default function Login() {
 
         <button
           type="submit"
-          className="bg-base text-background font-bold p-2 w-full rounded hover:bg-select transition-colors"
+          className="bg-green text-background font-bold p-2 w-full rounded-md hover:bg-select transition-colors"
         >
           {isCreating ? "Create Account" : "Login"}
         </button>
@@ -256,7 +253,7 @@ export default function Login() {
               password: "",
              }))
           }}
-          className="text-base underline block mt-2 hover:text-select"
+          className="text-green underline block mt-2 hover:text-select"
         >
           {isCreating ? "Already have an account?" : "Don't have an account? Create one"}
         </button>
@@ -267,7 +264,7 @@ export default function Login() {
             skipLogin()
             navigate("/dashboard")
           }}
-          className="mt-4 text-base underline hover:text-select"
+          className="mt-4 text-green underline hover:text-select"
         >
           Skip login
         </button>
