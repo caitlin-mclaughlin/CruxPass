@@ -117,7 +117,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center gap-x-2 font-semibold cursor-pointer" onClick={() => toggleExpanded(comp.id)}>
                 <span>{comp.name}</span>
-                <span className={`transform translate-y-[-1px] transition-transform ${expandedIds.includes(comp.id) ? 'rotate-180' : ''}`}>
+                <span className={`transform -translate-y-px transition-transform ${expandedIds.includes(comp.id) ? 'rotate-180' : ''}`}>
                   ▼
                 </span>
               </div>

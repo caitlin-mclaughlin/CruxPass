@@ -18,16 +18,7 @@
   input[type="time"]::selection {
     background-color: var(--color-highlight) !important;
     color: var(--color-background) !important;
-  }
-
-  input[type="date"],
-  input[type="time"] {
-    @apply appearance-none;
-  }
-
-  input[type="date"]::selection,
-  input[type="time"]::selection {
-    @apply bg-highlight text-background;
+  
   }
 
   input[type="date"],
@@ -38,7 +29,7 @@
   input:focus,
   select:focus,
   textarea:focus {
-    border-color: theme('colors.base');
+    border-color: var(--color-green);
     outline: none !important;
     box-shadow: none !important;
   }

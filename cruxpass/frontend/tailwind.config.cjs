@@ -41,7 +41,7 @@ module.exports = {
         accent: '#531818',
         highlight: '#415773',
         accentHighlight: '#732b33',
-	    }
+	  }
     }
   },
   plugins: [
