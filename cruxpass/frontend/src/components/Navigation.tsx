@@ -29,7 +29,7 @@ export default function Navigation({
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between bg-base px-4 py-3 shadow sticky top-0 z-50 text-background">
+      <div className="md:hidden flex items-center justify-between bg-green px-4 py-3 shadow sticky top-0 z-50 text-background">
         <button onClick={() => setOpen(!open)} className="base-select text-background">
           <Menu size={24} />
         </button>
@@ -41,10 +41,10 @@ export default function Navigation({
 
       {/* Sidebar */}
       <aside
-        className={`flex h-screen md:relative top-0 left-0 z-40 h-full w-52 bg-base shadow-md transform transition-transform duration-200 text-background
+        className={`flex h-screen md:relative top-0 left-0 z-40 h-full w-52 bg-green shadow-md transform transition-transform duration-200 text-background
         ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:flex md:flex-col`}
       >
-        <div className="flex flex-col h-full py-6 space-y-2 bg-base">
+        <div className="flex flex-col h-full py-6 space-y-2 bg-green">
           <Link to="/dashboard" className={linkClasses('/dashboard')}>
             Dashboard
           </Link>
@@ -84,7 +84,7 @@ export default function Navigation({
       {/* Mobile Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 bg-backgroundz-30 md:hidden text-base"
+          className="fixed inset-0 bg-backgroundz-30 md:hidden text-green"
           onClick={() => setOpen(false)}
         />
       )}

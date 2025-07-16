@@ -85,7 +85,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="p-8 bg-background text-base flex flex-col h-screen">
+    <div className="p-8 bg-(--background) text-(--base) flex flex-col h-screen">
       {/* Header + Button container */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Upcoming Competitions</h1>
@@ -93,7 +93,7 @@ export default function DashboardPage() {
         {gymSession && (
           <button
             onClick={() => setShowModal(true)}
-            className="bg-base text-background font-bold px-4 py-2 text-1xl shadow rounded-md"
+            className="bg-green text-background font-bold px-4 py-2 text-1xl shadow rounded-md"
           >
             New Competition
           </button>

@@ -1,16 +1,28 @@
 /* global.css */
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   input, select, textarea {
-    @apply bg-shadow text-base placeholder-prompt border border-base rounded-md p-2 w-full;
+    background-color: var(--color-shadow) !important;
+    color: var(--color-green) !important;
+    border-color: var(--color-green) !important;
+    @apply border rounded-md p-2 w-full;
+  }
+  
+  *::selection {
+    background-color: var(--color-highlight) !important;
+    color: var(--color-background) !important;
   }
 
-  *::selection {
-    @apply bg-highlight text-background;
+  input[type="date"]::selection,
+  input[type="time"]::selection {
+    background-color: var(--color-highlight) !important;
+    color: var(--color-background) !important;
+  }
+
+  input[type="date"],
+  input[type="time"] {
+    @apply appearance-none;
   }
 
   input[type="date"]::selection,
@@ -26,98 +38,74 @@
   input:focus,
   select:focus,
   textarea:focus {
-    border-color: hsl(var(--base));
+    border-color: theme('colors.base');
     outline: none !important;
     box-shadow: none !important;
+  }
+
+  .form-input {
+    background-color: var(--color-shadow);
+    color: var(--color-green);
+    border-color: var(--color-green);
+    @apply border rounded-md p-2 w-full appearance-none;
+  }
+
+  .border-color-accent {
+    border-color: var(--color-accent);
+  }
+
+  .text-color-accent {
+    color: var(--color-accent);
+  }
+
+  .placeholder-color-accent::placeholder {
+    color: var(--color-accent);
   }
 
   /* Hide default HTML5 validation tooltip on Chrome/Firefox/Edge */
   input:invalid {
     box-shadow: none !important;
   }
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+  
 }
 
 @layer components {
+
   .react-datepicker {
-    @apply bg-background rounded-md border border-base shadow-xl;
+    background-color: var(--color-background) !important;
+    border-color: var(--color-green) !important;
+    @apply rounded-md border shadow-xl;
   }
 
   .react-datepicker__header,
   .react-datepicker-time__header {
-    @apply bg-base border-base text-background;
+    background-color: var(--color-green) !important;
+    color: var(--color-background) !important;
+    border-color: var(--color-green) !important;
   }
 
   .react-datepicker__current-month,
   .react-datepicker__day-names,
   .react-datepicker__day-name  {
-    @apply bg-base text-background rounded-md border-base;
+    background-color: var(--color-green) !important;
+    color: var(--color-background) !important;
+    border-color: var(--color-green) !important;
+    @apply rounded-md;
   }
 
   .react-datepicker__navigation-icon::before {
-    @apply border-background hover:border-shadow;
+    border-color: var(--color-background) !important;
   }
 
   .react-datepicker__time-container {
     min-width: 100px !important; 
-    @apply border-base;
+    border-color: var(--color-green) !important;
   }
 
   .react-datepicker__time-box {
     width: 100% !important;
-    @apply bg-background text-base border border-transparent;
+    background-color: var(--color-background) !important;
+    color: var(--color-green) !important;
   }
 
   .react-datepicker__time-list {
@@ -125,7 +113,7 @@
     max-height: 200px;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--base)) hsl(var(--shadow)); /* for Firefox */
+    scrollbar-color: var(--color-green) var(--color-shadow); /* for Firefox */
   }
 
   /* Chrome/Safari scrollbar styling */
@@ -134,35 +122,35 @@
   }
 
   .react-datepicker__time-list::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--base)) !important;
+    background-color: var(--color-green) !important;
     border-radius: 999px !important;
   }
 
   .react-datepicker__time-list::-webkit-scrollbar-track {
-    background: hsl(var(--shadow)) !important;
+    background: var(--color-shadow) !important;
   }
 
   .react-datepicker__time-list-item:hover,
   .react-datepicker__day:hover {
-    background-color: hsl(var(--shadow)) !important;
-    color: hsl(var(--base)) !important;
+    background-color: var(--color-shadow) !important;
+    color: var(--color-green) !important;
     @apply rounded-md;
   }
 
   .react-datepicker__triangle {
-    fill: hsl(var(--base)) !important;
-    stroke: hsl(var(--base)) !important;
-    color: hsl(var(--base)) !important;
+    fill: var(--color-green) !important;
+    stroke: var(--color-green) !important;
+    color: var(--color-green) !important;
   }
 
   .react-datepicker__day--today {
-    background-color: hsl(var(--base)) !important;
-    color: hsl(var(--background)) !important;
+    background-color: var(--color-green) !important;
+    color: var(--color-background) !important;
   }
 
   .react-datepicker__day--today:hover {
-    background-color: hsl(var(--select)) !important;
-    color: hsl(var(--background)) !important;
+    background-color: var(--color-select) !important;
+    color: var(--color-background) !important;
   }
 
 }
@@ -179,18 +167,8 @@
 
   /* Firefox */
   input:-moz-autofill {
-    box-shadow: 0 0 0px 1000px hsl(var(--shadow)) inset !important;
-    -webkit-text-fill-color: hsl(var(--base)) !important;
+    box-shadow: 0 0 0px 1000px var(--color-shadow) inset !important;
+    -webkit-text-fill-color: var(--color-green) !important;
   }
 
-}
-
-
-@layer base {
-  * {
-    @apply border-base;
-  }
-  body {
-    @apply bg-background text-base;
-  }
 }

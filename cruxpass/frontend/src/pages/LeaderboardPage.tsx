@@ -10,7 +10,7 @@ export default function LeaderboardPage() {
   }, [])
 
   return (
-    <div className="flex h-screen p-8 bg-background text-base">
+    <div className="flex h-screen p-8 bg-background text-green">
       <h1 className="text-2xl font-bold mb-4">Leaderboards</h1>
       {leaders.map((entry: any, i) => (
         <div key={i} className="border-b p-2">

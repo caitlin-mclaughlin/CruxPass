@@ -31,34 +31,34 @@ export default function ProfilePage() {
 
   if (climberProfile) {
     return (
-      <div className="h-screen p-8 bg-background text-base">
+      <div className="h-screen p-8 bg-background text-green">
         <h2 className="text-xl font-semibold mb-4">Climber Profile</h2>
 
-        <div className="grid grid-cols-2 gap-y-3 max-w-md rounded-md px-2 py-2 bg-shadow border border-base">
-          <div className="font-medium text-base">Name:</div>
-          <div className="text-base">{climberProfile.name}</div>
+        <div className="grid grid-cols-2 gap-y-3 max-w-md rounded-md px-2 py-2 bg-shadow border border-green">
+          <div className="font-medium text-green">Name:</div>
+          <div className="text-green">{climberProfile.name}</div>
 
-          <div className="font-medium text-base">Email:</div>
-          <div className="text-base">{climberProfile.email}</div>
+          <div className="font-medium text-green">Email:</div>
+          <div className="text-green">{climberProfile.email}</div>
 
-          <div className="font-medium text-base">Phone:</div>
-          <div className="text-base">{formatPhoneNumber(climberProfile.phone)}</div>
+          <div className="font-medium text-green">Phone:</div>
+          <div className="text-green">{formatPhoneNumber(climberProfile.phone)}</div>
 
-          <div className="font-medium text-base">Username:</div>
-          <div className="text-base">{climberProfile.username}</div>
+          <div className="font-medium text-green">Username:</div>
+          <div className="text-green">{climberProfile.username}</div>
 
-          <div className="font-medium text-base">Date of Birth:</div>
-          <div className="text-base">{climberProfile.dob}</div>
+          <div className="font-medium text-green">Date of Birth:</div>
+          <div className="text-green">{climberProfile.dob}</div>
 
-          <div className="font-medium text-base">Address:</div>
+          <div className="font-medium text-green">Address:</div>
           <div className="text-sm">
             {formatAddress(climberProfile.address).split('\n').map((line, idx) => (
               <div key={idx}>{line}</div>
             ))}
           </div>
 
-          <div className="font-medium text-base">User Since:</div>
-          <div className="text-base">{new Date(climberProfile.createdAt).toLocaleDateString()}</div>
+          <div className="font-medium text-green">User Since:</div>
+          <div className="text-green">{new Date(climberProfile.createdAt).toLocaleDateString()}</div>
         </div>
       </div>
     )
@@ -66,31 +66,31 @@ export default function ProfilePage() {
 
   if (gymProfile) {
     return (
-      <div className="h-screen p-8 bg-background text-base">
+      <div className="h-screen p-8 bg-background text-green">
         <h2 className="text-xl font-semibold mb-4">Gym Profile</h2>
 
-        <div className="grid grid-cols-2 gap-y-3 max-w-md rounded-md px-2 py-2 bg-shadow border border-base">
-          <div className="font-medium text-base">Gym Name:</div>
-          <div className="text-base">{gymProfile.name}</div>
+        <div className="grid grid-cols-2 gap-y-3 max-w-md rounded-md px-2 py-2 bg-shadow border border-green">
+          <div className="font-medium text-green">Gym Name:</div>
+          <div className="text-green">{gymProfile.name}</div>
 
-          <div className="font-medium text-base">Email:</div>
-          <div className="text-base">{gymProfile.email}</div>
+          <div className="font-medium text-green">Email:</div>
+          <div className="text-green">{gymProfile.email}</div>
 
-          <div className="font-medium text-base">Phone:</div>
-          <div className="text-base">{formatPhoneNumber(gymProfile.phone)}</div>
+          <div className="font-medium text-green">Phone:</div>
+          <div className="text-green">{formatPhoneNumber(gymProfile.phone)}</div>
 
-          <div className="font-medium text-base">Username:</div>
-          <div className="text-base">{gymProfile.username}</div>
+          <div className="font-medium text-green">Username:</div>
+          <div className="text-green">{gymProfile.username}</div>
 
-          <div className="font-medium text-base">Address:</div>
-          <div className="text-base">
+          <div className="font-medium text-green">Address:</div>
+          <div className="text-green">
             {formatAddress(gymProfile.address).split('\n').map((line, idx) => (
               <div key={idx}>{line}</div>
             ))}
           </div>
 
-          <div className="font-medium text-base">Gym Since:</div>
-          <div className="text-base">{new Date(gymProfile.createdAt).toLocaleDateString()}</div>
+          <div className="font-medium text-green">Gym Since:</div>
+          <div className="text-green">{new Date(gymProfile.createdAt).toLocaleDateString()}</div>
         </div>
       </div>
     )
