@@ -10,7 +10,6 @@ import LeaderboardPage from '@/pages/LeaderboardPage'
 import LoginPage from '@/pages/LoginPage'
 import Navigation from '@/components/Navigation'
 import ProfilePage from '@/pages/ProfilePage'
-import RecentComps from '@/components/RecentComps'
 import TopNav from '@/components/TopNav'
 
 import { GymSessionProvider } from '@/context/GymSessionContext'
@@ -71,8 +70,8 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <AppLayout>
-        <GymSessionProvider>
+      <GymSessionProvider>
+        <AppLayout>
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
@@ -86,8 +85,8 @@ export default function App() {
               }
             />
           </Routes>
-        </GymSessionProvider>
-      </AppLayout>
+        </AppLayout>
+      </GymSessionProvider>
     </BrowserRouter>
   )
 }

@@ -31,21 +31,32 @@ export function GymSessionProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("token");
     if (!token) return;
 
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.role !== 'GYM') {
+        console.log("Not a gym account, skipping /gyms/me fetch");
+        return;
+      }
+    } catch (e) {
+      console.warn("Failed to decode token:", e);
+      return;
+    }
+
     console.log("Sending token:", token);
     api.get('/gyms/me')
       .then(res => {
-        const { name, address, id } = res.data.gym ?? res.data
-        const fullAddress = `${address.streetAddress}, ${address.city}, ${address.state} ${address.zipCode}`
+        const { name, address, id } = res.data.gym ?? res.data;
+        const fullAddress = `${address.streetAddress}, ${address.city}, ${address.state} ${address.zipCode}`;
         setGymSession({
           gymId: id,
           gymName: name,
           gymAddress: fullAddress
-        })
+        });
       })
       .catch(err => {
-        console.warn('Not logged in as a gym or token invalid:', err)
-      })
-  }, [token])
+        console.warn('Not logged in as a gym or token invalid:', err);
+      });
+  }, [token]);
 
   return (
     <GymSessionContext.Provider value={{ gymSession, setGymSession }}>

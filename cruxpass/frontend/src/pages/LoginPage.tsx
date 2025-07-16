@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom'
 import { AccountTypeSelect } from '@/components/AccountTypeSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import DatePicker from "react-datepicker";
-import { datepickerCalendar, datepickerDay } from "@/styles/classNames";
 
 export default function Login() {
   const navigate = useNavigate()
@@ -143,7 +142,7 @@ export default function Login() {
         const res = await api.post(`/auth/register/${formData.accountType}`, {
           name: formData.name,
           email: formData.email,
-          username: formData.username || null,
+          username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
           phone: stripNonDigits(formData.phone),
           dob: formData.dob || null,
           password: formData.password,
@@ -173,7 +172,7 @@ export default function Login() {
 
   const inputClass = (field: string) => {
     const base =
-      "rounded border p-2 w-full bg-shadow placeholder-prompt border-base text-base focus:outline-none focus:ring-0 \
+      "rounded-md border p-2 w-full bg-shadow placeholder-prompt border-base text-base focus:outline-none focus:ring-0 \
        text-base appearance-none selection:bg-highlight selection:text-background";
 
     return invalidFields.has(field)
@@ -196,7 +195,7 @@ export default function Login() {
               onChange={(val) => setFormData(prev => ({ ...prev, accountType: val }))}
             />
 
-            <input name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" className={inputClass("name")} required />
+            <input name="name" value={formData.name} onChange={handleChange} placeholder={formData.accountType !== "gym" ? "Full Name" : "Gym Name"} className={inputClass("name")} required />
             <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className={inputClass("email")} required />
             <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" className={inputClass("phone")}  required />
             <input name="username" value={formData.username} onChange={handleChange} placeholder="Username (optional)" className={inputClass("username")}  />
@@ -241,7 +240,7 @@ export default function Login() {
 
         <button
           type="submit"
-          className="bg-base text-background font-bold p-2 w-full rounded hover:bg-select transition-colors"
+          className="bg-base text-background font-bold p-2 w-full rounded-md hover:bg-select transition-colors"
         >
           {isCreating ? "Create Account" : "Login"}
         </button>

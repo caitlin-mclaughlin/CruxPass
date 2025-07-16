@@ -7,7 +7,7 @@ export default function FloatingSearch({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-start justify-center pt-20 px-4">
-      <div className="bg-white p-4 rounded shadow-lg w-full max-w-md relative">
+      <div className="bg-white p-4 rounded-md shadow-lg w-full max-w-md relative">
         <button onClick={onClose} className="absolute top-2 right-2 text-gray-500 hover:text-red-500">
           <X className="w-5 h-5" />
         </button>

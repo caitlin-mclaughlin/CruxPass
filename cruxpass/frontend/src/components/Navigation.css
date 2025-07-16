@@ -3,7 +3,7 @@
   flex-direction: column;
   padding: 1rem;
   background: #1f2937; /* dark background */
-  color: theme('colors.base');
+  color: hsl(var(--base));
   height: 100vh;
   width: 200px;
 }
@@ -31,8 +31,8 @@
 
 .btn-search,
 .btn-logout {
-  background: theme('colors.accent'); /* blue */
-  color: theme('colors.bacgrounf');
+  background: hsl(var(--accent)); /* blue */
+  color: hsl(var(--bacgrounf));
   border: none;
   padding: 0.5rem 1rem;
   width: 100%;
@@ -42,5 +42,5 @@
 }
 
 .btn-logout {
-  background: theme('colors.accent');
+  background: hsl(var(--accent));
 }

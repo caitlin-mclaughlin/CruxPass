@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { LogOut, Search, Menu } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useState } from 'react'
+import { useGymSession } from '@/context/GymSessionContext'
 
 export default function Navigation({ 
     onSearchClick,
@@ -11,8 +12,14 @@ export default function Navigation({
     showProfileOption: boolean
 }) {
   const location = useLocation()
+  const { setGymSession } = useGymSession()
   const { logout } = useAuth()
   const [open, setOpen] = useState(false)
+
+  const handleLogout = () => {
+    setGymSession?.(null)
+    logout()
+  }
 
   const linkClasses = (path: string) =>
     `block px-4 py-2 hover:bg-select transition ${
@@ -57,7 +64,7 @@ export default function Navigation({
           <div className="mt-auto">
             {showProfileOption ? (
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="flex items-center w-full text-background bg-accent px-4 py-2 hover:bg-accentHighlight"
               >
                 <LogOut size={18} className="mr-2" /> Sign out

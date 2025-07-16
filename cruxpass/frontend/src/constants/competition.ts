@@ -4,8 +4,8 @@ export type CompetitionType = typeof COMPETITION_TYPES[number];
 export const COMPETITION_FORMATS = ['RED_POINT', 'MODIFIED_RED_POINT', 'ON_SIGHT', 'FLASH'] as const;
 export type CompetitionFormat = typeof COMPETITION_FORMATS[number];
 export const COMPETITOR_GROUPS = [
-  'REC', 'INTERMEDIATE', 'ADVANCED', 'OPEN', 'JUNIOR',
-  'YOUTH_A', 'YOUTH_B', 'YOUTH_C', 'YOUTH_D'
+  'REC', 'INTERMEDIATE', 'ADVANCED', 'OPEN', 'YOUTH_D',
+  'YOUTH_C', 'YOUTH_B', 'YOUTH_A', 'JUNIOR'
 ] as const;
 export type CompetitionGroup = typeof COMPETITOR_GROUPS[number];
 
@@ -22,11 +22,11 @@ export const CompetitionEnumMap = {
   INTERMEDIATE: 'Intermediate',
   ADVANCED: 'Advanced',
   OPEN: 'Open',
-  JUNIOR: 'Ages: 18-19',
-  YOUTH_A: 'Ages: 16-17',
-  YOUTH_B: 'Ages: 14-15',
-  YOUTH_C: 'Ages: 12-13',
   YOUTH_D: 'Ages: 11 and Under',
+  YOUTH_C: 'Ages: 12-13',
+  YOUTH_B: 'Ages: 14-15',
+  YOUTH_A: 'Ages: 16-17',
+  JUNIOR: 'Ages: 18-19',
 } as const;
 
 export type CompetitionEnumKey = keyof typeof CompetitionEnumMap

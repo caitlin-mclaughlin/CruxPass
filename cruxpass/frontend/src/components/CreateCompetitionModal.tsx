@@ -11,6 +11,7 @@ import {
   COMPETITOR_GROUPS,
   CompetitionEnumMap
 } from '@/constants/competition'
+import DatePicker from 'react-datepicker'
 
 interface Props {
   open: boolean
@@ -23,8 +24,7 @@ interface Props {
 export default function CreateCompetitionModal({ open, onClose, onSubmit, gymName, gymAddress }: Props) {
   const [form, setForm] = useState({
     name: '',
-    date: '',
-    time: '',
+    dateTime: null as Date | null,
     types: [] as string[],
     format: '',
     groups: [] as string[],
@@ -41,16 +41,14 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
   }
 
   const handleSubmit = () => {
-    if (!form.name || !form.date || !form.time || !form.types.length || !form.format || !form.groups.length) {
+    if (!form.name || !form.dateTime || !form.types.length || !form.format || !form.groups.length) {
       alert('Please complete all required fields.')
       return
     }
 
-    const dateTime = `${form.date}T${form.time}:00`
-
     const payload = {
       name: form.name,
-      date: dateTime,
+      date: form.dateTime.toISOString(),
       types: form.types,
       format: form.format,
       competitorGroups: form.groups,
@@ -91,16 +89,14 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
           onChange={e => setForm({ ...form, name: e.target.value })}
         />
 
-        <div className="flex gap-4">
-          <Input
-            type="date"
-            value={form.date}
-            onChange={e => setForm({ ...form, date: e.target.value })}
-          />
-          <Input
-            type="time"
-            value={form.time}
-            onChange={e => setForm({ ...form, time: e.target.value })}
+        <div className="flex gap-4 w-full">
+          <DatePicker 
+            selected={form.dateTime}
+            onChange={(date) => setForm(prev => ({ ...prev, datetime: date }))}
+            showTimeSelect
+            dateFormat="Pp"
+            placeholderText="Select date & time"
+            className="rounded-md border px-3 py-1 w-full bg-shadow placeholder-prompt border-base text-base focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
           />
         </div>
 
@@ -152,7 +148,7 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
 
         <div className="mt-2 border-t border-base pt-4">
           <p className="font-semibold mb-1">Host Gym</p>
-          <div className="px-3 py-1 rounded border border-base bg-shadow">
+          <div className="px-3 py-1 rounded-md border border-base bg-shadow">
             <div>{gymName}</div>
             <div>{gymAddress}</div>
           </div>

@@ -4,7 +4,8 @@ import api from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
 import CreateCompetitionModal from '@/components/CreateCompetitionModal'
 import { useGymSession } from '@/context/GymSessionContext'
-import { formatAddress, formatDate } from '@/utils/formatters'
+import { formatAddress, formatDate, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
+import { CompetitionEnumMap } from '@/constants/competition'
 
 interface Address {
   streetAddress: string;
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const { gymSession } = useGymSession()
   const gymAddress = gymSession?.gymAddress ?? ''
   const gymName = gymSession?.gymName ?? ''
+  const [expandedIds, setExpandedIds] = useState<number[]>([])
 
   console.log("Sending competition with token:", localStorage.getItem("token"))
   const handleNewCompetition = (data: any) => {
@@ -42,18 +44,45 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-  if (token) {
-    api.get('/competitions')
-      .then(res => {
-        if (Array.isArray(res.data)) {
-          setComps(res.data)
-        } else {
-          console.error("Unexpected competitions response:", res.data)
-        }
-      })
-      .catch(err => console.error('Error loading competitions', err))
+      api.get('/competitions')
+        .then(res => {
+          if (Array.isArray(res.data)) {
+            const sortedComps = [...res.data].sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+            )
+            setComps(sortedComps)
+          } else {
+            console.error("Unexpected competitions response:", res.data)
+          }
+        })
+        .catch(err => console.error('Error loading competitions', err))
+  }, [])
+
+  const toggleExpanded = (id: number) => {
+    setExpandedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
   }
-}, [token])
+
+  const handleRegister = (competitionId: number) => {
+    if (!token) {
+      alert("Please log in to register.");
+      return;
+    }
+
+    api.post(`/competitions/${competitionId}/register`)
+      .then(() => {
+        setComps(prev =>
+          prev.map(comp =>
+            comp.id === competitionId ? { ...comp, registered: true } : comp
+          )
+        );
+      })
+      .catch(err => {
+        console.error('Registration failed:', err);
+        alert('Registration failed. You may already be registered.');
+      });
+  };
 
   return (
     <div className="p-8 bg-background text-base flex flex-col h-screen">
@@ -64,7 +93,7 @@ export default function DashboardPage() {
         {gymSession && (
           <button
             onClick={() => setShowModal(true)}
-            className="bg-base text-background font-bold px-4 py-2 text-1xl rounded"
+            className="bg-base text-background font-bold px-4 py-2 text-1xl shadow rounded-md"
           >
             New Competition
           </button>
@@ -81,12 +110,56 @@ export default function DashboardPage() {
 
       <div className="grid gap-4">
         {comps.map(comp => (
-          <div key={comp.id} className="border p-4 rounded shadow">
-            <div className="font-semibold">{comp.name}</div>
-            <div>{formatDate(comp.date)}  —  {comp.hostGymName}: {formatAddress(comp.location)}</div>
+          <div
+            key={comp.id}
+            className="border p-4 rounded-md bg-shadow shadow flex items-center justify-between"
+          >
+            <div>
+              <div className="flex items-center gap-x-2 font-semibold cursor-pointer" onClick={() => toggleExpanded(comp.id)}>
+                <span>{comp.name}</span>
+                <span className={`transform translate-y-[-1px] transition-transform ${expandedIds.includes(comp.id) ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+              </div>
+              {!expandedIds.includes(comp.id) && (
+                <div>
+                  {formatDate(comp.date)} — {comp.hostGymName}: {formatAddress(comp.location)}
+                </div>
+              )}
+              {expandedIds.includes(comp.id) && (
+                <div className="mt-2 text-sm space-y-1">
+                  <div><strong>Date & Time:</strong> {formatDateTimePretty(comp.date)}</div>
+                  <div><strong>Host Gym:</strong> {comp.hostGymName}</div>
+                  <div><strong>Location:</strong> {formatAddress(comp.location)}</div>
+                  <div><strong>Format:</strong> {CompetitionEnumMap[comp.format as keyof typeof CompetitionEnumMap]}</div>
+                  <div>
+                    <strong>Type(s):</strong> {comp.types.map(t => CompetitionEnumMap[t as keyof typeof CompetitionEnumMap]).join(', ')}
+                  </div>
+                  <div>
+                    <strong>Groups:</strong> {formatGroupsInOrder(comp.competitorGroups)}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {!gymSession && (
+              <button
+                className={`px-4 py-2 rounded-md font-semibold shadow text-background ${
+                  comp.registered
+                  ? 'bg-highlight'
+                  : 'bg-base hover:bg-select'
+                }`}
+                onClick={() => handleRegister(comp.id)}
+                disabled={comp.registered}
+              >
+                {comp.registered ? 'Registered' : 'Register'}
+              </button>
+            )}
           </div>
         ))}
       </div>
+
     </div>
   )
 

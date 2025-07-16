@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     setToken(null)
     localStorage.removeItem('token')
+    window.location.reload()
   }
 
   function skipLogin() {
