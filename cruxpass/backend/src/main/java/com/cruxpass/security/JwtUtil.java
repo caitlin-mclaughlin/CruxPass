@@ -22,23 +22,43 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.trim().getBytes());
     }
 
-    public String generateToken(String subject, String role) {
-        System.out.println("Creating JWT: email = " + subject + ", role = " + role);
+    public String generateToken(String subject, String role, Long id) {
+        System.out.println("Creating JWT: email = " + subject + ", role = " + role + ", id = " + id);
 
         return Jwts.builder()
                 .setSubject(subject)
                 .claim("role", role)
+                .claim("id", id)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
+
     public String extractEmail(String token) {
         try {
             String email = getClaims(token).getSubject();
             System.out.println("Extracted email from token: " + email);
             return email;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String extractRole(String token) {
+        try {
+            return getClaims(token).get("role", String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public Long extractId(String token) {
+        try {
+            return getClaims(token).get("id", Long.class);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

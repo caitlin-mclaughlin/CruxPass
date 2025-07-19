@@ -1,4 +1,4 @@
-import { COMPETITOR_GROUPS, CompetitionEnumMap } from '@/constants/competition'
+import { COMPETITOR_GROUPS, CompetitionEnumMap } from '@/constants/enum'
 
 export function formatPhoneNumber(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10); // max 10 digits
@@ -65,6 +65,6 @@ export function formatDateTimePretty(isoString: string): string {
 }
 
 export function formatGroupsInOrder(groups: string[]): string {
-  const ordered = COMPETITOR_GROUPS.filter(group => groups.includes(group))
-  return ordered.map(group => CompetitionEnumMap[group]).join(', ')
+  const ordered = COMPETITOR_GROUPS.filter(competitorGroup => groups.includes(competitorGroup))
+  return ordered.map(competitorGroup => CompetitionEnumMap[competitorGroup]).join(', ')
 }

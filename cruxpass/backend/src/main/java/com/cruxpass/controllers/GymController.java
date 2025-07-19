@@ -1,15 +1,16 @@
 package com.cruxpass.controllers;
 
-import com.cruxpass.dtos.GymProfileDto;
+import com.cruxpass.dtos.AddressDto;
+import com.cruxpass.dtos.requests.UpdateGymRequestDto;
+import com.cruxpass.dtos.responses.GymResponseDto;
 import com.cruxpass.models.Gym;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.GymService;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,42 +18,76 @@ import org.springframework.web.bind.annotation.*;
 public class GymController {
 
     private final GymService gymService;
-    private final CurrentUserService currentUser;
+    private final CurrentUserService currentUserService;
 
-    public GymController(GymService gymService, CurrentUserService currentUser) {
+    public GymController(GymService gymService, CurrentUserService currentUserService) {
         this.gymService = gymService;
-        this.currentUser = currentUser;
-    }
-
-    @GetMapping("/me")
-    @PreAuthorize("hasRole('GYM')")
-    public ResponseEntity<GymProfileDto> getMyGym(Authentication authentication) {
-        String email = authentication.getName();  // Spring sets this to the username/email from token
-
-        System.out.println("Looking for gym with email: " + email);
-        Gym gym = gymService.getByEmail(email);
-
-        if (gym == null) {
-            return ResponseEntity.status(404).build();
-        }
-
-        var dto = new GymProfileDto(
-            gym.getName(),
-            gym.getEmail(),
-            gym.getPhone(),
-            gym.getAddress()
-        );
-
-        return ResponseEntity.ok(dto);
+        this.currentUserService = currentUserService;
     }
 
     @GetMapping
-    public List<Gym> getAll() {
-        return gymService.getAll();
+    public ResponseEntity<List<GymResponseDto>> getAll() {
+        List<Gym> gyms = gymService.getAll();
+        if (gyms == null) return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(gyms.stream()
+            .map(gym -> new GymResponseDto(
+                gym.getId(),
+                gym.getName(), 
+                gym.getEmail(),
+                gym.getPhone(),
+                gym.getUsername(),
+                new AddressDto(gym.getAddress()),
+                gym.getCreatedAt()
+            ))
+            .toList());
     }
 
-    @GetMapping("/{id}")
-    public Gym getById(@PathVariable Long id) {
-        return gymService.getById(id);
+    // Secure endpoint for logged-in gym
+    @GetMapping("/me")
+    public ResponseEntity<GymResponseDto> getCurrentGym(@RequestHeader("Authorization") String authHeader) {
+        Gym gym = currentUserService.getGymFromToken(authHeader);
+        if (gym == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(new GymResponseDto(
+            gym.getId(),
+            gym.getName(), 
+            gym.getEmail(),
+            gym.getPhone(),
+            gym.getUsername(),
+            new AddressDto(gym.getAddress()),
+            gym.getCreatedAt()
+        ));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<GymResponseDto> updateGym(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody UpdateGymRequestDto updateRequest
+    ) {
+        Gym gym = currentUserService.getGymFromToken(authHeader);
+        if (gym == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Or 401
+        }
+
+        gym.setName(updateRequest.name());
+        gym.setEmail(updateRequest.email());
+        gym.setPhone(updateRequest.phone());
+        gym.setUsername(updateRequest.username());
+        gym.setAddress(updateRequest.address().toEntity());
+
+        Gym updated = gymService.save(gym);
+
+        return ResponseEntity.ok(new GymResponseDto(
+            updated.getId(),
+            updated.getName(),
+            updated.getEmail(),
+            updated.getPhone(),
+            updated.getUsername(),
+            new AddressDto(updated.getAddress()),
+            updated.getCreatedAt()
+        ));
     }
 }

@@ -1,16 +1,22 @@
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription,
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog'
 
 import {
   COMPETITION_TYPES,
   COMPETITION_FORMATS,
   COMPETITOR_GROUPS,
   CompetitionEnumMap
-} from '@/constants/competition'
+} from '@/constants/enum'
 import DatePicker from 'react-datepicker'
 
 interface Props {
@@ -55,7 +61,6 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
       location: parseAddress(gymAddress) // parse into structured fields
     }
 
-    console.log("Submitting competition:", payload)
     onSubmit(payload)
     onClose()
   }
@@ -81,6 +86,7 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle className="font-bold">Create Competition</DialogTitle>
+          <DialogDescription>Fill out the details for your gym's new competition.</DialogDescription>
         </DialogHeader>
 
         <Input
@@ -92,17 +98,17 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
         <div className="flex gap-4 w-full">
           <DatePicker 
             selected={form.dateTime}
-            onChange={(date) => setForm(prev => ({ ...prev, datetime: date }))}
+            onChange={(date) => setForm(prev => ({ ...prev, dateTime: date }))}
             showTimeSelect
             dateFormat="Pp"
             placeholderText="Select date & time"
-            className="rounded-md border px-3 py-1 w-full bg-shadow placeholder-prompt border-base text-base focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
+            className="rounded-md border px-3 py-1 w-full bg-shadow placeholder-prompt border-green text-green focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
           />
         </div>
 
         <div>
           <p className="font-semibold mb-1">Type</p>
-          <div className="flex gap-4 flex-wrap px-2.5 py-2 rounded-md border border-base bg-shadow">
+          <div className="flex gap-4 flex-wrap px-2.5 py-1 shadow rounded-md border border-green bg-shadow">
             {COMPETITION_TYPES.map(typeKey => (
               <label key={typeKey} className="flex items-center gap-1">
                 <Checkbox
@@ -117,7 +123,7 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
 
         <div>
           <p className="font-semibold mb-1">Format</p>
-          <Select value={form.format} onValueChange={value => setForm({ ...form, format: value })}>
+          <Select value={form.format} onValueChange={(value: any) => setForm({ ...form, format: value })}>
             <SelectTrigger>
               <SelectValue placeholder="Select format" />
             </SelectTrigger>
@@ -133,22 +139,22 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
 
         <div>
           <p className="font-semibold mb-1">Competitor Groups</p>
-          <div className="flex gap-4 flex-wrap px-2.5 py-2 rounded-md border border-base bg-shadow">
-            {COMPETITOR_GROUPS.map(group => (
-              <label key={group} className="flex items-center gap-1">
+          <div className="flex gap-4 flex-wrap px-2.5 py-1 shadow rounded-md border border-green bg-shadow">
+            {COMPETITOR_GROUPS.map(competitorGroup => (
+              <label key={competitorGroup} className="flex items-center gap-1">
                 <Checkbox
-                  checked={form.groups.includes(group)}
-                  onCheckedChange={() => toggleCheckbox('groups', group)}
+                  checked={form.groups.includes(competitorGroup)}
+                  onCheckedChange={() => toggleCheckbox('groups', competitorGroup)}
                 />
-                {CompetitionEnumMap[group]}
+                {CompetitionEnumMap[competitorGroup]}
               </label>
             ))}
           </div>
         </div>
 
-        <div className="mt-2 border-t border-base pt-4">
+        <div className="mt-2 border-t border-green pt-4">
           <p className="font-semibold mb-1">Host Gym</p>
-          <div className="px-3 py-1 rounded-md border border-base bg-shadow">
+          <div className="px-3 py-1 shadow rounded-md border border-green bg-shadow">
             <div>{gymName}</div>
             <div>{gymAddress}</div>
           </div>

@@ -1,8 +1,13 @@
-package com.cruxpass.dtos;
+package com.cruxpass.dtos.requests;
 
 import jakarta.validation.constraints.*;
+import lombok.NonNull;
 
 import java.time.LocalDate;
+
+import com.cruxpass.dtos.AddressDto;
+import com.cruxpass.enums.Gender;
+
 
 public class RegisterRequest {
 
@@ -22,9 +27,13 @@ public class RegisterRequest {
     // Null if registering a gym
     public LocalDate dob;
 
+    // Null if registering a gym
+    public Gender gender;
+
+    @NotBlank
     @Size(min = 6, message = "Password must be at least 6 characters")
     public String password;
 
-    @NotNull
+    @NonNull
     public AddressDto address;
 }

@@ -2,7 +2,7 @@ package com.cruxpass.services;
 
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Registration;
-import com.cruxpass.models.User;
+import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.RegistrationRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +25,12 @@ public class RegistrationService {
         return repository.findById(id).orElse(null);
     }
 
-    public boolean existsByUserAndCompetition(User user, Competition competition) {
-        return repository.existsByUserAndCompetition(user, competition);
+    public Registration getByClimberAndCompetition(Climber climber, Competition competition) {
+        return repository.findByClimberAndCompetition(climber, competition);
+    }
+
+    public boolean existsByClimberAndCompetition(Climber climber, Competition competition) {
+        return repository.existsByClimberAndCompetition(climber, competition);
     }
 
     public Registration save(Registration reg) {

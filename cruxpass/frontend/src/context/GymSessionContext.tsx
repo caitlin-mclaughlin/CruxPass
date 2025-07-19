@@ -1,25 +1,7 @@
+// GymSessionContext.tsx
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import api from '@/services/api'
 import { useAuth } from './AuthContext'
-
-interface GymSession {
-  gymId: number
-  gymName: string
-  gymAddress: string
-}
-
-interface GymSessionContextType {
-  gymSession: GymSession | null
-  setGymSession: (session: GymSession | null) => void
-}
-
-interface AddressDto {
-  streetAddress: string
-  apartmentNumber?: string | null
-  city: string
-  state: string
-  zipCode: string
-}
 
 const GymSessionContext = createContext<GymSessionContextType | undefined>(undefined)
 
@@ -33,22 +15,18 @@ export function GymSessionProvider({ children }: { children: ReactNode }) {
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.role !== 'GYM') {
-        console.log("Not a gym account, skipping /gyms/me fetch");
-        return;
-      }
+      if (payload.role !== 'GYM') return;
     } catch (e) {
       console.warn("Failed to decode token:", e);
       return;
     }
 
-    console.log("Sending token:", token);
     api.get('/gyms/me')
       .then(res => {
-        const { name, address, id } = res.data.gym ?? res.data;
+        const { id, name, address } = res.data.gym ?? res.data;
         const fullAddress = `${address.streetAddress}, ${address.city}, ${address.state} ${address.zipCode}`;
         setGymSession({
-          gymId: id,
+          id: id,
           gymName: name,
           gymAddress: fullAddress
         });

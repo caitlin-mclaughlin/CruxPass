@@ -17,4 +17,14 @@ public record AddressDto(
              addr.getZipCode()
         );
     }
+
+    public Address toEntity() {
+        Address a = new Address();
+        a.setStreetAddress(this.streetAddress);
+        a.setApartmentNumber(this.apartmentNumber);
+        a.setCity(this.city);
+        a.setState(this.state);
+        a.setZipCode(this.zipCode);
+        return a;
+    }
 }

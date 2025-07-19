@@ -2,14 +2,6 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react'
 import api from '@/services/api'
 
-interface AuthContextType {
-  token: string | null
-  login: (token: string) => void
-  logout: () => void
-  skipLogin: () => void
-  guest: boolean
-}
-
 // Provide default (dummy) values to silence TS warning
 const AuthContext = createContext<AuthContextType>({
   token: null,

@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.cruxpass.dtos.RegisterRequest;
+import com.cruxpass.dtos.requests.RegisterRequest;
 import com.cruxpass.models.Address;
 import com.cruxpass.models.Gym;
 import com.cruxpass.repositories.GymRepository;
@@ -22,7 +22,7 @@ public class GymService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void createGym(RegisterRequest dto) {
+    public Gym createGym(RegisterRequest dto) {
         if (repository.findByEmail(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         } else if (repository.findByUsername(dto.username).isPresent()) {
@@ -46,7 +46,11 @@ public class GymService {
         );
         gym.setAddress(addr);
 
-        repository.save(gym);
+        return repository.save(gym);
+    }
+
+    public Gym save(Gym gym) {
+        return repository.save(gym);
     }
 
     public List<Gym> getAll() {

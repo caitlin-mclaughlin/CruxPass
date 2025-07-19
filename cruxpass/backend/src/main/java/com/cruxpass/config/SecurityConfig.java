@@ -3,6 +3,7 @@ package com.cruxpass.config;
 import com.cruxpass.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,10 +28,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(authz -> authz
+                .requestMatchers(HttpMethod.GET, "/api/competitions/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/leaderboards/**").permitAll()
                 .requestMatchers(
                     "/api/auth/**",
-                    "/api/competitions/**",
-                    "/api/leaderboards/**",
                     "/api/search/**"
                 ).permitAll()
                 .anyRequest().authenticated()

@@ -7,6 +7,7 @@ module.exports = {
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
+  	'./src/global.css'
   ],
   darkMode: ["class"],
   safelist: [
@@ -29,6 +30,15 @@ module.exports = {
     '.react-datepicker__time-list::-webkit-scrollbar',
     '.react-datepicker__time-list::-webkit-scrollbar-thumb',
     '.react-datepicker__time-list::-webkit-scrollbar-track',
+    '.react-datepicker__year-dropdown::-webkit-scrollbar',
+    '.react-datepicker__year-dropdown::-webkit-scrollbar-thumb',
+    '.react-datepicker__year-dropdown::-webkit-scrollbar-track',
+    '.react-datepicker__year-option',
+    '.react-datepicker__year-option:hover',
+    '.react-datepicker__year-dropdown',
+    '.react-datepicker__year-dropdown-container',
+    '.react-datepicker__year-read-view',
+    '.react-datepicker__year-read-view--down-arrow',
   ],
   theme: {
     extend: {
@@ -37,9 +47,9 @@ module.exports = {
         shadow: '#c1af94',
         base: '#17341a',
         select: '#225247',
-        prompt: '#3c503fb0',
+        prompt: '#3c503fb5',
         accent: '#531818',
-        highlight: '#415773',
+        highlight: '#3E566F',
         accentHighlight: '#732b33',
 	  }
     }

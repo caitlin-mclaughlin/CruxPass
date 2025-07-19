@@ -56,7 +56,7 @@ export default function Navigation({
           </Link>
           <button
             onClick={onSearchClick}
-            className="flex items-center px-4 py-2 hover:bg-select"
+            className="flex items-center px-4 py-2 hover:bg-select cursor-pointer"
           >
             <Search size={18} className="mr-2" /> Search
           </button>
@@ -65,14 +65,14 @@ export default function Navigation({
             {showProfileOption ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center w-full text-background bg-accent px-4 py-2 hover:bg-accentHighlight"
+                className="flex items-center w-full text-background bg-accent px-4 py-2 hover:bg-accentHighlight cursor-pointer"
               >
                 <LogOut size={18} className="mr-2" /> Sign out
               </button>
             ) : (
               <Link
                 to="/"
-                className="flex items-center w-full text-background px-4 py-2 hover:bg-select"
+                className="flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"
               >
                 <LogOut size={18} className="mr-2" /> Sign in
               </Link>

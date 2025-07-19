@@ -2,17 +2,17 @@ package com.cruxpass.services;
 
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.dtos.RegionalScoreDto;
-import com.cruxpass.dtos.SubmissionRequestDto;
-import com.cruxpass.dtos.UserScoreDto;
+import com.cruxpass.dtos.requests.SubmissionRequestDto;
+import com.cruxpass.dtos.ClimberScoreDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Route;
 import com.cruxpass.models.Submission;
 import com.cruxpass.models.SubmittedRoute;
-import com.cruxpass.models.User;
+import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.CompetitionRepository;
 import com.cruxpass.repositories.RouteRepository;
 import com.cruxpass.repositories.SubmissionRepository;
-import com.cruxpass.repositories.UserRepository;
+import com.cruxpass.repositories.ClimberRepository;
 
 import org.springframework.stereotype.Service;
 
@@ -27,18 +27,18 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepo;
     private final RouteRepository routeRepo;
     private final CompetitionRepository compRepo;
-    private final UserRepository userRepo;
+    private final ClimberRepository climberRepo;
 
     public SubmissionService(
         SubmissionRepository submissionRepo,
         RouteRepository routeRepo,
         CompetitionRepository compRepo,
-        UserRepository userRepo
+        ClimberRepository climberRepo
     ) {
         this.submissionRepo = submissionRepo;
         this.routeRepo = routeRepo;
         this.compRepo = compRepo;
-        this.userRepo = userRepo;
+        this.climberRepo = climberRepo;
     }
 
     public List<Submission> getAll() {
@@ -50,7 +50,7 @@ public class SubmissionService {
     }
 
     public void submitScore(Long compId, String userEmail, SubmissionRequestDto dto) {
-        User user = userRepo.findByEmail(userEmail).orElseThrow();
+        Climber climber = climberRepo.findByEmail(userEmail).orElseThrow();
         Competition comp = compRepo.findById(compId).orElseThrow();
 
         if (dto.routes.size() != 5) throw new IllegalArgumentException("Exactly 5 routes required");
@@ -69,7 +69,7 @@ public class SubmissionService {
         }
 
         Submission submission = new Submission();
-        submission.setUser(user);
+        submission.setClimber(climber);
         submission.setCompetition(comp);
         submission.setRoutes(submittedRoutes);
 
@@ -126,17 +126,17 @@ public class SubmissionService {
             List<Integer> attempts = sorted.stream()
                 .map(SubmittedRoute::getAttempts).toList();
 
-            results.add(new RankedSubmissionDto(place++, s.getUser().getName(), getTotalScore(s), points, attempts));
+            results.add(new RankedSubmissionDto(place++, s.getClimber().getName(), getTotalScore(s), points, attempts));
         }
         return results;
     }
 
-    public List<UserScoreDto> getScoresForUser(String email) {
-        User user = userRepo.findByEmail(email).orElseThrow();
-        List<Submission> submissions = submissionRepo.findByUserId(user.getId());
+    public List<ClimberScoreDto> getScoresForUser(String email) {
+        Climber climber = climberRepo.findByEmail(email).orElseThrow();
+        List<Submission> submissions = submissionRepo.findByClimberId(climber.getId());
 
         return submissions.stream()
-                .map(s -> new UserScoreDto(
+                .map(s -> new ClimberScoreDto(
                         s.getCompetition().getName(),
                         s.getCompetition().getDate(),
                         getTotalScore(s)
@@ -144,14 +144,14 @@ public class SubmissionService {
     }
     
     public List<RegionalScoreDto> getSeriesalLeaderboard() {
-        Map<User, Integer> pointsMap = new HashMap<>();
+        Map<Climber, Integer> pointsMap = new HashMap<>();
 
         List<Competition> competitions = compRepo.findAll();
         for (Competition comp : competitions) {
             List<Submission> ranked = getRankedSubmissions(comp.getId());
 
             for (int i = 0; i < ranked.size(); i++) {
-                User u = ranked.get(i).getUser();
+                Climber u = ranked.get(i).getClimber();
                 int placement = i + 1;
                 int score = switch (placement) {
                     case 1 -> 100;

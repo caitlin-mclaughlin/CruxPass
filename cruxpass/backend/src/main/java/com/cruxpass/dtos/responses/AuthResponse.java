@@ -1,4 +1,4 @@
-package com.cruxpass.dtos;
+package com.cruxpass.dtos.responses;
 
 public class AuthResponse {
     public String token;

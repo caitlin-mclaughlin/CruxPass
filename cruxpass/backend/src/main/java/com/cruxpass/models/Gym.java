@@ -1,17 +1,24 @@
 package com.cruxpass.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
 @Data
 @Entity
+@EntityListeners(AuditingEntityListener.class) 
 @NoArgsConstructor
 public class Gym {
 
@@ -19,12 +26,23 @@ public class Gym {
     @GeneratedValue
     private Long id;
 
+    @NotBlank
     private String name;
-    private String username;
+    @NotBlank
     private String email;
+    @NotBlank
     private String phone;
+    @NotBlank
+    private String username;
+    @NotBlank
     private String passwordHash;
+    @NonNull
     private Address address;
+
+    @Column(nullable = false, updatable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    @CreatedDate
+    private Date createdAt;
 
     @JsonIgnore
     @OneToMany(mappedBy = "gym")

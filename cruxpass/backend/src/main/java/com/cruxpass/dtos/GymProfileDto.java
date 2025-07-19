@@ -6,5 +6,6 @@ public record GymProfileDto(
     String name,
     String email,
     String phone,
+    String username,
     Address address
 ) {}

@@ -1,9 +1,9 @@
 package com.cruxpass.security;
 
 import com.cruxpass.models.Gym;
-import com.cruxpass.models.User;
+import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.GymRepository;
-import com.cruxpass.repositories.UserRepository;
+import com.cruxpass.repositories.ClimberRepository;
 
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
@@ -24,12 +24,12 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserRepository userRepo;
+    private final ClimberRepository climberRepo;
     private final GymRepository gymRepo;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserRepository userRepo, GymRepository gymRepo) {
+    public JwtAuthFilter(JwtUtil jwtUtil, ClimberRepository climberRepo, GymRepository gymRepo) {
         this.jwtUtil = jwtUtil;
-        this.userRepo = userRepo;
+        this.climberRepo = climberRepo;
         this.gymRepo = gymRepo;
     }
 
@@ -55,9 +55,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 boolean valid = false;
 
-                if (role.equalsIgnoreCase("USER")) {
-                    User user = userRepo.findByEmail(email).orElse(null);
-                    valid = user != null && jwtUtil.validateToken(token);
+                if (role.equalsIgnoreCase("CLIMBER")) {
+                    Climber climber = climberRepo.findByEmail(email).orElse(null);
+                    valid = climber != null && jwtUtil.validateToken(token);
                 } else if (role.equalsIgnoreCase("GYM")) {
                     Gym gym = gymRepo.findByEmail(email).orElse(null);
                     valid = gym != null && jwtUtil.validateToken(token);

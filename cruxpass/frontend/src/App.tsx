@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useAuth } from '@/context/AuthContext'
 import { JSX, useEffect, useState } from 'react'
 import api from '@/services/api'
+import "react-datepicker/dist/react-datepicker.css";
 
 import DashboardPage from '@/pages/DashboardPage'
 import FloatingSearch from '@/components/FloatingSearch'
@@ -13,6 +14,7 @@ import ProfilePage from '@/pages/ProfilePage'
 import TopNav from '@/components/TopNav'
 
 import { GymSessionProvider } from '@/context/GymSessionContext'
+import { ClimberProvider } from './context/ClimberContext';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { token } = useAuth()
@@ -71,21 +73,23 @@ export default function App() {
   return (
     <BrowserRouter>
       <GymSessionProvider>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/leaderboards" element={<LeaderboardPage />} />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <ProfilePage />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </AppLayout>
+        <ClimberProvider>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<LoginPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/leaderboards" element={<LeaderboardPage />} />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </AppLayout>
+        </ClimberProvider>
       </GymSessionProvider>
     </BrowserRouter>
   )

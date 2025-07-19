@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { AccountTypeSelect } from '@/components/AccountTypeSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import DatePicker from "react-datepicker";
+import { MAX_AGE, MIN_AGE } from '@/constants/literal'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -34,6 +35,9 @@ export default function Login() {
   const { login, token, skipLogin } = useAuth()
   const [submitted, setSubmitted] = useState(false)
   const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
+  const today = new Date()
+  const minDob = new Date(today.getFullYear() - MAX_AGE, today.getMonth(), today.getDate())
+  const maxDob = new Date(today.getFullYear() - MIN_AGE, today.getMonth(), today.getDate())
 
   useEffect(() => {
     if (token) navigate("/dashboard")
@@ -84,20 +88,18 @@ export default function Login() {
   };
 
   const handleDobChange = (date: Date | null) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
-      dob: date ? date.toISOString().split("T")[0] : "",
-    }));
+      dob: date ? date.toISOString().split('T')[0] : ''
+    }))
 
-    // Also clear from invalid fields if it's valid
-    if (date) {
-      setInvalidFields(prev => {
-        const updated = new Set(prev);
-        updated.delete("dob");
-        return updated;
-      });
-    }
-  };
+    // Clear invalid field
+    setInvalidFields(prev => {
+      const updated = new Set(prev)
+      updated.delete("dob")
+      return updated
+    })
+  }
 
   const getRequiredFields = (): string[] => {
     if (!isCreating) return ["emailOrUsername", "password"];
@@ -204,16 +206,16 @@ export default function Login() {
                   Date of Birth
                 </label>
                 <DatePicker
-                  id="dob"
-                  name="dob"
                   dateFormat="MM/dd/yyyy"
+                  minDate={minDob}
+                  maxDate={maxDob}
                   placeholderText="MM/DD/YYYY"
                   selected={formData.dob ? new Date(formData.dob) : null}
                   onChange={handleDobChange}
+                  showYearDropdown
+                  scrollableYearDropdown
+                  yearDropdownItemNumber={50}
                   className={inputClass("dob")}
-                  dayClassName={() =>
-                    "items-center justify-center rounded-md text-green bg-background hover:bg-accent hover:text-background"
-                  }
                 />
               </div>
             )}

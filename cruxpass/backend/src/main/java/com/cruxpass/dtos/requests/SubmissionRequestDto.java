@@ -1,4 +1,4 @@
-package com.cruxpass.dtos;
+package com.cruxpass.dtos.requests;
 
 import java.util.List;
 
