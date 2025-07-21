@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -12,52 +12,116 @@ import {
 } from '@/components/ui/dialog'
 
 import {
-  COMPETITION_TYPES,
+  CompetitionEnumMap,
+  CompetitionFormat,
+  CompetitionStatus,
+  CompetitionType,
+  CompetitorGroup,
   COMPETITION_FORMATS,
-  COMPETITOR_GROUPS,
-  CompetitionEnumMap
+  COMPETITION_TYPES,
+  COMPETITOR_GROUPS
 } from '@/constants/enum'
 import DatePicker from 'react-datepicker'
+import { COMP_DURATION } from '@/constants/literal'
 
 interface Props {
   open: boolean
   onClose: () => void
   onSubmit: (data: any) => void
   gymName: string
-  gymAddress: string // Expected format: "123 Main St, Madison, WI 53703"
+  gymAddress: string
+  initialData?: {
+    name: string
+    date: string // ISO string
+    types: CompetitionType[]
+    format: CompetitionFormat
+    competitorGroups: CompetitorGroup[]
+  }
 }
 
-export default function CreateCompetitionModal({ open, onClose, onSubmit, gymName, gymAddress }: Props) {
-  const [form, setForm] = useState({
-    name: '',
-    dateTime: null as Date | null,
-    types: [] as string[],
-    format: '',
-    groups: [] as string[],
+type FormState = {
+  name: string
+  date: Date | null
+  types: CompetitionType[]
+  format: CompetitionFormat // if you define a type
+  groups: CompetitorGroup[]
+}
+
+export default function CreateCompetitionModal({ open, onClose, onSubmit, gymName, gymAddress, initialData }: Props) {
+  const [form, setForm] = useState<FormState>(() => {
+    if (initialData) {
+      return {
+        name: initialData.name,
+        date: new Date(initialData.date),
+        types: initialData.types as CompetitionType[],
+        format: initialData.format as CompetitionFormat,
+        groups: initialData.competitorGroups as CompetitorGroup[],
+      }
+    } else {
+      return {
+        name: '',
+        date: null,
+        types: [] as CompetitionType[],
+        format: '' as CompetitionFormat,
+        groups: [] as CompetitorGroup[],
+      }
+    }
   })
 
-  const toggleCheckbox = (field: 'types' | 'groups', value: string) => {
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        name: initialData.name,
+        date: new Date(initialData.date),
+        types: initialData.types as CompetitionType[],
+        format: initialData.format as CompetitionFormat,
+        groups: initialData.competitorGroups as CompetitorGroup[],
+      })
+    }
+  }, [initialData])
+
+  function toggleCheckbox(field: 'types', value: CompetitionType): void
+  function toggleCheckbox(field: 'groups', value: CompetitorGroup): void
+  function toggleCheckbox(field: 'types' | 'groups', value: CompetitionType | CompetitorGroup) {
     setForm(prev => {
-      const list = prev[field]
+      const list = prev[field as keyof FormState] as (CompetitionType | CompetitorGroup)[]
+      const updatedList = list.includes(value)
+        ? list.filter(v => v !== value)
+        : [...list, value]
+
       return {
         ...prev,
-        [field]: list.includes(value) ? list.filter(v => v !== value) : [...list, value]
+        [field]: updatedList
       }
     })
   }
 
   const handleSubmit = () => {
-    if (!form.name || !form.dateTime || !form.types.length || !form.format || !form.groups.length) {
+    if (!form.name || !form.date || !form.types.length || !form.format || !form.groups.length) {
       alert('Please complete all required fields.')
       return
     }
 
+    const now = new Date()
+    const compStart = form.date!
+    const compEnd = new Date(compStart.getTime() + COMP_DURATION)
+
+    let status: CompetitionStatus
+    if (now < compStart) {
+      status = 'UPCOMING'
+    } else if (now >= compStart && now <= compEnd) {
+      status = 'LIVE'
+    } else {
+      status = 'FINISHED'
+    }
+
     const payload = {
       name: form.name,
-      date: form.dateTime.toISOString(),
-      types: form.types,
-      format: form.format,
-      competitorGroups: form.groups,
+      date: form.date.toISOString(),
+      types: form.types as CompetitionType[],
+      format: form.format as CompetitionFormat,
+      competitorGroups: form.groups as CompetitorGroup[],
+      status: status as CompetitionStatus,
       location: parseAddress(gymAddress) // parse into structured fields
     }
 
@@ -85,7 +149,9 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-bold">Create Competition</DialogTitle>
+          <DialogTitle className="font-bold">
+            {initialData ? 'Edit Competition' : 'Create Competition'}
+          </DialogTitle>
           <DialogDescription>Fill out the details for your gym's new competition.</DialogDescription>
         </DialogHeader>
 
@@ -97,8 +163,8 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
 
         <div className="flex gap-4 w-full">
           <DatePicker 
-            selected={form.dateTime}
-            onChange={(date) => setForm(prev => ({ ...prev, dateTime: date }))}
+            selected={form.date}
+            onChange={(date) => setForm(prev => ({ ...prev, date: date }))}
             showTimeSelect
             dateFormat="Pp"
             placeholderText="Select date & time"
@@ -123,7 +189,7 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
 
         <div>
           <p className="font-semibold mb-1">Format</p>
-          <Select value={form.format} onValueChange={(value: any) => setForm({ ...form, format: value })}>
+          <Select value={form.format} onValueChange={(value: CompetitionFormat) => setForm({ ...form, format: value })}>
             <SelectTrigger>
               <SelectValue placeholder="Select format" />
             </SelectTrigger>

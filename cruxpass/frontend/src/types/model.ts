@@ -35,6 +35,7 @@ interface Competition {
   types: string[];
   format: string;
   competitorGroups: string[];
+  status: string;
   location: Address;
   hostGymName: string;
   registered?: boolean;
@@ -58,4 +59,11 @@ interface GymSessionContextType {
 interface Option {
   value: string
   label: string
+}
+
+type Registration = {
+  climberName: string
+  email: string
+  gender: string
+  competitorGroup: string
 }

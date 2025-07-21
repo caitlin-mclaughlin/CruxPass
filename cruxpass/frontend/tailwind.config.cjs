@@ -43,13 +43,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#d9c7ad',
-        shadow: '#c1af94',
-        base: '#17341a',
+        background: '#decbb5',
+        shadow: '#cab9a0',
+        green: '#17341a',
         select: '#225247',
         prompt: '#3c503fb5',
         accent: '#531818',
-        highlight: '#3E566F',
+        highlight: '#39516a',
         accentHighlight: '#732b33',
 	  }
     }

@@ -3,7 +3,7 @@
   flex-direction: column;
   padding: 1rem;
   background: #1f2937; /* dark background */
-  color: hsl(var(--base));
+  color: hsl(var(--green));
   height: 100vh;
   width: 200px;
 }
@@ -32,7 +32,7 @@
 .btn-search,
 .btn-logout {
   background: hsl(var(--accent)); /* blue */
-  color: hsl(var(--bacgrounf));
+  color: hsl(var(--background));
   border: none;
   padding: 0.5rem 1rem;
   width: 100%;

@@ -229,7 +229,7 @@ export default function ProfilePage() {
                 setSelectedGender(formData.gender)
               }}
             } 
-            className="bg-green text-background px-4 py-1 rounded-md font-semibold"
+            className="bg-green text-background px-4 py-1 rounded-md font-semibold hover:bg-select"
           >
             Edit Profile
           </button>

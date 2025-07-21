@@ -6,6 +6,8 @@ import { AccountTypeSelect } from '@/components/AccountTypeSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import DatePicker from "react-datepicker";
 import { MAX_AGE, MIN_AGE } from '@/constants/literal'
+import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
+import { GENDER_OPTIONS, GenderEnumMap } from '@/constants/enum'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -21,6 +23,7 @@ export default function Login() {
     username: "",
     phone: "",
     dob: "",
+    gender: "",
     password: "",
     emailOrUsername: "",
     address: {
@@ -35,6 +38,7 @@ export default function Login() {
   const { login, token, skipLogin } = useAuth()
   const [submitted, setSubmitted] = useState(false)
   const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
+  const [selectedGender, setSelectedGender] = useState<string | null>(null)
   const today = new Date()
   const minDob = new Date(today.getFullYear() - MAX_AGE, today.getMonth(), today.getDate())
   const maxDob = new Date(today.getFullYear() - MIN_AGE, today.getMonth(), today.getDate())
@@ -147,6 +151,7 @@ export default function Login() {
           username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
           phone: stripNonDigits(formData.phone),
           dob: formData.dob || null,
+          gender: formData.gender || null,
           password: formData.password,
           address: formData.address
         })
@@ -217,6 +222,25 @@ export default function Login() {
                   yearDropdownItemNumber={50}
                   className={inputClass("dob")}
                 />
+
+                <label htmlFor="gender" className="mt-3 mb-1 font-medium text-green" >
+                  Which gender group / division will you compete in?
+                </label>
+                <CustomRadioGroup
+                  name="gender"
+                  options={GENDER_OPTIONS.map(g => ({ 
+                    value: g, 
+                    label: GenderEnumMap[g as keyof typeof GenderEnumMap] 
+                  }))}
+                  selected={selectedGender}
+                  onChange={(g: string) => {
+                    setSelectedGender(g)
+                    setFormData((prev: any) => ({ 
+                      ...prev, 
+                      gender: g
+                    }))
+                  }}
+                />
               </div>
             )}
 
@@ -255,7 +279,7 @@ export default function Login() {
               password: "",
              }))
           }}
-          className="text-green underline block mt-2 hover:text-select"
+          className="text-green underline block hover:text-select"
         >
           {isCreating ? "Already have an account?" : "Don't have an account? Create one"}
         </button>
@@ -266,7 +290,7 @@ export default function Login() {
             skipLogin()
             navigate("/dashboard")
           }}
-          className="mt-4 text-green underline hover:text-select"
+          className="text-green underline hover:text-select"
         >
           Skip login
         </button>

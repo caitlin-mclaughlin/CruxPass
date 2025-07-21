@@ -21,6 +21,10 @@ public class RegistrationService {
         return repository.findAll();
     }
 
+    public List<Registration> getByCompetition(Competition competition) {
+        return repository.findByCompetition(competition);
+    }
+
     public Registration getById(Long id) {
         return repository.findById(id).orElse(null);
     }

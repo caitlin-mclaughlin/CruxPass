@@ -2,11 +2,12 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.AddressDto;
 import com.cruxpass.dtos.CompetitionDto;
+import com.cruxpass.dtos.requests.UpdateCompRequestDto;
+import com.cruxpass.dtos.requests.UpdateGymRequestDto;
 import com.cruxpass.dtos.responses.CompetitionResponseDto;
+import com.cruxpass.dtos.responses.GymResponseDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
-import com.cruxpass.models.Registration;
-import com.cruxpass.models.Climber;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.GymService;
@@ -17,8 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/gyms/{gymId}/competitions")
@@ -58,12 +57,8 @@ public class CompetitionController {
 
         try {
             Gym gym = currentUserService.getGymFromToken(authHeader);
+            if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-            if (gym == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not an authorized gym");
-            }
-
-            System.out.println("Creating competition for gym: " + gym.getName());
             Competition newComp = competitionService.createCompetition(dto, gym);
 
             return ResponseEntity.ok(new CompetitionResponseDto(newComp));
@@ -73,4 +68,32 @@ public class CompetitionController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCompetition(
+        @RequestHeader("Authorization") String authHeader,
+        @PathVariable Long id,
+        @RequestBody UpdateCompRequestDto updateRequest
+    ) {
+        try {
+            Gym gym = currentUserService.getGymFromToken(authHeader);
+            if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+            Competition comp = competitionService.getById(id);
+            if (comp == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            
+            comp.setName(updateRequest.name());
+            comp.setDate(updateRequest.date());
+            comp.setTypes(updateRequest.types());
+            comp.setFormat(updateRequest.format());
+            comp.setCompetitorGroups(updateRequest.competitorGroups());
+            comp.setStatus(updateRequest.status());
+
+            Competition updated = competitionService.save(comp);
+
+            return ResponseEntity.ok(new CompetitionResponseDto(updated));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
 }

@@ -39,7 +39,10 @@ public class CompRegistrationController {
         @RequestHeader("Authorization") String authHeader
     ) {
         currentUserService.validateGymAccess(gymId, authHeader);
-        List<Registration> regs = registrationService.getAll();
+        Competition comp = competitionService.getById(competitionId);
+        if (comp == null) return ResponseEntity.notFound().build();
+
+        List<Registration> regs = registrationService.getByCompetition(comp);
         if (regs == null) return ResponseEntity.notFound().build();
 
         return ResponseEntity.ok(regs.stream()
@@ -49,6 +52,7 @@ public class CompRegistrationController {
                     gymId,
                     competitionId,
                     reg.getCompetitorGroup(),
+                    reg.getGender(),
                     reg.getClimber().getName(),
                     reg.getClimber().getEmail(),
                     reg.isPaid()
@@ -73,6 +77,7 @@ public class CompRegistrationController {
             gymId,
             competitionId,
             reg.getCompetitorGroup(),
+            reg.getGender(),
             reg.getClimber().getName(),
             reg.getClimber().getEmail(),
             reg.isPaid()

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
 
@@ -13,5 +14,6 @@ public record CompetitionDto (
     Set<CompetitionType> types,
     CompetitionFormat format,
     Set<CompetitorGroup> competitorGroups,
+    CompetitionStatus status,
     AddressDto location
 ) {}

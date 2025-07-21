@@ -11,6 +11,7 @@ import LeaderboardPage from '@/pages/LeaderboardPage'
 import LoginPage from '@/pages/LoginPage'
 import Navigation from '@/components/Navigation'
 import ProfilePage from '@/pages/ProfilePage'
+import CompetitionPage from '@/pages/CompetitionPage'
 import TopNav from '@/components/TopNav'
 
 import { GymSessionProvider } from '@/context/GymSessionContext'
@@ -79,6 +80,7 @@ export default function App() {
               <Route path="/" element={<LoginPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/leaderboards" element={<LeaderboardPage />} />
+              <Route path="/competitions/:competitionId" element={<CompetitionPage />} />
               <Route
                 path="/profile"
                 element={

@@ -27,6 +27,10 @@ public class CompetitionService {
         return competitionRepository.findById(id).orElse(null);
     }
 
+    public Competition save(Competition competition) {
+        return competitionRepository.save(competition);
+    }
+
     @Transactional
     public Competition createCompetition(CompetitionDto dto, Gym gym) {
         Competition competition = new Competition();
@@ -35,6 +39,7 @@ public class CompetitionService {
         competition.setFormat(dto.format());
         competition.setTypes(dto.types());
         competition.setCompetitorGroups(dto.competitorGroups());
+        competition.setStatus(dto.status());
 
         competition.setGym(gym);
 

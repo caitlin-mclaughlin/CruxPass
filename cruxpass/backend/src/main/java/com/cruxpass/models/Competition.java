@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -45,6 +46,10 @@ public class Competition {
     @Enumerated(EnumType.STRING)
     private Set<CompetitorGroup> competitorGroups;
     
+    @NonNull
+    @Enumerated(EnumType.STRING)
+    private CompetitionStatus status;
+
     @NonNull
     @ManyToOne
     @JoinColumn(name = "gym_id")

@@ -81,7 +81,7 @@ public class GymController {
         Gym updated = gymService.save(gym);
 
         return ResponseEntity.ok(new GymResponseDto(
-            updated.getId(),
+            gym.getId(),
             updated.getName(),
             updated.getEmail(),
             updated.getPhone(),

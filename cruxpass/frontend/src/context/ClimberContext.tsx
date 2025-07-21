@@ -10,7 +10,17 @@ export function ClimberProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth()
 
   useEffect(() => {
-    if (!token) return
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.role !== 'CLIMBER') return;
+    } catch (e) {
+      console.warn("Failed to decode token:", e);
+      return;
+    }
+
     api.get('/climbers/me')
       .then(res => {
         const { id, name, email, gender, dob } = res.data
