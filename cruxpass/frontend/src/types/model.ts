@@ -32,9 +32,13 @@ interface Competition {
   gymId: number;
   name: string;
   date: string;
+  deadline: string;
+  capacity: number;
   types: string[];
   format: string;
   competitorGroups: string[];
+  divisions: string[];
+  divisionsEnabled?: boolean;
   status: string;
   location: Address;
   hostGymName: string;

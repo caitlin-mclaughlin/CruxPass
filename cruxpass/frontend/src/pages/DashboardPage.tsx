@@ -10,6 +10,7 @@ import { useClimber } from '@/context/ClimberContext'
 import { formatAddress, formatDate, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
 import { CompetitionEnumMap, CompetitorGroup, GenderEnumMap } from '@/constants/enum'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
+import { CompetitionFormPayload } from '@/types/dto'
 
 export default function DashboardPage() {
   const [comps, setComps] = useState<Competition[]>([])
@@ -25,7 +26,7 @@ export default function DashboardPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const liveRegisteredComp = comps.find(c => c.status === 'LIVE' && c.registered)
 
-  const handleNewCompetition = (data: any) => {
+  const handleNewCompetition = (data: CompetitionFormPayload) => {
     api.post(`/gyms/${gymSession?.id}/competitions`, data)
       .then(() => window.location.reload())
       .catch(err => console.error('Failed to create competition', err))
@@ -142,11 +143,13 @@ export default function DashboardPage() {
                 {expandedIds.includes(comp.id) && (
                   <div className="mt-2 text-sm space-y-1">
                     <div><strong>Date & Time:</strong> {formatDateTimePretty(comp.date)}</div>
+                    <div><strong>Registration Deadline:</strong> {formatDateTimePretty(comp.deadline)}</div>
                     <div><strong>Host Gym:</strong> {comp.hostGymName}</div>
                     <div><strong>Location:</strong> {formatAddress(comp.location)}</div>
                     <div><strong>Format:</strong> {CompetitionEnumMap[comp.format as keyof typeof CompetitionEnumMap]}</div>
                     <div><strong>Type(s):</strong> {comp.types.map(t => CompetitionEnumMap[t as keyof typeof CompetitionEnumMap]).join(', ')}</div>
                     <div><strong>Groups:</strong> {formatGroupsInOrder(comp.competitorGroups)}</div>
+                    <div><strong>Divisions:</strong> {comp.divisions.map(t => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ')}</div>
 
                     {comp.registration && (
                       <div className="text-highlight">

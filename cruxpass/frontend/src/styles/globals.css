@@ -17,6 +17,16 @@
   input[type="time"] {
     @apply appearance-none;
   }
+  
+  /* Remove spin buttons in number inputs */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield; /* Firefox */
+  }
 
   input[type="date"]::selection,
   input[type="time"]::selection {
@@ -163,7 +173,6 @@
     color: var(--color-green) !important;
   }
 
-
   .react-datepicker__day--disabled,
   .react-datepicker__day {
     color: var(--color-green) !important;
@@ -244,6 +253,27 @@
   input:-moz-autofill {
     box-shadow: 0 0 0px 1000px var(--color-shadow) inset !important;
     -webkit-text-fill-color: var(--color-green) !important;
+  }
+
+  /* Tailwind-style custom scrollbar for AddRoutesModal */
+  .scrollbar-thin-green {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-green) transparent;
+  }
+
+  .scrollbar-thin-green::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  .scrollbar-thin-green::-webkit-scrollbar-track {
+    background: transparent; /* Let the container background show */
+  }
+
+  .scrollbar-thin-green::-webkit-scrollbar-thumb {
+    background-color: var(--color-green);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
 
 }

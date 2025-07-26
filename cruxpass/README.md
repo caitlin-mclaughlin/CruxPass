@@ -38,3 +38,8 @@ docker stack deploy -c docker-compose.yml cruxpass
 // Wait 5-10s and run logs
 docker service logs cruxpass_backend
 ```
+
+
+## Database
+docker exec -it f705fb495b74 psql -U postgres -d cruxpass
+(replace id with value shown by "docker ps")

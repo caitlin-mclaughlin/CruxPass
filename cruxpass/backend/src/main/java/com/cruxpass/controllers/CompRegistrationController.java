@@ -2,9 +2,7 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.requests.CompRegistrationRequestDto;
 import com.cruxpass.dtos.responses.RegistrationResponseDto;
-import com.cruxpass.models.Climber;
 import com.cruxpass.models.Competition;
-import com.cruxpass.models.Gym;
 import com.cruxpass.models.Registration;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
@@ -13,8 +11,8 @@ import com.cruxpass.services.RegistrationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -96,10 +94,22 @@ public class CompRegistrationController {
 
         var competition = competitionService.getById(competitionId);
         if (competition == null) return ResponseEntity.notFound().build();
-        if (competition.getGym().getId() != gymId) return ResponseEntity.badRequest().build();
+        if (!competition.getGym().getId().equals(gymId)) return ResponseEntity.badRequest().build();
 
+        // Prevent duplicate registration
         if (registrationService.existsByClimberAndCompetition(climber, competition)) {
-            return ResponseEntity.badRequest().body("Already registered");
+            return ResponseEntity.badRequest().body("You are already registered for this competition.");
+        }
+        
+        // Check registration deadline
+        if (competition.getDeadline() != null && competition.getDeadline().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body("Registration deadline has passed.");
+        }
+
+        // Check capacity
+        long currentCount = registrationService.countByCompetition(competition);
+        if (competition.getCapacity() > 0 && currentCount >= competition.getCapacity()) {
+            return ResponseEntity.badRequest().body("Competition is at full capacity.");
         }
 
         Registration reg = new Registration();
@@ -112,5 +122,4 @@ public class CompRegistrationController {
         registrationService.save(reg);
         return ResponseEntity.ok("Successfully registered");
     }
-
 }

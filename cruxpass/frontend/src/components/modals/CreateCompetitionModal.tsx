@@ -1,107 +1,86 @@
-import { useEffect, useState } from 'react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription,
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog'
-
-import {
-  CompetitionEnumMap,
-  CompetitionFormat,
-  CompetitionStatus,
-  CompetitionType,
-  CompetitorGroup,
-  COMPETITION_FORMATS,
-  COMPETITION_TYPES,
-  COMPETITOR_GROUPS
-} from '@/constants/enum'
+import { COMPETITION_TYPES, COMPETITION_FORMATS, COMPETITOR_GROUPS, CompetitionEnumMap, CompetitionStatus, GENDER_OPTIONS, Gender, GenderEnumMap } from '@/constants/enum'
+import { CompetitionFormat, CompetitionType, CompetitorGroup } from '@/constants/enum'
 import DatePicker from 'react-datepicker'
+import { useState } from 'react'
 import { COMP_DURATION } from '@/constants/literal'
+import { parseAddress } from '@/utils/formatters'
+import { CompetitionFormPayload } from '@/types/dto'
 
-interface Props {
+type Props = {
   open: boolean
   onClose: () => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: CompetitionFormPayload) => void
   gymName: string
   gymAddress: string
   initialData?: {
     name: string
-    date: string // ISO string
+    date: string
+    deadline: string
+    capacity: number
     types: CompetitionType[]
     format: CompetitionFormat
     competitorGroups: CompetitorGroup[]
+    divisions: Gender[]
+    divisionsEnabled: boolean
   }
 }
 
 type FormState = {
   name: string
   date: Date | null
+  deadline: Date | null
+  capacity: number | ''
   types: CompetitionType[]
-  format: CompetitionFormat // if you define a type
+  format: CompetitionFormat
   groups: CompetitorGroup[]
+  divisions: Gender[]
+  divisionsEnabled: boolean
+}
+
+function buildInitialForm(data?: Props['initialData']): FormState {
+  return data
+    ? {
+        name: data.name,
+        date: new Date(data.date),
+        deadline: new Date(data.deadline),
+        capacity: data.capacity,
+        types: data.types,
+        format: data.format,
+        groups: data.competitorGroups,
+        divisions: data?.divisions ?? [],
+        divisionsEnabled: !!data?.divisions?.length, // true if any were prefilled
+      }
+    : {
+        name: '',
+        date: null,
+        deadline: null,
+        capacity: '',
+        types: [],
+        format: '' as CompetitionFormat,
+        groups: [],
+        divisions: [],
+        divisionsEnabled: false,
+      }
 }
 
 export default function CreateCompetitionModal({ open, onClose, onSubmit, gymName, gymAddress, initialData }: Props) {
-  const [form, setForm] = useState<FormState>(() => {
-    if (initialData) {
-      return {
-        name: initialData.name,
-        date: new Date(initialData.date),
-        types: initialData.types as CompetitionType[],
-        format: initialData.format as CompetitionFormat,
-        groups: initialData.competitorGroups as CompetitorGroup[],
-      }
-    } else {
-      return {
-        name: '',
-        date: null,
-        types: [] as CompetitionType[],
-        format: '' as CompetitionFormat,
-        groups: [] as CompetitorGroup[],
-      }
-    }
-  })
+  const [form, setForm] = useState<FormState>(() => buildInitialForm(initialData))
 
-  useEffect(() => {
-    if (initialData) {
-      setForm({
-        name: initialData.name,
-        date: new Date(initialData.date),
-        types: initialData.types as CompetitionType[],
-        format: initialData.format as CompetitionFormat,
-        groups: initialData.competitorGroups as CompetitorGroup[],
-      })
-    }
-  }, [initialData])
+  const handleSubmit = async () => {
+    const { name, date, deadline, capacity, types, format, groups, divisions, divisionsEnabled } = form
 
-  function toggleCheckbox(field: 'types', value: CompetitionType): void
-  function toggleCheckbox(field: 'groups', value: CompetitorGroup): void
-  function toggleCheckbox(field: 'types' | 'groups', value: CompetitionType | CompetitorGroup) {
-    setForm(prev => {
-      const list = prev[field as keyof FormState] as (CompetitionType | CompetitorGroup)[]
-      const updatedList = list.includes(value)
-        ? list.filter(v => v !== value)
-        : [...list, value]
-
-      return {
-        ...prev,
-        [field]: updatedList
-      }
-    })
-  }
-
-  const handleSubmit = () => {
-    if (!form.name || !form.date || !form.types.length || !form.format || !form.groups.length) {
-      alert('Please complete all required fields.')
+    if (!name || !date || !deadline || capacity === '' || !types.length || !format 
+      || !groups.length || (divisionsEnabled && !divisions.length)
+    ) {
+      alert('Please complete all fields before submitting.')
       return
     }
-
+    
     const now = new Date()
     const compStart = form.date!
     const compEnd = new Date(compStart.getTime() + COMP_DURATION)
@@ -116,42 +95,30 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
     }
 
     const payload = {
-      name: form.name,
-      date: form.date.toISOString(),
-      types: form.types as CompetitionType[],
-      format: form.format as CompetitionFormat,
-      competitorGroups: form.groups as CompetitorGroup[],
+      name: name,
+      date: date.toISOString(),
+      deadline: deadline.toISOString(),
+      capacity: capacity,
+      types: types as CompetitionType[],
+      format: format as CompetitionFormat,
+      competitorGroups: groups as CompetitorGroup[],
+      divisions: divisions as Gender[],
       status: status as CompetitionStatus,
       location: parseAddress(gymAddress) // parse into structured fields
     }
 
-    onSubmit(payload)
+    onSubmit(payload as CompetitionFormPayload)
     onClose()
   }
 
-  const parseAddress = (address: string) => {
-    // Naive parser: assumes "123 Main St, Madison, WI 53703"
-    const parts = address.split(',')
-    const streetAddress = parts[0]?.trim() || ''
-    const city = parts[1]?.trim() || ''
-    const stateZip = parts[2]?.trim().split(' ') || []
-
-    return {
-      streetAddress,
-      apartmentNumber: null,
-      city,
-      state: stateZip[0] || '',
-      zipCode: stateZip[1] || ''
-    }
-  }
+  const toggleArrayValue = <T,>(value: T, arr: T[]): T[] =>
+    arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-bold">
-            {initialData ? 'Edit Competition' : 'Create Competition'}
-          </DialogTitle>
+          <DialogTitle>{initialData ? 'Edit Competition' : 'Create Competition'}</DialogTitle>
           <DialogDescription>Fill out the details for your gym's new competition.</DialogDescription>
         </DialogHeader>
 
@@ -164,69 +131,153 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
         <div className="flex gap-4 w-full">
           <DatePicker 
             selected={form.date}
-            onChange={(date) => setForm(prev => ({ ...prev, date: date }))}
+            onChange={(date) => setForm((prev: any) => ({ ...prev, date: date }))}
             showTimeSelect
             dateFormat="Pp"
-            placeholderText="Select date & time"
+            placeholderText="Competition Date & Time"
+            className="rounded-md border px-3 py-1 w-full max-w-xl bg-shadow placeholder-prompt border-green text-green focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
+          />
+          <DatePicker 
+            selected={form.deadline}
+            onChange={(deadline) => setForm((prev: any) => ({ ...prev, deadline: deadline }))}
+            showTimeSelect
+            dateFormat="Pp"
+            placeholderText="Registration Deadline"
             className="rounded-md border px-3 py-1 w-full bg-shadow placeholder-prompt border-green text-green focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
           />
         </div>
 
         <div>
-          <p className="font-semibold mb-1">Type</p>
-          <div className="flex gap-4 flex-wrap px-2.5 py-1 shadow rounded-md border border-green bg-shadow">
-            {COMPETITION_TYPES.map(typeKey => (
-              <label key={typeKey} className="flex items-center gap-1">
-                <Checkbox
-                  checked={form.types.includes(typeKey)}
-                  onCheckedChange={() => toggleCheckbox('types', typeKey)}
-                />
-                {CompetitionEnumMap[typeKey]}
-              </label>
-            ))}
-          </div>
+          <label className="font-semibold">Capacity</label>
+          <Input
+            type="number"
+            placeholder="Maximum number of registrations"
+            step={10}
+            value={form.capacity}
+            onChange={e =>
+              setForm({ ...form, capacity: e.target.value === '' ? '' : parseInt(e.target.value, 10) })
+            }
+          />
         </div>
 
         <div>
-          <p className="font-semibold mb-1">Format</p>
-          <Select value={form.format} onValueChange={(value: CompetitionFormat) => setForm({ ...form, format: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select format" />
-            </SelectTrigger>
-            <SelectContent>
-              {COMPETITION_FORMATS.map(format => (
-                <SelectItem key={format} value={format}>
-                  {CompetitionEnumMap[format]}
-                </SelectItem>
+            <label className="font-semibold">Types</label>
+            <div className="flex flex-wrap space-x-5 gap-2 border border-green bg-shadow px-3 py-1 rounded-md shadow">
+              {COMPETITION_TYPES.map(type => (
+                <div key={type} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={form.types.includes(type)}
+                    onCheckedChange={() =>
+                      setForm({ ...form, types: toggleArrayValue(type, form.types) })
+                    }
+                  />
+                  <span>{CompetitionEnumMap[type]}</span>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <p className="font-semibold mb-1">Competitor Groups</p>
-          <div className="flex gap-4 flex-wrap px-2.5 py-1 shadow rounded-md border border-green bg-shadow">
-            {COMPETITOR_GROUPS.map(competitorGroup => (
-              <label key={competitorGroup} className="flex items-center gap-1">
-                <Checkbox
-                  checked={form.groups.includes(competitorGroup)}
-                  onCheckedChange={() => toggleCheckbox('groups', competitorGroup)}
-                />
-                {CompetitionEnumMap[competitorGroup]}
-              </label>
-            ))}
+            </div>
           </div>
-        </div>
 
-        <div className="mt-2 border-t border-green pt-4">
-          <p className="font-semibold mb-1">Host Gym</p>
-          <div className="px-3 py-1 shadow rounded-md border border-green bg-shadow">
-            <div>{gymName}</div>
-            <div>{gymAddress}</div>
+          <div>
+            <label className="font-semibold">Format</label>
+            <Select
+              value={form.format}
+              onValueChange={val => setForm({ ...form, format: val as CompetitionFormat })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select format" />
+              </SelectTrigger>
+              <SelectContent>
+                {COMPETITION_FORMATS.map(f => (
+                  <SelectItem key={f} value={f}>
+                    {CompetitionEnumMap[f]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </div>
 
-        <Button onClick={handleSubmit}>Submit</Button>
+          <div>
+            <label className="font-semibold">Competitor Groups</label>
+            <div className="flex flex-wrap space-x-5 gap-2 border border-green bg-shadow px-3 py-1 rounded-md shadow">
+              {COMPETITOR_GROUPS.map(group => (
+                <div key={group} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={form.groups.includes(group)}
+                    onCheckedChange={() =>
+                      setForm({ ...form, groups: toggleArrayValue(group, form.groups) })
+                    }
+                  />
+                  <span>{CompetitionEnumMap[group]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="font-semibold">Group Divisions</label>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={form.divisionsEnabled}
+                  onClick={() =>
+                    setForm(prev => ({
+                      ...prev,
+                      divisionsEnabled: !prev.divisionsEnabled,
+                      divisions: !prev.divisionsEnabled ? prev.divisions : [],
+                    }))
+                  }
+                  className={`relative inline-flex h-6 w-11 border border-green items-center rounded-full transition-colors focus:outline-none ${
+                    form.divisionsEnabled ? 'bg-green' : 'bg-shadow'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full border border-green bg-background transition-transform ${
+                      form.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+
+            <div
+              className={`flex flex-wrap space-x-5 gap-2 border px-3 py-1 rounded-md shadow transition-opacity ${
+                form.divisionsEnabled
+                  ? 'border-green bg-shadow opacity-100'
+                  : 'border-border bg-muted text-muted opacity-50 pointer-events-none'
+              }`}
+            >
+              {GENDER_OPTIONS.map(gender => (
+                <div key={gender} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={form.divisions.includes(gender)}
+                    onCheckedChange={() =>
+                      setForm(prev => ({
+                        ...prev,
+                        divisions: toggleArrayValue(gender, prev.divisions),
+                      }))
+                    }
+                  />
+                  <span>{GenderEnumMap[gender]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-1 border-t border-green pt-3">
+            <p className="font-semibold mb-1">Host Gym</p>
+            <div className="px-3 py-1 shadow rounded-md border border-green bg-shadow">
+              <div>{gymName}</div>
+              <div>{gymAddress}</div>
+            </div>
+          </div>
+
+          <Button onClick={handleSubmit} className="w-full">
+            {initialData ? 'Save Changes' : 'Create Competition'}
+          </Button>
+
       </DialogContent>
     </Dialog>
   )

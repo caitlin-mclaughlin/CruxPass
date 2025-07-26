@@ -21,3 +21,22 @@ interface AddressDto {
   state: string
   zipCode: string
 }
+
+export type CompetitionFormPayload = {
+  name: string
+  date: string
+  deadline: string
+  capacity: number
+  types: string[]
+  format: string
+  competitorGroups: string[]
+  divisions: string[]
+  status: string
+  location: {
+    streetAddress: string
+    apartmentNumber: string | null
+    city: string
+    state: string
+    zipCode: string
+  }
+}

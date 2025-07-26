@@ -224,23 +224,25 @@ export default function Login() {
                 />
 
                 <label htmlFor="gender" className="mt-3 mb-1 font-medium text-green" >
-                  Which gender group / division will you compete in?
+                  Gender (For Competition Divisions):
                 </label>
-                <CustomRadioGroup
-                  name="gender"
-                  options={GENDER_OPTIONS.map(g => ({ 
-                    value: g, 
-                    label: GenderEnumMap[g as keyof typeof GenderEnumMap] 
-                  }))}
-                  selected={selectedGender}
-                  onChange={(g: string) => {
-                    setSelectedGender(g)
-                    setFormData((prev: any) => ({ 
-                      ...prev, 
-                      gender: g
-                    }))
-                  }}
-                />
+                <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow">
+                  <CustomRadioGroup
+                    name="gender"
+                    options={GENDER_OPTIONS.map(g => ({ 
+                      value: g, 
+                      label: GenderEnumMap[g as keyof typeof GenderEnumMap]
+                    }))}
+                    selected={selectedGender}
+                    onChange={(g: string) => {
+                      setSelectedGender(g)
+                      setFormData((prev: any) => ({ 
+                        ...prev, 
+                        gender: g
+                      }))
+                    }}
+                  />
+                </div>
               </div>
             )}
 

@@ -1,5 +1,7 @@
 package com.cruxpass.models;
 
+import org.springframework.lang.NonNull;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -22,5 +24,10 @@ public class Route {
     private int pointValue;
 
     @ManyToOne
+    @NonNull
     private Competition competition;
+
+    @ManyToOne
+    @NonNull
+    private Gym gym;
 }

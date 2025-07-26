@@ -1,7 +1,9 @@
 package com.cruxpass.models;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +17,7 @@ import com.cruxpass.enums.CompetitionFormat;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
@@ -31,6 +34,10 @@ public class Competition {
     private String name;
     @NonNull
     private LocalDateTime date;
+    @NonNull
+    private LocalDateTime deadline;
+    @Positive
+    private int capacity;
     
     @NonNull
     @ElementCollection(targetClass = CompetitionType.class)
@@ -45,7 +52,12 @@ public class Competition {
     @ElementCollection(targetClass = CompetitorGroup.class)
     @Enumerated(EnumType.STRING)
     private Set<CompetitorGroup> competitorGroups;
-    
+
+    @Nullable
+    @ElementCollection(targetClass = Gender.class)
+    @Enumerated(EnumType.STRING)
+    private Set<Gender> divisions;
+
     @NonNull
     @Enumerated(EnumType.STRING)
     private CompetitionStatus status;

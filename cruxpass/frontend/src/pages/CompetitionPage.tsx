@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import api from '@/services/api'
 import { formatAddress, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
-import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, GenderEnumMap } from '@/constants/enum'
+import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
 import { useGymSession } from '@/context/GymSessionContext'
 import CreateCompetitionModal from '@/components/modals/CreateCompetitionModal'
 import AddRoutesModal from '@/components/modals/AddRoutesModal'
@@ -68,6 +68,18 @@ export default function CompetitionPage() {
     }
   }
 
+  const handleEditRoutes = async (routes: any) => {
+    try {
+      await api.put(`/gyms/${gymSession?.id}/competitions/${competitionId}/routes`, routes)
+      setShowRouteModal(false)
+      // Optionally re-fetch competition data:
+      await api.get(`/gyms/${gymSession?.id}/competitions/${competitionId}/routes`)
+    } catch (err) {
+      console.error("Failed to update competition", err)
+      alert("Could not update competition.")
+    }
+  }
+
   if (loading) return <div className="h-screen p-8 text-green bg-background">Loading...</div>
   if (!competition) return <div className="h-screen p-8 text-green bg-background">Competition not found</div>
 
@@ -78,11 +90,13 @@ export default function CompetitionPage() {
       {/* Competition Details Box */}
       <div className="mb-2 border rounded-md p-4 bg-shadow max-w-3xl">
         <div><strong>Date & Time:</strong> {formatDateTimePretty(competition.date)}</div>
+        <div><strong>Registration Deadline:</strong> {formatDateTimePretty(competition.deadline)}</div>
         <div><strong>Host Gym:</strong> {competition.hostGymName}</div>
         <div><strong>Location:</strong> {formatAddress(competition.location)}</div>
         <div><strong>Format:</strong> {CompetitionEnumMap[competition.format as keyof typeof CompetitionEnumMap]}</div>
         <div><strong>Type(s):</strong> {competition.types.map(t => CompetitionEnumMap[t as keyof typeof CompetitionEnumMap]).join(', ')}</div>
         <div><strong>Groups:</strong> {formatGroupsInOrder(competition.competitorGroups)}</div>
+        <div><strong>Divisions:</strong> {competition.divisionsEnabled ? competition.divisions.map(t => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ') : "None"}</div>
       </div>
 
       {gymSession && gymSession.id === competition.gymId && (
@@ -134,9 +148,13 @@ export default function CompetitionPage() {
           initialData={{
             name: competition.name,
             date: competition.date,
+            deadline: competition.deadline,
+            capacity: competition.capacity,
             format: competition.format as CompetitionFormat,
             types: competition.types as CompetitionType[],
             competitorGroups: competition.competitorGroups as CompetitorGroup[],
+            divisions: competition.divisions as Gender[],
+            divisionsEnabled: !competition.divisions?.length, 
           }}
         />
       )}
@@ -144,10 +162,7 @@ export default function CompetitionPage() {
       <AddRoutesModal
         open={showRouteModal}
         onClose={() => setShowRouteModal(false)}
-        onSubmit={(routes) => {
-          console.log('Submitted routes:', routes)
-          // Send to backend here: api.post(`/competitions/{id}/routes`, routes)
-        }}
+        onSubmit={(routes) => handleEditRoutes(routes)}
       />
 
     </div>

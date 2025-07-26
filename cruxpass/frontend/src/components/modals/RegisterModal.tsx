@@ -1,12 +1,20 @@
 // components/RegisterModal.tsx
 import { useEffect, useState } from 'react'
-import { Dialog } from '@headlessui/react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CompRegistrationRequestDto } from '@/types/dto'
 import { useClimber } from '@/context/ClimberContext'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
-import { CompetitionEnumMap, COMPETITOR_GROUPS, CompetitorGroup, Gender, GENDER_OPTIONS, GenderEnumMap, } from '@/constants/enum'
+import {
+  CompetitionEnumMap,
+  COMPETITOR_GROUPS,
+  CompetitorGroup,
+  Gender,
+  GENDER_OPTIONS,
+  GenderEnumMap
+} from '@/constants/enum'
 import api from '@/services/api'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   open: boolean
@@ -21,14 +29,22 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
   const [error, setError] = useState<string | null>(null)
   const { climber } = useClimber()
 
+  const divisions = competition.divisions || []
+
+  // Groups available
   const sortedGroups = COMPETITOR_GROUPS.filter(group => competition.competitorGroups.includes(group))
+
   const isYouthGroup = (group: string) => group.includes('YOUTH') || group.includes('JUNIOR')
 
   const handleSubmit = async () => {
-    if (!selectedGroup || !climber) return
+    if (!selectedGroup || !climber || !selectedGender) {
+      setError('Please select both a competitor group and gender.')
+      return
+    }
 
     const groupEnum = selectedGroup as CompetitorGroup
-    const genderEnum = selectedGender as Gender;
+    const genderEnum = selectedGender as Gender
+
     const isAgeEligible = isEligibleForGroup(climber.dob, groupEnum)
 
     if (!isAgeEligible && isYouthGroup(selectedGroup)) {
@@ -36,11 +52,6 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
       return
     } else if (!isAgeEligible) {
       setError('You must be at least 18 years old to compete in this group.')
-      return
-    }
-
-    if (!selectedGender) {
-      setError('Please select a gender group to compete in.')
       return
     }
 
@@ -56,10 +67,7 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
 
     try {
       await api.post(`/gyms/${competition.gymId}/competitions/${competition.id}/registrations`, payload)
-      onSuccess({
-        gender: selectedGender!,
-        competitorGroup: selectedGroup as CompetitorGroup
-      })
+      onSuccess({ gender: selectedGender, competitorGroup: selectedGroup as CompetitorGroup })
       handleClose()
     } catch (err) {
       console.error(err)
@@ -67,21 +75,10 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
     }
   }
 
-  useEffect(() => {
-    if (open) {
-      setError(null)
-      setSelectedGroup(null)
-      setSelectedGender(null)
-      if (climber?.gender) {
-        setSelectedGender(climber.gender)
-      }
-    }
-  }, [open, climber])
-
   const handleClose = () => {
     setError(null)
     setSelectedGroup(null)
-    setSelectedGender(null)
+    setSelectedGender(climber?.gender || null)
     onClose()
   }
 
@@ -96,48 +93,59 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
   }
 
   useEffect(() => {
-    if (climber?.gender) {
+    if (open && climber?.gender) {
       setSelectedGender(climber.gender)
     }
-  }, [climber])
+  }, [open, climber])
 
   return (
-    <Dialog open={open} onClose={handleClose} className="relative z-50 bg-background">
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-      <div className="fixed inset-0 flex items-center justify-center">
-        <Dialog.Panel className="bg-background p-6 rounded-md shadow-xl w-96">
-          <Dialog.Title className="text-xl text-green font-bold mb-4">Register for {competition.name}</Dialog.Title>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Register for {competition.name}</DialogTitle>
+          <DialogDescription>Fill out your information for this competition.</DialogDescription>
+        </DialogHeader>
 
-          <CustomRadioGroup
-            label="Choose a competitor group:"
-            name="group"
-            options={sortedGroups.map(group => ({
-              value: group,
-              label: CompetitionEnumMap[group as keyof typeof CompetitionEnumMap]
-            }))}
-            selected={selectedGroup}
-            onChange={handleGroupChange}
-          />
-
-          <CustomRadioGroup
-            label="Which gender group will you compete in?"
-            name="gender"
-            options={GENDER_OPTIONS.map(g => ({ 
-              value: g, 
-              label: GenderEnumMap[g as keyof typeof GenderEnumMap] 
-            }))}
-            selected={selectedGender}
-            onChange={handleGenderChange}
-          />
+          <div>
+            <label className="font-semibold">Competitor Group:</label>
+            <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow">
+              <CustomRadioGroup
+                name="group"
+                options={sortedGroups.map(group => ({
+                  value: group,
+                  label: CompetitionEnumMap[group as keyof typeof CompetitionEnumMap]
+                }))}
+                selected={selectedGroup}
+                onChange={handleGroupChange}
+              />
+            </div>
+          </div>
+ 
+          {competition.divisions && (
+            <div>          
+              <label className="font-semibold">Gender Division:</label>
+              <div className="flex flex-wrap px-3 py-1 bg-shadow border border-green rounded-md shadow">
+                <CustomRadioGroup
+                  name="gender"
+                  options={GENDER_OPTIONS.map(g => ({
+                    value: g,
+                    label: GenderEnumMap[g as keyof typeof GenderEnumMap]
+                  }))}
+                  selected={selectedGender}
+                  onChange={handleGenderChange}
+                />
+              </div>
+            </div>
+          )}
 
           {error && <div className="text-accent mt-2">{error}</div>}
 
-          <div className="mt-4 flex justify-end space-x-2">
-            <button onClick={handleClose} className="bg-accent text-background font-semibold px-4 py-2 rounded-md shadow hover:bg-accentHighlight">Cancel</button>
-            <button onClick={handleSubmit} className="bg-green text-background font-semibold px-4 py-2 rounded-md shadow hover:bg-select">Submit</button>
-          </div>
-        </Dialog.Panel>
-      </div>
+          <Button onClick={handleSubmit} className="w-full">
+            Register For {competition.name}
+          </Button>
+
+      </DialogContent>
     </Dialog>
+
   )
 }

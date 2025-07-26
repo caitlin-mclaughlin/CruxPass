@@ -4,6 +4,7 @@ import com.cruxpass.dtos.CompetitionDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.repositories.CompetitionRepository;
+import com.cruxpass.repositories.RegistrationRepository;
 
 import java.util.List;
 
@@ -13,10 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CompetitionService {
 
+    private final RegistrationRepository registrationRepository;
+
     private final CompetitionRepository competitionRepository;
 
-    public CompetitionService(CompetitionRepository competitionRepository) {
+    public CompetitionService(CompetitionRepository competitionRepository, RegistrationRepository registrationRepository) {
         this.competitionRepository = competitionRepository;
+        this.registrationRepository = registrationRepository;
     }
 
     public List<Competition> getAllCompetitions() {
@@ -36,9 +40,12 @@ public class CompetitionService {
         Competition competition = new Competition();
         competition.setName(dto.name());
         competition.setDate(dto.date());
+        competition.setDeadline(dto.deadline());
+        competition.setCapacity(dto.capacity());
         competition.setFormat(dto.format());
         competition.setTypes(dto.types());
         competition.setCompetitorGroups(dto.competitorGroups());
+        competition.setDivisions(dto.divisions());
         competition.setStatus(dto.status());
 
         competition.setGym(gym);

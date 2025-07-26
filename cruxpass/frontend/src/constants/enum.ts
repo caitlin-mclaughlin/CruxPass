@@ -39,10 +39,11 @@ export const CompetitionLabelMap = Object.fromEntries(
 );
 
 /** GENDER ENUMS **/
-export const GENDER_OPTIONS = ['MEN', 'WOMEN'] as const;
+export const GENDER_OPTIONS = ['MALE', 'FEMALE', 'NONBINARY'] as const;
 export type Gender = typeof GENDER_OPTIONS[number];
 
 export const GenderEnumMap = {
-  MEN: 'Men',
-  WOMEN: 'Women',
+  MALE: 'Men',
+  FEMALE: 'Women',
+  NONBINARY: 'Non-Binary',
 } as const;

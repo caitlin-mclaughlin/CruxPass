@@ -49,20 +49,8 @@ public class PublicCompetitionController {
                     registrationService.getByClimberAndCompetition(climber, comp) : null;
                 SimpleRegistrationDto simpleReg = reg != null ?
                     new SimpleRegistrationDto(reg.getGender(), reg.getCompetitorGroup()) : null;
-                return new CompetitionResponseDto(
-                    comp.getId(),
-                    comp.getGym().getId(),
-                    comp.getName(),
-                    comp.getDate(),
-                    comp.getTypes().stream().map(Enum::name).toList(),
-                    comp.getFormat().name(),
-                    comp.getCompetitorGroups().stream().map(Enum::name).toList(),
-                    comp.getStatus().name(),
-                    new AddressDto(comp.getGym().getAddress()),
-                    comp.getGym().getName(),
-                    reg != null,
-                    simpleReg
-                );
+
+                return new CompetitionResponseDto(comp, reg != null, simpleReg);
             })
             .toList());
     }

@@ -1,11 +1,8 @@
 package com.cruxpass.controllers;
 
-import com.cruxpass.dtos.AddressDto;
 import com.cruxpass.dtos.CompetitionDto;
 import com.cruxpass.dtos.requests.UpdateCompRequestDto;
-import com.cruxpass.dtos.requests.UpdateGymRequestDto;
 import com.cruxpass.dtos.responses.CompetitionResponseDto;
-import com.cruxpass.dtos.responses.GymResponseDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.security.CurrentUserService;
@@ -75,17 +72,24 @@ public class CompetitionController {
         @RequestBody UpdateCompRequestDto updateRequest
     ) {
         try {
+            System.out.println("DEBUG: attempting to authorize gym");
             Gym gym = currentUserService.getGymFromToken(authHeader);
             if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
+            System.out.println("DEBUG: checking comp existence");
             Competition comp = competitionService.getById(id);
             if (comp == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             
+            boolean divisionsEnabled = updateRequest.divisions() != null && updateRequest.divisions().size() != 0;
+
             comp.setName(updateRequest.name());
             comp.setDate(updateRequest.date());
+            comp.setDeadline(updateRequest.deadline());
+            comp.setCapacity(updateRequest.capacity());
             comp.setTypes(updateRequest.types());
             comp.setFormat(updateRequest.format());
             comp.setCompetitorGroups(updateRequest.competitorGroups());
+            comp.setDivisions(divisionsEnabled ? updateRequest.divisions() : null);
             comp.setStatus(updateRequest.status());
 
             Competition updated = competitionService.save(comp);

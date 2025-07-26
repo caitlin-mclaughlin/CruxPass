@@ -68,3 +68,19 @@ export function formatGroupsInOrder(groups: string[]): string {
   const ordered = COMPETITOR_GROUPS.filter(competitorGroup => groups.includes(competitorGroup))
   return ordered.map(competitorGroup => CompetitionEnumMap[competitorGroup]).join(', ')
 }
+
+export function parseAddress(address: string) {
+    // Naive parser: assumes "123 Main St, Madison, WI 53703"
+    const parts = address.split(',')
+    const streetAddress = parts[0]?.trim() || ''
+    const city = parts[1]?.trim() || ''
+    const stateZip = parts[2]?.trim().split(' ') || []
+
+    return {
+      streetAddress,
+      apartmentNumber: null,
+      city,
+      state: stateZip[0] || '',
+      zipCode: stateZip[1] || ''
+    }
+  }

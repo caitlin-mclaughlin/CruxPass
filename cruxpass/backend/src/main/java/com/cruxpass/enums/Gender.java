@@ -1,6 +1,7 @@
 package com.cruxpass.enums;
 
 public enum Gender {
-    MEN,
-    WOMEN
+    MALE,
+    FEMALE,
+    NONBINARY
 }

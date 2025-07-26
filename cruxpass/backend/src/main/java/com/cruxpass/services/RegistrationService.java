@@ -30,11 +30,15 @@ public class RegistrationService {
     }
 
     public Registration getByClimberAndCompetition(Climber climber, Competition competition) {
-        return repository.findByClimberAndCompetition(climber, competition);
+        return repository.findByClimberAndCompetition(climber, competition).orElse(null);
     }
 
     public boolean existsByClimberAndCompetition(Climber climber, Competition competition) {
         return repository.existsByClimberAndCompetition(climber, competition);
+    }
+
+    public long countByCompetition(Competition competition) {
+        return repository.countByCompetition(competition);
     }
 
     public Registration save(Registration reg) {
