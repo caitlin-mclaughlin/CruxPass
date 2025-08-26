@@ -2,11 +2,16 @@
 import { useId } from 'react'
 import { RadioGroup } from '@headlessui/react'
 
+interface Option {
+  value: string
+  label: string
+}
+
 interface Props {
   label?: string
   options: Option[]
   selected: string | null
-  onChange: (value: string) => void
+  onChange: (value: any) => void
   name: string
 }
 

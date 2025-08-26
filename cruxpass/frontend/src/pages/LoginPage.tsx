@@ -1,29 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import api from '@/services/api'
+import { useClimberSession } from '@/context/ClimberSessionContext'
+import { useGymSession } from '@/context/GymSessionContext'
+import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
 import { AccountTypeSelect } from '@/components/AccountTypeSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
-import DatePicker from "react-datepicker";
-import { MAX_AGE, MIN_AGE } from '@/constants/literal'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
-import { GENDER_OPTIONS, GenderEnumMap } from '@/constants/enum'
+import { AccountType, accountTypeOptions, Gender, GENDER_OPTIONS, GenderEnumMap } from '@/constants/enum'
+import SegmentedDateInput from '@/components/ui/SegmentedDateInput'
 
 export default function Login() {
   const navigate = useNavigate()
   const [isCreating, setIsCreating] = useState(false)
-  const accountTypes = [
-    { label: 'Climber', value: 'climber' },
-    { label: 'Gym', value: 'gym' }
-  ]
   const [formData, setFormData] = useState({
-    accountType: "climber",
+    accountType: AccountType.CLIMBER,
     name: "",
     email: "",
     username: "",
     phone: "",
-    dob: "",
-    gender: "",
+    dob: null as Date | null,
+    division: null as Gender | null,
     password: "",
     emailOrUsername: "",
     address: {
@@ -35,13 +32,10 @@ export default function Login() {
     }
   })
   const [errorMessage, setErrorMessage] = useState<string>("")
-  const { login, token, skipLogin } = useAuth()
-  const [submitted, setSubmitted] = useState(false)
-  const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
-  const [selectedGender, setSelectedGender] = useState<string | null>(null)
-  const today = new Date()
-  const minDob = new Date(today.getFullYear() - MAX_AGE, today.getMonth(), today.getDate())
-  const maxDob = new Date(today.getFullYear() - MIN_AGE, today.getMonth(), today.getDate())
+  const { login, register, skipLogin, token } = useAuth()
+  const { refreshClimber } = useClimberSession()
+  const { refreshGym } = useGymSession()
+  const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (token) navigate("/dashboard")
@@ -49,7 +43,6 @@ export default function Login() {
 
   useEffect(() => {
     setInvalidFields(new Set())
-    setSubmitted(false)
     setErrorMessage("")
   }, [isCreating])
 
@@ -57,11 +50,7 @@ export default function Login() {
     setErrorMessage("");
     const { name, value } = e.target;
 
-    if (name === "accountType" && value === "gym") {
-      setFormData(prev => ({ ...prev, dob: "" }));
-    }
-
-    // Clear invalid flag for this field
+    // Clear invalid flag
     setInvalidFields(prev => {
       const updated = new Set(prev);
       updated.delete(name);
@@ -74,52 +63,54 @@ export default function Login() {
         ...prev,
         address: { ...prev.address, [key]: value }
       }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-
-    if (name === "phone") {
+    } else if (name === "phone") {
       setFormData(prev => ({ ...prev, phone: formatPhoneNumber(value) }));
-    } else if (name.startsWith("address.")) {
-      const key = name.split(".")[1] as keyof typeof formData.address;
-      setFormData(prev => ({
-        ...prev,
-        address: { ...prev.address, [key]: value }
-      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleDobChange = (date: Date | null) => {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
-      dob: date ? date.toISOString().split('T')[0] : ''
-    }))
+      dob: date,
+    }));
 
-    // Clear invalid field
-    setInvalidFields(prev => {
-      const updated = new Set(prev)
-      updated.delete("dob")
-      return updated
-    })
-  }
+    setInvalidFields((prev) => {
+      const updated = new Set(prev);
+      if (date) updated.delete("dob");
+      return updated;
+    });
+  };
 
   const getRequiredFields = (): string[] => {
     if (!isCreating) return ["emailOrUsername", "password"];
-    return [
-      "name", "email", "phone", "password",
-      "address.streetAddress", "address.city", "address.state", "address.zipCode"
-    ];
+    if (formData.accountType === AccountType.GYM) {
+      return [
+        "name", "email", "phone", "password",
+        "address.streetAddress", "address.city", "address.state", "address.zipCode"
+      ];
+    } else {
+      return [
+        "name", "email", "phone", "password", "dob", "division",
+        "address.streetAddress", "address.city", "address.state", "address.zipCode"
+      ];
+    }
   };
 
   const getFieldValue = (field: string): string => {
+    if (field === "dob") {
+      return formData.dob instanceof Date ? formData.dob.toISOString() : "";
+    }
+
     if (field.startsWith("address.")) {
       const key = field.split(".")[1] as keyof typeof formData.address;
       return formData.address[key];
     }
+
     return (formData as any)[field] || "";
   };
+
 
   const validateForm = (): boolean => {
     const required = getRequiredFields();
@@ -136,7 +127,6 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
 
     if (!validateForm()) {
       setErrorMessage("Please fill out all required fields.")
@@ -145,26 +135,31 @@ export default function Login() {
 
     try {
       if (isCreating) {
-        const res = await api.post(`/auth/register/${formData.accountType}`, {
+        if (!formData.accountType) return
+        await register(formData.accountType, {
           name: formData.name,
           email: formData.email,
           username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
           phone: stripNonDigits(formData.phone),
-          dob: formData.dob || null,
-          gender: formData.gender || null,
+          dob: formData.dob ? formData.dob.toISOString().split('T')[0] : null,
+          division: formData.division || null,
           password: formData.password,
           address: formData.address
-        })
-        login(res.data.token)
-        navigate("/dashboard")
+        });
       } else {
-        const res = await api.post("/auth/login", {
+        await login({
           emailOrUsername: formData.emailOrUsername,
           password: formData.password
-        })
-        login(res.data.token)
-        navigate("/dashboard")
+        });
       }
+
+      if (formData.accountType === AccountType.CLIMBER) {
+        await refreshClimber()
+      } else {
+        await refreshGym()
+      }
+      navigate("/dashboard")
+
     } catch (err: any) {
       console.error("Login error:", err.response?.data)
       const msg =
@@ -177,68 +172,59 @@ export default function Login() {
     }
   }
 
-  const inputClass = (field: string) => {
-    const base = "form-input"; // use a class that handles styling via global.css
-
-    return invalidFields.has(field)
-      ? `${base} border-accent text-accent placeholder-accent`
-      : base;
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center h-screen px-4 bg-background">
-      <h1 className="text-green text-2xl font-bold mb-4" >
+    <div className="flex flex-col items-center justify-center h-screen p-2 bg-background">
+      <h1 className="text-green text-2xl font-bold mb-2" >
         {isCreating ? "Create Account" : "Login"}
       </h1>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-3 w-full max-w-md">
+      <form onSubmit={handleSubmit} noValidate className="w-full px-2 space-y-3 max-w-lg overflow-y-auto scrollbar-thin-green">
         {isCreating ? (
           <>
             {/* Climber / Gym drop down menu */}
             <AccountTypeSelect
               value={formData.accountType}
-              onChange={(val) => setFormData(prev => ({ ...prev, accountType: val }))}
+              onChange={(val: AccountType) => {
+                setFormData(prev => ({
+                  ...prev,
+                  accountType: val,
+                  ...(val === AccountType.GYM
+                    ? { dob: null, division: null }
+                    : {})
+                }))
+              }}
             />
-
-            <input name="name" value={formData.name} onChange={handleChange} placeholder={formData.accountType !== "gym" ? "Full Name" : "Gym Name"} className={inputClass("name")} required />
-            <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" className={inputClass("email")} required />
-            <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" className={inputClass("phone")}  required />
-            <input name="username" value={formData.username} onChange={handleChange} placeholder="Username (optional)" className={inputClass("username")}  />
-            <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" className={inputClass("password")}  required />
-            {formData.accountType !== "gym" && (
+            <Input name="name" value={formData.name} onChange={handleChange} placeholder={formData.accountType === AccountType.CLIMBER ? "Full Name" : "Gym Name"} required />
+            <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" required />
+            <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" required />
+            <Input name="username" value={formData.username} onChange={handleChange} placeholder="Username (optional)" />
+            <Input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" required />
+            {formData.accountType === AccountType.CLIMBER && (
               <div className="flex flex-col">
                 <label htmlFor="dob" className="mb-1 font-medium text-green" >
-                  Date of Birth
+                  Date of Birth:
                 </label>
-                <DatePicker
-                  dateFormat="MM/dd/yyyy"
-                  minDate={minDob}
-                  maxDate={maxDob}
-                  placeholderText="MM/DD/YYYY"
-                  selected={formData.dob ? new Date(formData.dob) : null}
-                  onChange={handleDobChange}
-                  showYearDropdown
-                  scrollableYearDropdown
-                  yearDropdownItemNumber={50}
-                  className={inputClass("dob")}
-                />
-
-                <label htmlFor="gender" className="mt-3 mb-1 font-medium text-green" >
+                <div className="w-full bg-shadow border rounded-md shadow-md">
+                  <SegmentedDateInput
+                    value={formData.dob}
+                    onChange={handleDobChange}
+                  />
+                </div>
+                <label htmlFor="division" className="mt-3 mb-1 font-medium text-green" >
                   Gender (For Competition Divisions):
                 </label>
-                <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow">
+                <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
                   <CustomRadioGroup
-                    name="gender"
+                    name="division"
                     options={GENDER_OPTIONS.map(g => ({ 
                       value: g, 
                       label: GenderEnumMap[g as keyof typeof GenderEnumMap]
                     }))}
-                    selected={selectedGender}
+                    selected={formData.division}
                     onChange={(g: string) => {
-                      setSelectedGender(g)
                       setFormData((prev: any) => ({ 
                         ...prev, 
-                        gender: g
+                        division: g
                       }))
                     }}
                   />
@@ -246,27 +232,29 @@ export default function Login() {
               </div>
             )}
 
-            <h2 className="font-semibold">Address</h2>
-            <input name="address.streetAddress" value={formData.address.streetAddress} onChange={handleChange} placeholder="Street Address" className={inputClass("address.streetAddress")}  required />
-            <input name="address.apartmentNumber" value={formData.address.apartmentNumber} onChange={handleChange} placeholder="Apartment (optional)" className={inputClass("address.apartmentNumber")}  />
-            <input name="address.city" value={formData.address.city} onChange={handleChange} placeholder="City" className={inputClass("address.city")}  required />
-            <input name="address.state" value={formData.address.state} onChange={handleChange} placeholder="State" className={inputClass("address.state")}  required />
-            <input name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} placeholder="Zip Code" className={inputClass("address.zipCode")}  required />
+            <label htmlFor="address" className="mt-3 mb-1 font-medium text-green" >
+              Address:
+            </label>
+            <Input name="address.streetAddress" value={formData.address.streetAddress} onChange={handleChange} placeholder="Street Address" required />
+            <Input name="address.apartmentNumber" value={formData.address.apartmentNumber} onChange={handleChange} placeholder="Apartment (optional)" />
+            <Input name="address.city" value={formData.address.city} onChange={handleChange} placeholder="City" required />
+            <Input name="address.state" value={formData.address.state} onChange={handleChange} placeholder="State" required />
+            <Input name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} placeholder="Zip Code" required />
           </>
         ) : (
           <>
-            <input name="emailOrUsername" value={formData.emailOrUsername} onChange={handleChange} placeholder="Email or Username" className={inputClass("emailOrUsername")}  required />
-            <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" className={inputClass("password")}  required />
+            <Input name="emailOrUsername" value={formData.emailOrUsername} onChange={handleChange} placeholder="Email or Username" required />
+            <Input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" required />
           </>
         )}
 
         {errorMessage && (
-          <div className="bg-background text-accent p-2 rounded">{errorMessage}</div>
+          <div className="bg-background text-accent">{errorMessage}</div>
         )}
 
         <button
           type="submit"
-          className="bg-green text-background font-bold p-2 w-full rounded-md hover:bg-select transition-colors"
+          className="bg-green text-background font-bold p-2 mb-1 w-full rounded-md hover:bg-select transition-colors"
         >
           {isCreating ? "Create Account" : "Login"}
         </button>
@@ -281,7 +269,7 @@ export default function Login() {
               password: "",
              }))
           }}
-          className="text-green underline block hover:text-select"
+          className="text-green mb-1 underline block hover:text-select"
         >
           {isCreating ? "Already have an account?" : "Don't have an account? Create one"}
         </button>

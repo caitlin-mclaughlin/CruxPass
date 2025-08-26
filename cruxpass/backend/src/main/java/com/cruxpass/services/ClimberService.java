@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -23,6 +24,7 @@ public class ClimberService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public Climber createUser(RegisterRequest dto) {
         if (repository.findByEmail(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
@@ -38,6 +40,7 @@ public class ClimberService {
         climber.setEmail(dto.email);
         climber.setPhone(dto.phone);
         climber.setDob(dto.dob);
+        climber.setDivision(dto.division);
         climber.setPasswordHash(passwordEncoder.encode(dto.password));
 
         Address addr = new Address(
@@ -52,6 +55,7 @@ public class ClimberService {
         return repository.save(climber);
     }
 
+    @Transactional
     public Climber save(Climber climber) {
         return repository.save(climber);
     }

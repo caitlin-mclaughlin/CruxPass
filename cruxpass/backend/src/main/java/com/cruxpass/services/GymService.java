@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cruxpass.dtos.requests.RegisterRequest;
@@ -22,6 +23,7 @@ public class GymService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public Gym createGym(RegisterRequest dto) {
         if (repository.findByEmail(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
@@ -49,6 +51,7 @@ public class GymService {
         return repository.save(gym);
     }
 
+    @Transactional
     public Gym save(Gym gym) {
         return repository.save(gym);
     }

@@ -4,10 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import java.util.List;
 
+import org.springframework.lang.NonNull;
+
+import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
@@ -21,14 +24,21 @@ public class Submission {
     private Long id;
 
     @ManyToOne
-    @NonNull
+    @JoinColumn(name = "climber_id", nullable = false)
     private Climber climber;
 
     @ManyToOne
-    @NonNull
+    @JoinColumn(name = "competition_id", nullable = false)
     private Competition competition;
 
+    @NonNull
+    @Enumerated(EnumType.STRING)
+    private CompetitorGroup competitorGroup;
+
+    @Enumerated(EnumType.STRING)
+    private Gender division;
+
     @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "submission")
     private List<SubmittedRoute> routes;
 }

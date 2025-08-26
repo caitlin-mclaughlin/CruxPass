@@ -13,7 +13,7 @@ public record ClimberResponseDto(
     String phone,
     String username,
     LocalDate dob,
-    Gender gender,
+    Gender division,
     AddressDto address,
     Date createdAt
 ) {}

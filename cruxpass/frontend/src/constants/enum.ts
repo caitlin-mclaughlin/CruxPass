@@ -1,5 +1,7 @@
 // enum.ts
 
+import { RankedSubmissionDto } from "@/models/dtos";
+
 /** COMPETITION ENUMS **/
 export const COMPETITION_TYPES = ['BOULDERING', 'SPORT_CLIMBING', 'SPEED_CLIMBING'] as const;
 export const COMPETITION_FORMATS = ['RED_POINT', 'MODIFIED_RED_POINT', 'ON_SIGHT', 'FLASH'] as const;
@@ -47,3 +49,23 @@ export const GenderEnumMap = {
   FEMALE: 'Women',
   NONBINARY: 'Non-Binary',
 } as const;
+
+/** COMPETITOR GROUP - GENDER KEY **/
+export type GroupGenderKey = `${CompetitorGroup}-${Gender}`
+
+/** ACCOUNT TYPES **/
+export enum AccountType {
+  CLIMBER = "CLIMBER",
+  GYM = "GYM"
+}
+
+export const AccountTypeDisplay: Record<AccountType, string> = {
+  [AccountType.CLIMBER]: "Climber",
+  [AccountType.GYM]: "Gym"
+}
+
+export const accountTypeOptions = Object.values(AccountType).map((role) => ({
+  value: role,
+  label: AccountTypeDisplay[role],
+}));
+

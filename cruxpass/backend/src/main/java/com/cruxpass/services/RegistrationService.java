@@ -5,6 +5,7 @@ import com.cruxpass.models.Registration;
 import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.RegistrationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -41,6 +42,7 @@ public class RegistrationService {
         return repository.countByCompetition(competition);
     }
 
+    @Transactional
     public Registration save(Registration reg) {
         return repository.save(reg);
     }

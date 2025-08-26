@@ -1,10 +1,13 @@
 package com.cruxpass.models;
 
-import io.micrometer.common.lang.NonNull;
+import org.springframework.lang.NonNull;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,7 +26,16 @@ public class SubmittedRoute {
     @Positive
     private int attempts;
 
+    private boolean send;
+
+    @JoinColumn(name = "route_id", nullable = false)
+    @OneToOne
     @NonNull
-    @ManyToOne
     private Route route;
+
+    @JoinColumn(name = "submission_id", nullable = false)
+    @ManyToOne
+    @NonNull
+    private Submission submission;
+
 }

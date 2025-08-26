@@ -6,6 +6,8 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.cruxpass.enums.AccountType;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -22,12 +24,12 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.trim().getBytes());
     }
 
-    public String generateToken(String subject, String role, Long id) {
+    public String generateToken(String subject, AccountType role, Long id) {
         System.out.println("Creating JWT: email = " + subject + ", role = " + role + ", id = " + id);
 
         return Jwts.builder()
                 .setSubject(subject)
-                .claim("role", role)
+                .claim("role", role.name())
                 .claim("id", id)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
@@ -38,18 +40,17 @@ public class JwtUtil {
 
     public String extractEmail(String token) {
         try {
-            String email = getClaims(token).getSubject();
-            System.out.println("Extracted email from token: " + email);
-            return email;
+            return getClaims(token).getSubject();
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public String extractRole(String token) {
+    public AccountType extractRole(String token) {
         try {
-            return getClaims(token).get("role", String.class);
+            String roleStr = getClaims(token).get("role", String.class);  // <-- read as String
+            return roleStr != null ? AccountType.valueOf(roleStr) : null; 
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -80,7 +81,6 @@ public class JwtUtil {
             .build()
             .parseClaimsJws(token)
             .getBody();
-        System.out.println("Decoded token claims: " + claims);
         return claims;
     }
 

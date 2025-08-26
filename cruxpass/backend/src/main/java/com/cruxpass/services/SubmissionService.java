@@ -2,78 +2,110 @@ package com.cruxpass.services;
 
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.dtos.RegionalScoreDto;
+import com.cruxpass.dtos.SubmittedRouteDto;
 import com.cruxpass.dtos.requests.SubmissionRequestDto;
+import com.cruxpass.dtos.responses.SubmissionResponseDto;
+import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.Gender;
 import com.cruxpass.dtos.ClimberScoreDto;
 import com.cruxpass.models.Competition;
+import com.cruxpass.models.Registration;
 import com.cruxpass.models.Route;
 import com.cruxpass.models.Submission;
 import com.cruxpass.models.SubmittedRoute;
 import com.cruxpass.models.Climber;
-import com.cruxpass.repositories.CompetitionRepository;
-import com.cruxpass.repositories.RouteRepository;
 import com.cruxpass.repositories.SubmissionRepository;
-import com.cruxpass.repositories.ClimberRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class SubmissionService {
     
-    private final SubmissionRepository submissionRepo;
-    private final RouteRepository routeRepo;
-    private final CompetitionRepository compRepo;
-    private final ClimberRepository climberRepo;
+    private final SubmissionRepository submissionRepository;
+    private final RouteService routeService;
+    private final CompetitionService compService;
+    private final ClimberService climberService;
 
     public SubmissionService(
-        SubmissionRepository submissionRepo,
-        RouteRepository routeRepo,
-        CompetitionRepository compRepo,
-        ClimberRepository climberRepo
+        SubmissionRepository submissionRepository,
+        RouteService routeService,
+        CompetitionService compService,
+        ClimberService climberService
     ) {
-        this.submissionRepo = submissionRepo;
-        this.routeRepo = routeRepo;
-        this.compRepo = compRepo;
-        this.climberRepo = climberRepo;
+        this.submissionRepository = submissionRepository;
+        this.routeService = routeService;
+        this.compService = compService;
+        this.climberService = climberService;
     }
 
     public List<Submission> getAll() {
-        return submissionRepo.findAll();
+        return submissionRepository.findAll();
     }
 
     public Submission getById(Long id) {
-        return submissionRepo.findById(id).orElse(null);
+        return submissionRepository.findById(id).orElse(null);
     }
 
-    public void submitScore(Long compId, String userEmail, SubmissionRequestDto dto) {
-        Climber climber = climberRepo.findByEmail(userEmail).orElseThrow();
-        Competition comp = compRepo.findById(compId).orElseThrow();
+    public Submission getByCompetitionAndClimber(Long compId, Long climberId) {
+        Submission subs = submissionRepository.findByCompetitionIdAndClimberIdWithRoutes(compId, climberId).orElse(null);
+        return subs;
+    }
 
-        if (dto.routes.size() != 5) throw new IllegalArgumentException("Exactly 5 routes required");
+    @Transactional
+    public SubmissionResponseDto submitOrUpdateScores(Competition comp, Climber climber, SubmissionRequestDto dto) {
+        if (climber == null || comp == null) return null;
 
-        List<SubmittedRoute> submittedRoutes = new ArrayList<>();
-        for (var r : dto.routes) {
-            Route route = routeRepo.findById(r.routeId).orElseThrow();
-            if (!route.getCompetition().getId().equals(compId)) {
-                throw new IllegalArgumentException("Route not in this competition");
+        Submission submission = submissionRepository
+            .findByCompetitionIdAndClimberIdWithRoutes(comp.getId(), climber.getId())
+            .orElseGet(() -> {
+                Submission s = new Submission();
+                s.setClimber(climber);
+                s.setCompetition(comp);
+                s.setRoutes(new ArrayList<>());
+                return s;
+            });
+
+        submission.setCompetitorGroup(dto.competitorGroup());
+        submission.setDivision(dto.division());
+
+        Map<Long, SubmittedRoute> routeMap = submission.getRoutes().stream()
+            .collect(Collectors.toMap(sr -> sr.getRoute().getId(), sr -> sr));
+
+        for (SubmittedRouteDto routeDto : dto.routes()) {
+            Route route = routeService.getById(routeDto.routeId());
+            if (route == null) throw new RuntimeException("Route not found: ID " + routeDto.routeId());
+
+            SubmittedRoute existing = routeMap.get(routeDto.routeId());
+            if (existing != null) {
+                existing.setAttempts(routeDto.attempts());
+                existing.setSend(routeDto.send());
+            } else {
+                SubmittedRoute newRoute = new SubmittedRoute();
+                newRoute.setRoute(route);
+                newRoute.setAttempts(routeDto.attempts());
+                newRoute.setSend(routeDto.send());
+                newRoute.setSubmission(submission);
+                submission.getRoutes().add(newRoute);
             }
-
-            SubmittedRoute sr = new SubmittedRoute();
-            sr.setRoute(route);
-            sr.setAttempts(r.attempts);
-            submittedRoutes.add(sr);
         }
 
-        Submission submission = new Submission();
-        submission.setClimber(climber);
-        submission.setCompetition(comp);
-        submission.setRoutes(submittedRoutes);
+        Submission saved = submissionRepository.saveAndFlush(submission);
 
-        submissionRepo.save(submission);
+        // Map to DTO inside the same transaction
+        List<SubmittedRouteDto> routeDtos = saved.getRoutes().stream()
+            .map(sr -> new SubmittedRouteDto(sr.getRoute().getId(), sr.getAttempts(), sr.isSend()))
+            .toList();
+
+        return new SubmissionResponseDto(saved.getId(), comp.getId(), climber.getId(), routeDtos);
     }
 
     public int[] getTiebreakKey(Submission submission) {
@@ -89,9 +121,9 @@ public class SubmissionService {
                 .sum();
     }
 
-    public List<Submission> getRankedSubmissions(Long competitionId) {
-        List<Submission> all = submissionRepo.findByCompetitionId(competitionId);
-
+    public List<Submission> getRankedSubmissions(Long compId) {
+        List<Submission> all = submissionRepository.findByCompetitionId(compId).orElse(null);
+        if (all == null) return null;
         all.sort((a, b) -> {
             int scoreA = getTotalScore(a);
             int scoreB = getTotalScore(b);
@@ -113,6 +145,7 @@ public class SubmissionService {
 
     public List<RankedSubmissionDto> getRankings(Long compId) {
         List<Submission> ranked = getRankedSubmissions(compId);
+        if (ranked == null) return null;
         List<RankedSubmissionDto> results = new ArrayList<>();
 
         int place = 1;
@@ -125,30 +158,30 @@ public class SubmissionService {
                 .map(r -> r.getRoute().getPointValue()).toList();
             List<Integer> attempts = sorted.stream()
                 .map(SubmittedRoute::getAttempts).toList();
-
-            results.add(new RankedSubmissionDto(place++, s.getClimber().getName(), getTotalScore(s), points, attempts));
+            
+            results.add(new RankedSubmissionDto(place++, s.getClimber().getName(), getTotalScore(s), points, attempts, s.getCompetitorGroup(), s.getDivision()));
         }
         return results;
     }
 
-    public List<ClimberScoreDto> getScoresForUser(String email) {
-        Climber climber = climberRepo.findByEmail(email).orElseThrow();
-        List<Submission> submissions = submissionRepo.findByClimberId(climber.getId());
-
-        return submissions.stream()
-                .map(s -> new ClimberScoreDto(
-                        s.getCompetition().getName(),
-                        s.getCompetition().getDate(),
-                        getTotalScore(s)
-                )).toList();
+    public List<ClimberScoreDto> getScoresForUser(Long climberId) {
+        List<Submission> subs = submissionRepository.findByClimberId(climberId).orElse(null);
+        if (subs == null) return null;
+        
+        return subs.stream().map(s -> new ClimberScoreDto(
+            climberId,
+            s.getCompetition().getId(),
+            getTotalScore(s)
+        )).toList();
     }
     
     public List<RegionalScoreDto> getSeriesalLeaderboard() {
         Map<Climber, Integer> pointsMap = new HashMap<>();
 
-        List<Competition> competitions = compRepo.findAll();
+        List<Competition> competitions = compService.getAll();
         for (Competition comp : competitions) {
             List<Submission> ranked = getRankedSubmissions(comp.getId());
+            if (ranked == null) return null;
 
             for (int i = 0; i < ranked.size(); i++) {
                 Climber u = ranked.get(i).getClimber();
@@ -168,6 +201,62 @@ public class SubmissionService {
                 .map(e -> new RegionalScoreDto(e.getKey().getName(), e.getKey().getSeries(), e.getValue()))
                 .sorted((a, b) -> Integer.compare(b.totalPoints, a.totalPoints))
                 .toList();
+    }
+    
+    public List<RankedSubmissionDto> getRankingsByGroupAndDivision(Long competitionId, CompetitorGroup group, Gender division) {
+        List<Submission> allSubs = submissionRepository.findByCompetitionId(competitionId).orElse(List.of());
+        List<RankedSubmissionDto> results = new ArrayList<>();
+
+        // Build map of climberId → Registration for filtering
+        Map<Long, Registration> regMap = compService.getByIdWithRegistrations(competitionId)
+            .getRegistrations()
+            .stream()
+            .filter(r -> r.getCompetitorGroup() == group && (division == null || r.getDivision() == division))
+            .collect(Collectors.toMap(r -> r.getClimber().getId(), Function.identity()));
+
+        // Collect into a mutable list to allow sorting
+        List<Submission> filteredSubs = allSubs.stream()
+            .filter(sub -> regMap.containsKey(sub.getClimber().getId()))
+            .collect(Collectors.toCollection(ArrayList::new));  // Changed here
+
+        filteredSubs.sort((a, b) -> {
+            int scoreA = getTotalScore(a);
+            int scoreB = getTotalScore(b);
+            if (scoreA != scoreB) return Integer.compare(scoreB, scoreA);
+
+            int[] tieA = getTiebreakKey(a);
+            int[] tieB = getTiebreakKey(b);
+            for (int i = 0; i < Math.min(tieA.length, tieB.length); i++) {
+                if (tieA[i] != tieB[i]) return Integer.compare(tieA[i], tieB[i]);
+            }
+            return 0;
+        });
+
+        int place = 1;
+        for (Submission s : filteredSubs) {
+            List<SubmittedRoute> sorted = s.getRoutes().stream()
+                .sorted(Comparator.comparingInt((SubmittedRoute r) -> r.getRoute().getPointValue()).reversed())
+                .toList();
+
+            List<Integer> points = sorted.stream().map(r -> r.getRoute().getPointValue()).toList();
+            List<Integer> attempts = sorted.stream().map(SubmittedRoute::getAttempts).toList();
+
+            Registration reg = regMap.get(s.getClimber().getId());
+            CompetitorGroup regGroup = reg.getCompetitorGroup();
+            Gender regDivision = reg.getDivision();
+
+            results.add(new RankedSubmissionDto(
+                place++,
+                s.getClimber().getName(),
+                getTotalScore(s),
+                points,
+                attempts,
+                regGroup,
+                regDivision
+            ));
+        }
+
+        return results;
     }
 
 }

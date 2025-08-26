@@ -1,6 +1,7 @@
 package com.cruxpass.security;
 
 import com.cruxpass.models.Gym;
+import com.cruxpass.enums.AccountType;
 import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.GymRepository;
 import com.cruxpass.repositories.ClimberRepository;
@@ -48,25 +49,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             String email = jwtUtil.extractEmail(token);
-            String role = Jwts.parserBuilder().setSigningKey(jwtUtil.getKey()).build()
-                    .parseClaimsJws(token)
-                    .getBody().get("role", String.class);
+            AccountType role = jwtUtil.extractRole(token);
 
             if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 boolean valid = false;
 
-                if (role.equalsIgnoreCase("CLIMBER")) {
-                    Climber climber = climberRepo.findByEmail(email).orElse(null);
-                    valid = climber != null && jwtUtil.validateToken(token);
-                } else if (role.equalsIgnoreCase("GYM")) {
-                    Gym gym = gymRepo.findByEmail(email).orElse(null);
-                    valid = gym != null && jwtUtil.validateToken(token);
+                switch (role) {
+                    case CLIMBER -> {
+                        var climber = climberRepo.findByEmail(email).orElse(null);
+                        valid = climber != null && jwtUtil.validateToken(token);
+                    }
+                    case GYM -> {
+                        var gym = gymRepo.findByEmail(email).orElse(null);
+                        valid = gym != null && jwtUtil.validateToken(token);
+                    }
                 }
 
                 if (valid) {
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(email, null, List.of(authority));
+                    var authority = new SimpleGrantedAuthority("ROLE_" + role.name());
+                    var authToken = new UsernamePasswordAuthenticationToken(email, null, List.of(authority));
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }

@@ -39,6 +39,8 @@ module.exports = {
     '.react-datepicker__year-dropdown-container',
     '.react-datepicker__year-read-view',
     '.react-datepicker__year-read-view--down-arrow',
+    'scrollbar-thin-green',
+    '.form-input',
   ],
   theme: {
     extend: {

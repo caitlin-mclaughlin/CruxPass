@@ -6,10 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COMPETITION_TYPES, COMPETITION_FORMATS, COMPETITOR_GROUPS, CompetitionEnumMap, CompetitionStatus, GENDER_OPTIONS, Gender, GenderEnumMap } from '@/constants/enum'
 import { CompetitionFormat, CompetitionType, CompetitorGroup } from '@/constants/enum'
 import DatePicker from 'react-datepicker'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { COMP_DURATION } from '@/constants/literal'
 import { parseAddress } from '@/utils/formatters'
-import { CompetitionFormPayload } from '@/types/dto'
+import { CompetitionFormPayload } from '@/models/dtos'
+import { format, isValid, parse } from 'date-fns'
+import { displayDateTime, parseBackendLocal } from '@/utils/datetime'
+import { useIsMobile } from '@/hooks/isMobile'
 
 type Props = {
   open: boolean
@@ -20,10 +23,11 @@ type Props = {
   initialData?: {
     name: string
     date: string
+    duration: number
     deadline: string
     capacity: number
     types: CompetitionType[]
-    format: CompetitionFormat
+    compFormat: CompetitionFormat
     competitorGroups: CompetitorGroup[]
     divisions: Gender[]
     divisionsEnabled: boolean
@@ -33,10 +37,11 @@ type Props = {
 type FormState = {
   name: string
   date: Date | null
+  duration: number | ''
   deadline: Date | null
   capacity: number | ''
   types: CompetitionType[]
-  format: CompetitionFormat
+  compFormat: CompetitionFormat
   groups: CompetitorGroup[]
   divisions: Gender[]
   divisionsEnabled: boolean
@@ -46,11 +51,12 @@ function buildInitialForm(data?: Props['initialData']): FormState {
   return data
     ? {
         name: data.name,
-        date: new Date(data.date),
-        deadline: new Date(data.deadline),
+        date: parseBackendLocal(data.date),
+        duration: data.duration ?? 180, 
+        deadline: parseBackendLocal(data.deadline),
         capacity: data.capacity,
         types: data.types,
-        format: data.format,
+        compFormat: data.compFormat,
         groups: data.competitorGroups,
         divisions: data?.divisions ?? [],
         divisionsEnabled: !!data?.divisions?.length, // true if any were prefilled
@@ -58,23 +64,29 @@ function buildInitialForm(data?: Props['initialData']): FormState {
     : {
         name: '',
         date: null,
+        duration: '',
         deadline: null,
         capacity: '',
         types: [],
-        format: '' as CompetitionFormat,
+        compFormat: '' as CompetitionFormat,
         groups: [],
         divisions: [],
         divisionsEnabled: false,
       }
 }
 
-export default function CreateCompetitionModal({ open, onClose, onSubmit, gymName, gymAddress, initialData }: Props) {
-  const [form, setForm] = useState<FormState>(() => buildInitialForm(initialData))
+export default function CreateCompetitionModal(props: Props) {
+  const { open, onClose, onSubmit, gymName, gymAddress, initialData } = props;
+  const [form, setForm] = useState<FormState>(() => buildInitialForm(initialData));
+  
+  useEffect(() => {
+    setForm(buildInitialForm(initialData));
+  }, [initialData, open]);
 
   const handleSubmit = async () => {
-    const { name, date, deadline, capacity, types, format, groups, divisions, divisionsEnabled } = form
+    const { name, date, deadline, capacity, types, compFormat, groups, divisions, divisionsEnabled } = form
 
-    if (!name || !date || !deadline || capacity === '' || !types.length || !format 
+    if (!name || !date || !deadline || capacity === '' || !types.length || !compFormat 
       || !groups.length || (divisionsEnabled && !divisions.length)
     ) {
       alert('Please complete all fields before submitting.')
@@ -83,27 +95,28 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
     
     const now = new Date()
     const compStart = form.date!
-    const compEnd = new Date(compStart.getTime() + COMP_DURATION)
+    const compEnd = new Date(compStart.getTime() + Number(form.duration))
 
-    let status: CompetitionStatus
+    let compStatus: CompetitionStatus
     if (now < compStart) {
-      status = 'UPCOMING'
+      compStatus = 'UPCOMING'
     } else if (now >= compStart && now <= compEnd) {
-      status = 'LIVE'
+      compStatus = 'LIVE'
     } else {
-      status = 'FINISHED'
+      compStatus = 'FINISHED'
     }
 
     const payload = {
       name: name,
-      date: date.toISOString(),
-      deadline: deadline.toISOString(),
+      date: form.date ? format(form.date, 'yyyy-MM-dd HH:mm:ss') : null,
+      duration: form.duration,
+      deadline: form.deadline ? format(form.deadline, 'yyyy-MM-dd HH:mm:ss') : null,
       capacity: capacity,
       types: types as CompetitionType[],
-      format: format as CompetitionFormat,
+      compFormat: compFormat as CompetitionFormat,
       competitorGroups: groups as CompetitorGroup[],
       divisions: divisions as Gender[],
-      status: status as CompetitionStatus,
+      compStatus: compStatus as CompetitionStatus,
       location: parseAddress(gymAddress) // parse into structured fields
     }
 
@@ -113,6 +126,12 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
 
   const toggleArrayValue = <T,>(value: T, arr: T[]): T[] =>
     arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]
+
+  const portalTarget = typeof document !== 'undefined'
+  ? document.getElementById("datepicker-portal")
+  : undefined;
+
+  const isMobile = useIsMobile();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -129,35 +148,64 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
         />
 
         <div className="flex gap-4 w-full">
-          <DatePicker 
+          <DatePicker
+            wrapperClassName="flex-1"
             selected={form.date}
-            onChange={(date) => setForm((prev: any) => ({ ...prev, date: date }))}
+            onChange={(date) => setForm((prev: any) => ({ ...prev, date }))}
             showTimeSelect
             dateFormat="Pp"
             placeholderText="Competition Date & Time"
-            className="rounded-md border px-3 py-1 w-full max-w-xl bg-shadow placeholder-prompt border-green text-green focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
+            customInput={<Input />}
+            popperPlacement="bottom-start"
+            popperClassName="datepicker-popper"
+            popperContainer={(props) => <div {...props} />}
+            portalId={isMobile ? "datepicker-portal" : undefined} 
           />
-          <DatePicker 
+          <DatePicker
+            wrapperClassName="flex-1"
             selected={form.deadline}
-            onChange={(deadline) => setForm((prev: any) => ({ ...prev, deadline: deadline }))}
+            onChange={(deadline) => setForm((prev: any) => ({ ...prev, deadline }))}
             showTimeSelect
             dateFormat="Pp"
             placeholderText="Registration Deadline"
-            className="rounded-md border px-3 py-1 w-full bg-shadow placeholder-prompt border-green text-green focus:outline-none focus:ring-0 selection:bg-highlight selection:text-background"
+            customInput={<Input />}
+            popperPlacement="bottom-start"
+            popperClassName="datepicker-popper"
+            popperContainer={(props) => <div {...props} />}
+            portalId={isMobile ? "datepicker-portal" : undefined} 
           />
         </div>
 
-        <div>
-          <label className="font-semibold">Capacity</label>
-          <Input
-            type="number"
-            placeholder="Maximum number of registrations"
-            step={10}
-            value={form.capacity}
-            onChange={e =>
-              setForm({ ...form, capacity: e.target.value === '' ? '' : parseInt(e.target.value, 10) })
-            }
-          />
+        
+        <div className="flex gap-4 w-full">
+          <div className="flex-1">
+            <label className="font-semibold">Duration (Minutes)</label>
+            <Input
+              type="number"
+              placeholder="Competition duration"
+              step={30}
+              value={form.duration}
+              onChange={e =>
+                setForm({
+                  ...form,
+                  duration: e.target.value === '' ? '' : parseInt(e.target.value, 10),
+                })
+              }
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className="font-semibold">Capacity</label>
+            <Input
+              type="number"
+              placeholder="Max number of registrations"
+              step={10}
+              value={form.capacity}
+              onChange={e =>
+                setForm({ ...form, capacity: e.target.value === '' ? '' : parseInt(e.target.value, 10) })
+              }
+            />
+          </div>
         </div>
 
         <div>
@@ -180,11 +228,11 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
           <div>
             <label className="font-semibold">Format</label>
             <Select
-              value={form.format}
-              onValueChange={val => setForm({ ...form, format: val as CompetitionFormat })}
+              value={form.compFormat}
+              onValueChange={(val: CompetitionFormat) => setForm({ ...form, compFormat: val as CompetitionFormat })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select format" />
+                <SelectValue placeholder="Select Format" />
               </SelectTrigger>
               <SelectContent>
                 {COMPETITION_FORMATS.map(f => (
@@ -249,18 +297,18 @@ export default function CreateCompetitionModal({ open, onClose, onSubmit, gymNam
                   : 'border-border bg-muted text-muted opacity-50 pointer-events-none'
               }`}
             >
-              {GENDER_OPTIONS.map(gender => (
-                <div key={gender} className="flex items-center space-x-2">
+              {GENDER_OPTIONS.map(division => (
+                <div key={division} className="flex items-center space-x-2">
                   <Checkbox
-                    checked={form.divisions.includes(gender)}
+                    checked={form.divisions.includes(division)}
                     onCheckedChange={() =>
                       setForm(prev => ({
                         ...prev,
-                        divisions: toggleArrayValue(gender, prev.divisions),
+                        divisions: toggleArrayValue(division, prev.divisions),
                       }))
                     }
                   />
-                  <span>{GenderEnumMap[gender]}</span>
+                  <span>{GenderEnumMap[division]}</span>
                 </div>
               ))}
             </div>

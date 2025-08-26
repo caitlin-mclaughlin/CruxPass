@@ -27,14 +27,14 @@ public class Registration {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    Gender gender;
+    Gender division;
 
+    @JoinColumn(name = "climber_id", nullable = false)
     @ManyToOne
-    @NonNull
     private Climber climber;
 
+    @JoinColumn(name = "competition_id", nullable = false)
     @ManyToOne
-    @NonNull
     private Competition competition;
 
 }

@@ -2,12 +2,15 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.requests.CompRegistrationRequestDto;
 import com.cruxpass.dtos.responses.RegistrationResponseDto;
+import com.cruxpass.mappers.RegistrationMapper;
+import com.cruxpass.models.Climber;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Registration;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.RegistrationService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,9 @@ public class CompRegistrationController {
     private final CurrentUserService currentUserService;
     private final RegistrationService registrationService;
     private final CompetitionService competitionService;
+
+    @Autowired
+    private RegistrationMapper regMap;
 
     public CompRegistrationController(CurrentUserService currentUserService,
             RegistrationService registrationService, CompetitionService competitionService) {
@@ -44,18 +50,8 @@ public class CompRegistrationController {
         if (regs == null) return ResponseEntity.notFound().build();
 
         return ResponseEntity.ok(regs.stream()
-            .map(reg -> 
-                new RegistrationResponseDto(
-                    reg.getId(),
-                    gymId,
-                    competitionId,
-                    reg.getCompetitorGroup(),
-                    reg.getGender(),
-                    reg.getClimber().getName(),
-                    reg.getClimber().getEmail(),
-                    reg.isPaid()
-                )
-            ).toList()
+            .map(reg -> regMap.toResponseDto(reg))
+            .toList()
         );
     }
 
@@ -70,31 +66,22 @@ public class CompRegistrationController {
         Registration reg = registrationService.getById(id);
         if (reg == null) return ResponseEntity.notFound().build();
 
-        return ResponseEntity.ok(new RegistrationResponseDto(
-            reg.getId(),
-            gymId,
-            competitionId,
-            reg.getCompetitorGroup(),
-            reg.getGender(),
-            reg.getClimber().getName(),
-            reg.getClimber().getEmail(),
-            reg.isPaid()
-        ));
+        return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
 
-    @PostMapping
+    @PutMapping
     public ResponseEntity<?> registerForCompetition(
         @PathVariable Long gymId,
         @PathVariable Long competitionId,
         @RequestBody CompRegistrationRequestDto dto,
         @RequestHeader("Authorization") String authHeader
     ) {
-        var climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Climber climber = currentUserService.getClimberFromToken(authHeader);
+        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
 
-        var competition = competitionService.getById(competitionId);
+        Competition competition = competitionService.getById(competitionId);
         if (competition == null) return ResponseEntity.notFound().build();
-        if (!competition.getGym().getId().equals(gymId)) return ResponseEntity.badRequest().build();
+        if (competition.getGym().getId() != gymId) return ResponseEntity.badRequest().build();
 
         // Prevent duplicate registration
         if (registrationService.existsByClimberAndCompetition(climber, competition)) {
@@ -102,7 +89,7 @@ public class CompRegistrationController {
         }
         
         // Check registration deadline
-        if (competition.getDeadline() != null && competition.getDeadline().isBefore(LocalDateTime.now())) {
+        if (competition.getDeadline() == null || competition.isPastDeadline()) {
             return ResponseEntity.badRequest().body("Registration deadline has passed.");
         }
 
@@ -112,14 +99,9 @@ public class CompRegistrationController {
             return ResponseEntity.badRequest().body("Competition is at full capacity.");
         }
 
-        Registration reg = new Registration();
-        reg.setClimber(climber);
-        reg.setCompetition(competition);
-        reg.setCompetitorGroup(dto.competitorGroup());
-        reg.setGender(dto.gender());
-        reg.setPaid(dto.paid());
-
+        Registration reg = regMap.toEntity(dto, climber, competition);
         registrationService.save(reg);
-        return ResponseEntity.ok("Successfully registered");
+
+        return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
 }

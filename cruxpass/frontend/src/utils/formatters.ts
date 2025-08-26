@@ -1,4 +1,5 @@
 import { COMPETITOR_GROUPS, CompetitionEnumMap } from '@/constants/enum'
+import { Address } from '@/models/domain';
 
 export function formatPhoneNumber(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 10); // max 10 digits
@@ -21,7 +22,7 @@ export function formatAddress(location: {
       city: string;
       state: string;
       zipCode: string;
-    }): string {
+    } | Address): string {
   if (!location) return '';
   const line1 = location.apartmentNumber
     ? `${location.streetAddress}, Apt ${location.apartmentNumber}`
@@ -32,8 +33,7 @@ export function formatAddress(location: {
   return `${line1},\n${line2}`
 }
 
-export function formatDate(isoString: string): string {
-  const date = new Date(isoString);
+export function formatDate(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
   const yyyy = date.getFullYear();

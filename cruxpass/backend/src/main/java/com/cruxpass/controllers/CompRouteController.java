@@ -2,6 +2,7 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.RouteDto;
 import com.cruxpass.dtos.responses.RouteResponseDto;
+import com.cruxpass.mappers.RouteMapper;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Route;
@@ -10,6 +11,8 @@ import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.GymService;
 import com.cruxpass.services.RouteService;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +28,9 @@ public class CompRouteController {
     private final CompetitionService competitionService;
     private final CurrentUserService currentUserService;
 
+    @Autowired
+    private RouteMapper routeMap;
+
     public CompRouteController(RouteService routeService, GymService gymService,
             CompetitionService competitionService, CurrentUserService currentUserService) {
         this.routeService = routeService;
@@ -34,25 +40,22 @@ public class CompRouteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RouteResponseDto>> getAll(
+    public ResponseEntity<List<RouteResponseDto>> getRoutes(
         @PathVariable Long gymId,
         @PathVariable Long competitionId,
         @RequestHeader("Authorization") String authHeader
     ) {
         currentUserService.validateGymAccess(gymId, authHeader);
-        List<Route> routes = routeService.getAll();
+            
+        Competition comp = competitionService.getById(competitionId);
+        if (comp == null) return ResponseEntity.notFound().build();
+        if (comp.getGym().getId() != gymId)
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        List<Route> routes = routeService.getByCompetitionId(competitionId);
         if (routes == null) return ResponseEntity.notFound().build();
 
-        return ResponseEntity.ok(routes.stream()
-            .map(route ->
-                new RouteResponseDto(
-                    route.getId(),
-                    route.getCompetition().getId(),
-                    route.getNumber(),
-                    route.getPointValue()
-                )
-            ).toList()
-        );
+        return ResponseEntity.ok(routeMap.toResponseDtoList(routes));
     }
 
     @GetMapping("/{id}")
@@ -66,12 +69,7 @@ public class CompRouteController {
         Route route = routeService.getById(id);
         if (route == null) return ResponseEntity.notFound().build();
 
-        return ResponseEntity.ok(new RouteResponseDto(
-            gymId,
-            competitionId,
-            route.getNumber(),
-            route.getPointValue())
-        );
+        return ResponseEntity.ok(routeMap.toResponseDto(route));
     }
 
     @PutMapping()
@@ -87,18 +85,15 @@ public class CompRouteController {
         if (gym == null) return ResponseEntity.notFound().build();
         Competition comp = competitionService.getById(competitionId);
         if (comp == null) return ResponseEntity.notFound().build();
+        if (comp.getGym().getId() != gym.getId())
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        List<Route> newRoutes = routeService.getByGymAndCompetition(gym, comp);
+        List<Route> newRoutes = routeService.saveOrUpdateRoutes(
+            routeMap.toEntityList(routes, gym, comp)
+        );
+
         if (newRoutes == null) return ResponseEntity.notFound().build();
         
-        return ResponseEntity.ok(newRoutes.stream().map(route ->
-            new RouteResponseDto(
-                route.getId(),
-                route.getCompetition().getId(),
-                route.getNumber(),
-                route.getPointValue() 
-            )
-            ).toList()
-        );
+        return ResponseEntity.ok(routeMap.toResponseDtoList(newRoutes));
     }
 }

@@ -1,0 +1,23 @@
+.segmented-date-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.segmented-date-input input {
+  width: 2.5em;
+  text-align: center;
+  padding: 4px;
+}
+
+.segmented-date-input input:nth-child(5) {
+  width: 4em;
+}
+
+.calendar-btn {
+  margin-left: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+}

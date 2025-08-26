@@ -1,82 +1,96 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import api from '@/services/api'
-import { formatAddress, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
-import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
+import { useCompetition } from '@/context/GymCompetitionContext'
 import { useGymSession } from '@/context/GymSessionContext'
 import CreateCompetitionModal from '@/components/modals/CreateCompetitionModal'
 import AddRoutesModal from '@/components/modals/AddRoutesModal'
+import { CalendarCheck, PencilLine } from 'lucide-react'
+import { formatAddress, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
+import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
+import { CompetitionSummary, Registration, Route } from '@/models/domain'
+import { CompetitionFormPayload, RouteDto } from '@/models/dtos'
+import { displayDateTime, parseBackendLocal, pretty } from '@/utils/datetime'
 
 export default function CompetitionPage() {
-  const { competitionId } = useParams()
-  const [competition, setCompetition] = useState<Competition | null>(null)
-  const [registrations, setRegistrations] = useState<Registration[]>([])
-  const [loading, setLoading] = useState(true)
-  const { gymSession } = useGymSession()
+  const { competitionId } = useParams<{ competitionId: string }>()
+  const { 
+    competition, 
+    registrations,
+    routes,
+    loading,
+    error, 
+    refreshAll,
+    refreshCompetition, 
+    refreshRegistrations,
+    refreshRoutes,
+    updateCompetition,
+    updateRegistrations,
+    updateRoutes
+  } = useCompetition()
+  const { gym } = useGymSession()
+
+  const [loadingRegs, setLoadingRegs] = useState(true)
+  const [loadingRoutes, setLoadingRoutes] = useState(false)
+
   const [showEditModal, setShowEditModal] = useState(false)
-  const [editComp, setEditComp] = useState<Competition | null>(null)
   const [showRouteModal, setShowRouteModal] = useState(false)
 
+  // Load registrations on mount or when competition/gym changes
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!gymSession?.id || !competitionId) return
+    if (!gym?.id || !competitionId) return
 
-        const compRes = await api.get(`gyms/${gymSession.id}/competitions/${competitionId}`)
-        setCompetition(compRes.data)
+    setLoadingRegs(true)
+    refreshAll(gym.id, parseInt(competitionId))
+  }, [gym?.id, competitionId])
 
-        const regRes = await api.get(`gyms/${gymSession.id}/competitions/${competitionId}/registrations`)
-        setRegistrations(regRes.data)
-      } catch (err) {
-        console.error('Failed to load competition or registrations', err)
-      } finally {
-        setLoading(false)
-      }
+  // Fetch routes on demand (when route modal opens)
+  const fetchRoutes = async () => {
+    if (!gym?.id || !competitionId) return
+    setLoadingRoutes(true)
+    try {
+      refreshRoutes(gym.id, parseInt(competitionId))
+    } catch (err) {
+      console.error('Failed to load routes', err)
+    } finally {
+      setLoadingRoutes(false)
     }
+  }
 
-    fetchData()
-  }, [competitionId, gymSession])
-
-  useEffect(() => {
-    setCompetition(null)
-    setRegistrations([])
-    setLoading(true)
-  }, [competitionId])
-
-  const groupByGenderAndDivision = () => {
+  // Group registrations by division and group for display
+  const groupByGroupAndDivision = () => {
     const grouped: Record<string, Registration[]> = {}
+    if (!registrations) return
     for (const reg of registrations) {
-      const key = `${GenderEnumMap[reg.gender as keyof typeof GenderEnumMap]}'s ${CompetitionEnumMap[reg.competitorGroup as keyof typeof CompetitionEnumMap]}`
+      const key = `${GenderEnumMap[reg.division as keyof typeof GenderEnumMap]}'s ${CompetitionEnumMap[reg.competitorGroup as keyof typeof CompetitionEnumMap]}`
       if (!grouped[key]) grouped[key] = []
       grouped[key].push(reg)
     }
     return grouped
   }
 
-  const groupedRegs = groupByGenderAndDivision()
+  const groupedRegs = groupByGroupAndDivision() ?? {}
 
-  const handleEditCompetition = async (updatedData: any) => {
+  const handleEditCompetition = async (updatedData: CompetitionFormPayload) => {
     try {
-      await api.put(`/gyms/${gymSession?.id}/competitions/${competitionId}`, updatedData)
+      if (!gym?.id || !competitionId) return
+      await updateCompetition(gym.id, parseInt(competitionId), updatedData)
       setShowEditModal(false)
-      // Optionally re-fetch competition data:
-      const res = await api.get(`/gyms/${gymSession?.id}/competitions/${competitionId}`)
-      setCompetition(res.data)
+
+      await refreshCompetition(gym.id, parseInt(competitionId))
     } catch (err) {
       console.error("Failed to update competition", err)
       alert("Could not update competition.")
     }
   }
 
-  const handleEditRoutes = async (routes: any) => {
+  const handleEditRoutes = async (routes: RouteDto[]) => {
     try {
-      await api.put(`/gyms/${gymSession?.id}/competitions/${competitionId}/routes`, routes)
+      if (!gym?.id || !competitionId) return
+      await updateRoutes(gym.id, parseInt(competitionId), routes)
       setShowRouteModal(false)
-      // Optionally re-fetch competition data:
-      await api.get(`/gyms/${gymSession?.id}/competitions/${competitionId}/routes`)
     } catch (err) {
-      console.error("Failed to update competition", err)
-      alert("Could not update competition.")
+      console.error("Failed to update routes", err)
+      alert("Could not update routes.")
     }
   }
 
@@ -89,33 +103,41 @@ export default function CompetitionPage() {
 
       {/* Competition Details Box */}
       <div className="mb-2 border rounded-md p-4 bg-shadow max-w-3xl">
-        <div><strong>Date & Time:</strong> {formatDateTimePretty(competition.date)}</div>
-        <div><strong>Registration Deadline:</strong> {formatDateTimePretty(competition.deadline)}</div>
+        <div><strong>Date & Time:</strong> {displayDateTime(competition.date)}</div>
+        <div><strong>Registration Deadline:</strong> {displayDateTime(competition.deadline)}</div>
         <div><strong>Host Gym:</strong> {competition.hostGymName}</div>
         <div><strong>Location:</strong> {formatAddress(competition.location)}</div>
-        <div><strong>Format:</strong> {CompetitionEnumMap[competition.format as keyof typeof CompetitionEnumMap]}</div>
+        <div><strong>Format:</strong> {CompetitionEnumMap[competition.compFormat as keyof typeof CompetitionEnumMap]}</div>
         <div><strong>Type(s):</strong> {competition.types.map(t => CompetitionEnumMap[t as keyof typeof CompetitionEnumMap]).join(', ')}</div>
         <div><strong>Groups:</strong> {formatGroupsInOrder(competition.competitorGroups)}</div>
-        <div><strong>Divisions:</strong> {competition.divisionsEnabled ? competition.divisions.map(t => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ') : "None"}</div>
+        <div><strong>Divisions: </strong> 
+          {competition.divisions?.length 
+          ? competition.divisions.map(t => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ') 
+          : "None"}
+          </div>
       </div>
 
-      {gymSession && gymSession.id === competition.gymId && (
+      {gym && gym.id === competition.gymId && (
         <div className="flex justify-between max-w-3xl">
           <button
-              className="mb-4 bg-green text-background px-4 py-1 rounded-md font-semibold hover:bg-select"
+              className="mb-4 flex items-center bg-green text-background px-4 py-1.5 rounded-md font-semibold shadow hover:bg-select"
               onClick={() => {
-              setEditComp(competition)
               setShowEditModal(true)
             }}
           >
-            Edit Competition
+            <CalendarCheck size={18} className="mr-2" /> 
+            <span className="relative top-[1px]">Edit Competition</span>
           </button>
 
           <button
-              className="mb-4 bg-green text-background px-4 py-1 rounded-md font-semibold hover:bg-select"
-              onClick={() => setShowRouteModal(true)}
+              className="mb-4 flex items-center bg-green text-background px-4 py-1.5 rounded-md font-semibold shadow hover:bg-select"
+              onClick={() => {
+                fetchRoutes()
+                setShowRouteModal(true)
+              }}
           >
-            Edit Routes
+            <PencilLine size={18} className="mr-2" /> 
+            <span className="relative top-[1px]">Edit Routes</span>
           </button>
         </div>
       )}
@@ -143,14 +165,14 @@ export default function CompetitionPage() {
           onClose={() => setShowEditModal(false)}
           onSubmit={(updatedData) => handleEditCompetition(updatedData)}
           gymName={competition.hostGymName}
-          gymAddress={competition.location.streetAddress + ", " + competition.location.city + ", " 
-            + competition.location.state + ", " + competition.location.zipCode}
+          gymAddress={formatAddress(competition.location)}
           initialData={{
             name: competition.name,
             date: competition.date,
+            duration: competition.duration,
             deadline: competition.deadline,
             capacity: competition.capacity,
-            format: competition.format as CompetitionFormat,
+            compFormat: competition.compFormat as CompetitionFormat,
             types: competition.types as CompetitionType[],
             competitorGroups: competition.competitorGroups as CompetitorGroup[],
             divisions: competition.divisions as Gender[],
@@ -163,6 +185,7 @@ export default function CompetitionPage() {
         open={showRouteModal}
         onClose={() => setShowRouteModal(false)}
         onSubmit={(routes) => handleEditRoutes(routes)}
+        initialRoutes={routes}
       />
 
     </div>

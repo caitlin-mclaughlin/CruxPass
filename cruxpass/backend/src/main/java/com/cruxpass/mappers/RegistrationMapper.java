@@ -1,0 +1,75 @@
+package com.cruxpass.mappers;
+
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.cruxpass.dtos.SimpleRegistrationDto;
+import com.cruxpass.dtos.requests.CompRegistrationRequestDto;
+import com.cruxpass.dtos.responses.RegistrationResponseDto;
+import com.cruxpass.dtos.responses.SimpleRegistrationResponseDto;
+import com.cruxpass.models.Climber;
+import com.cruxpass.models.Competition;
+import com.cruxpass.models.Registration;
+
+@Component
+public class RegistrationMapper {
+
+    // Convert from Registration entity to RegistrationResponseDto
+    public RegistrationResponseDto toResponseDto(Registration reg) {
+        return new RegistrationResponseDto(
+            reg.getId(),
+            reg.getCompetition().getGym().getId(),
+            reg.getCompetition().getId(),
+            reg.getCompetitorGroup(),
+            reg.getDivision(),
+            reg.getClimber().getName(),
+            reg.getClimber().getEmail(),
+            reg.isPaid()
+        );
+    }
+
+    // Convert from Registration entity to SimpleRegistrationDto
+    public SimpleRegistrationDto toSimpleDto(Registration reg) {
+        return new SimpleRegistrationDto(
+            reg.getDivision(),
+            reg.getCompetitorGroup()
+        );
+    }
+
+    /** Convert Registration entity to SimpleRegistrationResponseDto */
+    public SimpleRegistrationResponseDto toSimpleResponseDto(Registration reg) {
+        return new SimpleRegistrationResponseDto(
+            reg.getId(),
+            reg.getCompetition().getId(),
+            reg.getCompetitorGroup(),
+            reg.getDivision(),
+            reg.getClimber().getName()
+        );
+    }
+
+    // Convert from CompRegistrationRequestDto to Registration entity
+    public Registration toEntity(CompRegistrationRequestDto dto, Climber climber, Competition competition) {
+        Registration reg = new Registration();
+        reg.setClimber(climber);
+        reg.setCompetition(competition);
+        reg.setCompetitorGroup(dto.competitorGroup());
+        reg.setDivision(dto.division());
+        reg.setPaid(dto.paid());
+        return reg;
+    }
+
+    // Optionally, map a list of registrations to response DTOs
+    public List<RegistrationResponseDto> toResponseDtoList(List<Registration> registrations) {
+        return registrations.stream()
+            .map(this::toResponseDto)
+            .toList();
+    }
+
+    public List<SimpleRegistrationDto> toSimpleDtoList(List<Registration> registrations) {
+        return registrations.stream()
+            .map(this::toSimpleDto)
+            .toList();
+    }
+}
+

@@ -6,6 +6,7 @@ import com.cruxpass.dtos.requests.RegisterRequest;
 import com.cruxpass.dtos.responses.AuthResponse;
 import com.cruxpass.dtos.responses.ClimberResponseDto;
 import com.cruxpass.dtos.responses.GymResponseDto;
+import com.cruxpass.enums.AccountType;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Climber;
 import com.cruxpass.security.JwtUtil;
@@ -36,19 +37,19 @@ public class AuthController {
         this.authManager = authManager;
     }
 
-    @PostMapping("/register/{type}")
+    @PutMapping("/register/{type}")
     public ResponseEntity<AuthResponse> register(
-            @PathVariable String type,
+            @PathVariable AccountType type,
             @Valid @RequestBody RegisterRequest dto
     ) {
         Long id;
-        switch (type.toLowerCase()) {
-            case "climber" -> {
+        switch (type) {
+            case CLIMBER -> {
                 Climber climber = climberService.createUser(dto);
                 id = climber.getId();
                 break;
             }
-            case "gym" -> {
+            case GYM-> {
                 Gym gym = gymService.createGym(dto);
                 id = gym.getId();
                 break;
@@ -58,19 +59,19 @@ public class AuthController {
             }
         }
 
-        String email = switch (type.toLowerCase()) {
-            case "climber" -> climberService.getByUsername(dto.username).getEmail();
-            case "gym" -> gymService.getByUsername(dto.username).getEmail();
+        String email = switch (type) {
+            case CLIMBER -> climberService.getByUsername(dto.username).getEmail();
+            case GYM -> gymService.getByUsername(dto.username).getEmail();
             default -> null;
         };
 
-        System.out.println("Generating token with email: " + email + " and role: " + type.toUpperCase());
+        System.out.println("Generating token with email: " + email + " and role: " + type);
 
-        String token = jwtUtil.generateToken(email, type.toUpperCase(), id);
+        String token = jwtUtil.generateToken(email, type, id);
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
-    @PostMapping("/login")
+    @PutMapping("/")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest dto) {
         String id = dto.emailOrUsername;
 
@@ -80,7 +81,7 @@ public class AuthController {
             if (!climberService.passwordMatches(climber, dto.password)) {
                 throw new IllegalArgumentException("Invalid password");
             }
-            String token = jwtUtil.generateToken(climber.getEmail(), "CLIMBER", climber.getId());
+            String token = jwtUtil.generateToken(climber.getEmail(), AccountType.CLIMBER, climber.getId());
             return ResponseEntity.ok(new AuthResponse(token));
         }
 
@@ -90,7 +91,7 @@ public class AuthController {
             if (!gymService.passwordMatches(gym, dto.password)) {
                 throw new IllegalArgumentException("Invalid password");
             }
-            String token = jwtUtil.generateToken(gym.getEmail(), "GYM", gym.getId());
+            String token = jwtUtil.generateToken(gym.getEmail(), AccountType.GYM, gym.getId());
             return ResponseEntity.ok(new AuthResponse(token));
         }
 
@@ -100,10 +101,10 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
-        String role = jwtUtil.extractRole(token);
+        AccountType role = jwtUtil.extractRole(token);
         Long id = jwtUtil.extractId(token);
 
-        if ("CLIMBER".equalsIgnoreCase(role)) {
+        if (role == AccountType.CLIMBER) {
             Climber climber = climberService.getById(id);
             if (climber != null) {
                 return ResponseEntity.ok(Map.of(
@@ -115,13 +116,13 @@ public class AuthController {
                         climber.getPhone(),
                         climber.getUsername(),
                         climber.getDob(),
-                        climber.getGender(),
+                        climber.getDivision(),
                         new AddressDto(climber.getAddress()),
                         climber.getCreatedAt()
                     )
                 ));
             }
-        } else if ("GYM".equalsIgnoreCase(role)) {
+        } else if (role == AccountType.GYM) {
             Gym gym = gymService.getById(id);
             if (gym != null) {
                 return ResponseEntity.ok(Map.of(

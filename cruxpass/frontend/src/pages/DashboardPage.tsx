@@ -1,119 +1,140 @@
-// DashboardPage.tsx
-import { useEffect, useState } from 'react'
-import api from '@/services/api'
-import { useAuth } from '@/context/AuthContext'
+// pages/DashboardPage.tsx
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CreateCompetitionModal from '@/components/modals/CreateCompetitionModal'
 import RegisterModal from '@/components/modals/RegisterModal'
+import AddScoresModal from '@/components/modals/AddScoresModal'
+import { CalendarPlus } from 'lucide-react'
+
 import { useGymSession } from '@/context/GymSessionContext'
-import { useClimber } from '@/context/ClimberContext'
+import { useClimberSession } from '@/context/ClimberSessionContext'
+import { useGlobalCompetitions } from '@/context/GlobalCompetitionsContext'
 import { formatAddress, formatDate, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
-import { CompetitionEnumMap, CompetitorGroup, GenderEnumMap } from '@/constants/enum'
+import { CompetitionEnumMap, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
-import { CompetitionFormPayload } from '@/types/dto'
+import { CompetitionFormPayload, SubmissionRequestDto } from '@/models/dtos'
+import { CompetitionSummary, Registration, Route, SubmittedRoute } from '@/models/domain'
+import { displayDateTime, pretty } from '@/utils/datetime'
+import { CompetitionProvider, useCompetition } from '@/context/GymCompetitionContext'
 
 export default function DashboardPage() {
-  const [comps, setComps] = useState<Competition[]>([])
-  const { token } = useAuth()
-  const [showModal, setShowModal] = useState(false)
-  const { gymSession } = useGymSession()
-  const { climber } = useClimber()
-  const gymAddress = gymSession?.gymAddress ?? ''
-  const gymName = gymSession?.gymName ?? ''
-  const [expandedIds, setExpandedIds] = useState<number[]>([])
-  const navigate = useNavigate()
-  const [registerComp, setRegisterComp] = useState<Competition | null>(null)
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const liveRegisteredComp = comps.find(c => c.status === 'LIVE' && c.registered)
+  const { 
+    competitions = [], 
+    loading: 
+    competitionsLoading,
+    refreshCompetitions,
+  } = useGlobalCompetitions()
 
-  const handleNewCompetition = (data: CompetitionFormPayload) => {
-    api.post(`/gyms/${gymSession?.id}/competitions`, data)
-      .then(() => window.location.reload())
-      .catch(err => console.error('Failed to create competition', err))
+  const { gym, createCompetition, refreshGym } = useGymSession()
+  const { climber } = useClimberSession()
+  const { submitScores, refreshSubmissions } = useCompetition()
+  const navigate = useNavigate()
+
+  const [expandedIds, setExpandedIds] = useState<number[]>([])
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [showScoresModal, setShowScoresModal] = useState(false)
+  const [registerComp, setRegisterComp] = useState<CompetitionSummary | null>(null)
+  const [existingSubmissions, setExistingSubmissions] = useState<SubmittedRoute[]>()
+
+  const gymName = gym?.gymName ?? ""
+  const gymAddress = gym?.gymAddress ?? ""
+
+  const sortedCompetitions = useMemo(
+    () => (competitions ?? []).slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    [competitions]
+  )
+  const liveRegisteredComp = sortedCompetitions.find(c => c.compStatus === 'LIVE' && c.registered)
+
+  // Create competition
+  const handleNewCompetition = async (data: CompetitionFormPayload) => {
+    if (!gym?.id) return
+    try {
+      await refreshGym()
+      await createCompetition(data)
+      await refreshCompetitions()
+    } catch (err) {
+      console.error('Failed to create competition', err)
+    }
   }
 
-  const openRegisterModal = (comp: Competition) => {
+  // Open register modal
+  const openRegisterModal = (comp: CompetitionSummary) => {
+    const token = localStorage.getItem('token')
     if (!token) {
-      navigate('/', { state: { redirectTo: `/dashboard` } });
-      return;
+      navigate('/', { state: { redirectTo: `/dashboard` } })
+      return
     }
-    
     setRegisterComp(comp)
     setShowRegisterModal(true)
   }
 
-  useEffect(() => {
-    const fetchComps = async () => {
-      try {
-        const res = await api.get('/competitions') // ← always get all
-        if (Array.isArray(res.data)) {
-          const sorted = res.data.sort(
-            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-          )
-          setComps(sorted)
-        } else {
-          console.error('Unexpected competitions response:', res.data)
-        }
-      } catch (err) {
-        console.error('Error loading competitions', err)
-      }
+  // Open add scores modal
+  const openScoresModal = () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      navigate('/', { state: { redirectTo: `/dashboard` } })
+      return
     }
-    fetchComps()
-  }, [])
+    setShowScoresModal(true)
+  }
 
-  const toggleExpanded = (id: number) => {
+  // UI helpers
+  const toggleExpanded = (id: number) =>
     setExpandedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
-  }
 
-  const handleShowRegistrations = (competitionId: number) => {
-    if (!gymSession) return
+  const handleShowRegistrations = (competitionId: number) =>
     navigate(`/competitions/${competitionId}`, { state: { redirectTo: `/dashboard` } })
-  }
 
-  const isClimberEligible = (comp: Competition): boolean => {
-    if (!climber) return true
-    return comp.competitorGroups.some(group => isEligibleForGroup(climber.dob, group as CompetitorGroup))
-  }
+  const isClimberEligible = (comp: CompetitionSummary) =>
+    climber ? comp.competitorGroups.some((g: string) => isEligibleForGroup(climber.dob, g as CompetitorGroup)) : true
 
-  const visibleComps = comps.filter(comp => comp.status === 'UPCOMING' || comp.status === 'LIVE')
+  const visibleComps = sortedCompetitions.filter(c => ['UPCOMING', 'LIVE'].includes(c.compStatus))
 
   return (
     <div className="p-8 bg-background text-green flex flex-col h-screen">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Upcoming Competitions</h1>
-        {gymSession && (
+        {gym && (
           <button
-            onClick={() => setShowModal(true)}
-            className="bg-green text-background font-bold px-4 py-2 text-1xl shadow rounded-md hover:bg-select cursor-pointer"
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center bg-green text-background font-bold px-4 py-2 text-1xl shadow rounded-md hover:bg-select cursor-pointer"
           >
-            New Competition
+            <CalendarPlus size={18} className="mr-2" /> 
+            <span className="relative top-[1px]">New Competition</span>
           </button>
         )}
       </div>
 
       <CreateCompetitionModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
         onSubmit={handleNewCompetition}
         gymName={gymName}
         gymAddress={gymAddress}
       />
 
       {climber && liveRegisteredComp && (
-        <div className="bg-green text-background p-4 mb-4 rounded shadow-md flex justify-between items-center">
+        <div className="bg-green text-background p-4 mb-4 rounded-md shadow-md flex justify-between items-center">
           <div>You are currently competing in <strong>{liveRegisteredComp.name}</strong>!</div>
           <button
-            onClick={() => navigate(`/competitions/${liveRegisteredComp.id}/score-entry`)}
+            onClick={async () => openScoresModal()}
             className="bg-shadow text-green font-bold px-3 py-1 rounded-md hover:bg-background"
           >
             Enter Scores
+          </button>
+          <button
+            onClick={() => navigate(`/competitions/${liveRegisteredComp.id}/leaderboard`)}
+            className="bg-shadow text-green font-bold px-3 py-1 rounded-md hover:bg-background"
+          >
+            View Live Leaderboard
           </button>
         </div>
       )}
 
       <div className="grid gap-4">
         {visibleComps.map(comp => {
-          const isHost = gymSession?.id === comp.gymId
+          const isHost = gym?.id === comp.gymId
 
           return (
             <div
@@ -129,32 +150,32 @@ export default function DashboardPage() {
                 >
                   <span>{comp.name}</span>
                   <span className={`transform -translate-y-[2px] transition-transform ${expandedIds.includes(comp.id) ? 'rotate-180' : ''}`}>▼</span>
-                  {comp.status === 'LIVE' && (
-                    <span className="px-4 py-1 font-semibold text-background bg-accent rounded-md">LIVE</span>
+                  {comp.compStatus === 'LIVE' && (
+                    <span className="flex px-4 font-semibold text-background bg-accent rounded-md">LIVE</span>
                   )}
                 </div>
 
                 {!expandedIds.includes(comp.id) && (
                   <div>
-                    {formatDate(comp.date)} — {comp.hostGymName}: {formatAddress(comp.location)}
+                    {formatDate(new Date(comp.date))} — {comp.hostGymName}: {formatAddress(comp.location)}
                   </div>
                 )}
 
                 {expandedIds.includes(comp.id) && (
                   <div className="mt-2 text-sm space-y-1">
-                    <div><strong>Date & Time:</strong> {formatDateTimePretty(comp.date)}</div>
-                    <div><strong>Registration Deadline:</strong> {formatDateTimePretty(comp.deadline)}</div>
+                    <div><strong>Date & Time:</strong> {displayDateTime(comp.date)}</div>
+                    <div><strong>Registration Deadline:</strong> {displayDateTime(comp.deadline)}</div>
                     <div><strong>Host Gym:</strong> {comp.hostGymName}</div>
                     <div><strong>Location:</strong> {formatAddress(comp.location)}</div>
-                    <div><strong>Format:</strong> {CompetitionEnumMap[comp.format as keyof typeof CompetitionEnumMap]}</div>
-                    <div><strong>Type(s):</strong> {comp.types.map(t => CompetitionEnumMap[t as keyof typeof CompetitionEnumMap]).join(', ')}</div>
+                    <div><strong>Format:</strong> {CompetitionEnumMap[comp.compFormat as keyof typeof CompetitionEnumMap]}</div>
+                    <div><strong>Type(s):</strong> {comp.types.map((t: string) => CompetitionEnumMap[t as keyof typeof CompetitionEnumMap]).join(', ')}</div>
                     <div><strong>Groups:</strong> {formatGroupsInOrder(comp.competitorGroups)}</div>
-                    <div><strong>Divisions:</strong> {comp.divisions.map(t => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ')}</div>
+                    <div><strong>Divisions:</strong> {comp.divisions.map((t: string) => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ')}</div>
 
                     {comp.registration && (
                       <div className="text-highlight">
                         <strong>Registered for:</strong>{' '}
-                        {GenderEnumMap[comp.registration.gender as keyof typeof GenderEnumMap]}'s{' '}
+                        {GenderEnumMap[comp.registration.division as keyof typeof GenderEnumMap]}'s{' '}
                         {CompetitionEnumMap[comp.registration.competitorGroup as keyof typeof CompetitionEnumMap]}
                       </div>
                     )}
@@ -162,7 +183,7 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {!gymSession ? (
+              {!gym ? (
                 <button
                   className={`px-4 py-2 rounded-md font-semibold shadow text-background ${
                     comp.registered
@@ -197,13 +218,28 @@ export default function DashboardPage() {
           open={showRegisterModal}
           onClose={() => setShowRegisterModal(false)}
           competition={registerComp}
-          onSuccess={(registration: any) => {
-            setComps(prev => prev.map(c =>
-              c.id === registerComp.id ? { ...c, registered: true, registration } : c
-            ))
+          onSuccess={async (registration: Registration) => {
+            await refreshCompetitions()
+            setShowRegisterModal(false)
           }}
-
         />
+      )}
+      
+      {liveRegisteredComp && liveRegisteredComp.registration && (
+        <CompetitionProvider id={liveRegisteredComp.id}>
+          <AddScoresModal
+            open={showScoresModal}
+            onClose={() => setShowScoresModal(false)}
+            onSuccess={async (routes: SubmittedRoute[]) => {
+              await refreshSubmissions(liveRegisteredComp.gymId, liveRegisteredComp.id)
+              setShowScoresModal(false)
+            }}
+            gymId={liveRegisteredComp.gymId}
+            competitionId={liveRegisteredComp.id}
+            competitorGroup={liveRegisteredComp.registration.competitorGroup as CompetitorGroup}
+            division={liveRegisteredComp.registration.division as Gender}
+          />
+        </CompetitionProvider>
       )}
     </div>
   )

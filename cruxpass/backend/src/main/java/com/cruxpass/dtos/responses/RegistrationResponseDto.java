@@ -8,7 +8,7 @@ public record RegistrationResponseDto(
     Long gymId,
     Long compId,
     CompetitorGroup competitorGroup,
-    Gender gender,
+    Gender division,
     String climberName,
     String email,
     boolean paid

@@ -28,7 +28,7 @@ public class RegisterRequest {
     public LocalDate dob;
 
     // Null if registering a gym
-    public Gender gender;
+    public Gender division;
 
     @NotBlank
     @Size(min = 6, message = "Password must be at least 6 characters")

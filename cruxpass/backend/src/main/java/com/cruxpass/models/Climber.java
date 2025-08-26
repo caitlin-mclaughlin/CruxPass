@@ -35,6 +35,7 @@ public class Climber {
     @NotBlank
     private String phone;
     @NonNull
+    @Temporal(TemporalType.DATE)
     private LocalDate dob;
     @NotBlank
     private String username;
@@ -45,7 +46,7 @@ public class Climber {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    private Gender gender;
+    private Gender division;
 
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)

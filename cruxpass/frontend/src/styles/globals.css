@@ -43,14 +43,14 @@
   textarea:focus {
     border-color: var(--color-green);
     outline: none !important;
-    box-shadow: none !important;
   }
 
   .form-input {
     background-color: var(--color-shadow);
     color: var(--color-green);
     border-color: var(--color-green);
-    @apply border rounded-md p-2 w-full appearance-none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    @apply appearance-none border rounded-md p-2 w-full shadow-md;
   }
 
   .border-color-accent {
@@ -64,24 +64,28 @@
   .placeholder-color-accent::placeholder {
     color: var(--color-accent);
   }
-
-  /* Hide default HTML5 validation tooltip on Chrome/Firefox/Edge */
-  input:invalid {
-    box-shadow: none !important;
-  }
   
 }
 
 @layer components {
 
+  .react-datepicker-wrapper,
   .react-datepicker__input-container {
-    @apply shadow;
+    width: 100% !important;
+    display: flex !important;
   }
 
   .react-datepicker {
+    z-index: 9999 !important;
     background-color: var(--color-background) !important;
     border-color: var(--color-green) !important;
     @apply rounded-md border shadow-xl;
+  }
+
+  .react-datepicker-popper {
+    position: absolute !important;
+    z-index: 9999 !important;
+    width: auto !important;
   }
 
   .react-datepicker__header,
@@ -237,6 +241,32 @@
     stroke: var(--color-background) !important;
     border-color: var(--color-background) !important;
   }
+
+
+  #datepicker-portal .react-datepicker {
+    position: absolute;
+    top: 0; /* start at top of the portal div */
+    left: 0;
+    z-index: 9999 !important;
+  }
+
+  @media (max-width: 768px) {
+    #datepicker-portal .react-datepicker {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: 90% !important;
+      max-width: 400px;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    #datepicker-portal .react-datepicker__triangle {
+      display: none;
+    }
+  }
+
 }
 
 @layer utilities {
@@ -245,6 +275,7 @@
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
     transition: background-color 9999s ease-out, color 9999s ease-out;
     transition-delay: 9999s;
   }

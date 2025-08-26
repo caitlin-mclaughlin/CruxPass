@@ -2,11 +2,14 @@
 package com.cruxpass.dtos.responses;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 import com.cruxpass.dtos.AddressDto;
 import com.cruxpass.dtos.SimpleRegistrationDto;
+import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.CompetitionStatus;
+import com.cruxpass.enums.CompetitionType;
+import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Gender;
 import com.cruxpass.models.Competition;
 
@@ -15,14 +18,15 @@ public record CompetitionResponseDto(
     Long gymId,
     String name,
     LocalDateTime date,
+    long duration,
     LocalDateTime deadline,
     int capacity,
-    List<String> types,
-    String format,
-    List<String> competitorGroups,
+    Set<CompetitionType> types,
+    CompetitionFormat compFormat,
+    Set<CompetitorGroup> competitorGroups,
     Set<Gender> divisions,
     boolean divisionsEnabled,
-    String status,
+    CompetitionStatus compStatus,
     AddressDto location,
     String hostGymName,
     boolean registered,
@@ -33,14 +37,15 @@ public record CompetitionResponseDto(
              comp.getGym().getId(),
              comp.getName(),
              comp.getDate(),
+             comp.getDuration(),
              comp.getDeadline(),
              comp.getCapacity(),
-             comp.getTypes().stream().map(Enum::name).toList(),
-             comp.getFormat().name(),
-             comp.getCompetitorGroups().stream().map(Enum::name).toList(),
+             comp.getTypes(),
+             comp.getCompFormat(),
+             comp.getCompetitorGroups(),
              comp.getDivisions(),
              comp.getDivisions() != null || !comp.getDivisions().isEmpty(),
-             comp.getStatus().toString(),
+             comp.getCompStatus(),
              new AddressDto(comp.getGym().getAddress()),
              comp.getGym().getName(),
              false,
@@ -53,14 +58,15 @@ public record CompetitionResponseDto(
              comp.getGym().getId(),
              comp.getName(),
              comp.getDate(),
+             comp.getDuration(),
              comp.getDeadline(),
              comp.getCapacity(),
-             comp.getTypes().stream().map(Enum::name).toList(),
-             comp.getFormat().name(),
-             comp.getCompetitorGroups().stream().map(Enum::name).toList(),
+             comp.getTypes(),
+             comp.getCompFormat(),
+             comp.getCompetitorGroups(),
              comp.getDivisions(),
              comp.getDivisions() != null || !comp.getDivisions().isEmpty(),
-             comp.getStatus().toString(),
+             comp.getCompStatus(),
              new AddressDto(comp.getGym().getAddress()),
              comp.getGym().getName(),
              registered,

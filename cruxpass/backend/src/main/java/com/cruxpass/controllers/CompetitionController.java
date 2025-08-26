@@ -1,16 +1,13 @@
 package com.cruxpass.controllers;
 
-import com.cruxpass.dtos.CompetitionDto;
 import com.cruxpass.dtos.requests.UpdateCompRequestDto;
 import com.cruxpass.dtos.responses.CompetitionResponseDto;
+import com.cruxpass.mappers.CompetitionMapper;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
-import com.cruxpass.services.GymService;
-import com.cruxpass.services.RegistrationService;
-import com.cruxpass.services.ClimberService;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,20 +18,14 @@ import org.springframework.web.bind.annotation.*;
 public class CompetitionController {
 
     private final CompetitionService competitionService;
-    private final RegistrationService registrationService;
-    private final ClimberService climberService;
-    private final GymService gymService;
     private final CurrentUserService currentUserService;
 
+    @Autowired
+    private CompetitionMapper compMap;
+
     public CompetitionController(CompetitionService competitionService, 
-                                 RegistrationService registrationService,
-                                 ClimberService climberService,
-                                 GymService gymService,
                                  CurrentUserService currentUserService) {
         this.competitionService = competitionService;
-        this.registrationService = registrationService;
-        this.climberService = climberService;
-        this.gymService = gymService;
         this.currentUserService = currentUserService;
     }
 
@@ -43,22 +34,24 @@ public class CompetitionController {
         var comp = competitionService.getById(id);
         if (comp == null) return null;
 
-        return ResponseEntity.ok(new CompetitionResponseDto(comp));
+        return ResponseEntity.ok(compMap.toResponseDto(comp));
     }
 
-    @PostMapping
+    @PutMapping
     @PreAuthorize("hasRole('GYM')")
     public ResponseEntity<?> createCompetition(
-            @RequestBody CompetitionDto dto,
+            @RequestBody UpdateCompRequestDto dto,
             @RequestHeader("Authorization") String authHeader) {
 
         try {
             Gym gym = currentUserService.getGymFromToken(authHeader);
             if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-            Competition newComp = competitionService.createCompetition(dto, gym);
 
-            return ResponseEntity.ok(new CompetitionResponseDto(newComp));
+            Competition newComp = compMap.toEntity(dto, gym);
+            Competition savedComp = competitionService.save(newComp);
+
+            return ResponseEntity.ok(compMap.toResponseDto(savedComp));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
@@ -72,29 +65,18 @@ public class CompetitionController {
         @RequestBody UpdateCompRequestDto updateRequest
     ) {
         try {
-            System.out.println("DEBUG: attempting to authorize gym");
             Gym gym = currentUserService.getGymFromToken(authHeader);
             if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-            System.out.println("DEBUG: checking comp existence");
             Competition comp = competitionService.getById(id);
-            if (comp == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            
-            boolean divisionsEnabled = updateRequest.divisions() != null && updateRequest.divisions().size() != 0;
+            if (comp == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
 
-            comp.setName(updateRequest.name());
-            comp.setDate(updateRequest.date());
-            comp.setDeadline(updateRequest.deadline());
-            comp.setCapacity(updateRequest.capacity());
-            comp.setTypes(updateRequest.types());
-            comp.setFormat(updateRequest.format());
-            comp.setCompetitorGroups(updateRequest.competitorGroups());
-            comp.setDivisions(divisionsEnabled ? updateRequest.divisions() : null);
-            comp.setStatus(updateRequest.status());
-
+            compMap.updateCompetitionFromDto(updateRequest, comp);
             Competition updated = competitionService.save(comp);
 
-            return ResponseEntity.ok(new CompetitionResponseDto(updated));
+            return ResponseEntity.ok(compMap.toResponseDto(updated));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());

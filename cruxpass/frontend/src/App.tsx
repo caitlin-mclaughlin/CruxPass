@@ -1,8 +1,8 @@
 // App.tsx
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/context/AuthContext'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { JSX, useEffect, useState } from 'react'
-import api from '@/services/api'
+import api from '@/services/apiService'
 import "react-datepicker/dist/react-datepicker.css";
 
 import DashboardPage from '@/pages/DashboardPage'
@@ -15,7 +15,10 @@ import CompetitionPage from '@/pages/CompetitionPage'
 import TopNav from '@/components/TopNav'
 
 import { GymSessionProvider } from '@/context/GymSessionContext'
-import { ClimberProvider } from './context/ClimberContext';
+import { ClimberSessionProvider } from './context/ClimberSessionContext';
+import GymCompetitionRouteWrapper from '@/components/GymCompetitionRouteWrapper'
+import { GlobalCompetitionsProvider } from './context/GlobalCompetitionsContext';
+
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { token } = useAuth()
@@ -73,26 +76,43 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <GymSessionProvider>
-        <ClimberProvider>
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<LoginPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/leaderboards" element={<LeaderboardPage />} />
-              <Route path="/competitions/:competitionId" element={<CompetitionPage />} />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <ProfilePage />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </AppLayout>
-        </ClimberProvider>
-      </GymSessionProvider>
+      <AuthProvider>
+        <GymSessionProvider>
+          <ClimberSessionProvider>
+            <GlobalCompetitionsProvider>
+              <AppLayout>
+                <Routes>
+                  <Route path="/" element={<LoginPage />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route
+                    path="/competitions/:competitionId/leaderboard"
+                    element={
+                      <GymCompetitionRouteWrapper>
+                        <LeaderboardPage />
+                      </GymCompetitionRouteWrapper>
+                    }
+                  />
+                  <Route 
+                    path="/competitions/:competitionId" 
+                    element={
+                      <GymCompetitionRouteWrapper>
+                        <CompetitionPage />
+                      </GymCompetitionRouteWrapper>
+                    } />
+                  <Route
+                    path="/profile"
+                    element={
+                      <PrivateRoute>
+                        <ProfilePage />
+                      </PrivateRoute>
+                    }
+                  />
+                </Routes>
+              </AppLayout>
+            </GlobalCompetitionsProvider>
+          </ClimberSessionProvider>
+        </GymSessionProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

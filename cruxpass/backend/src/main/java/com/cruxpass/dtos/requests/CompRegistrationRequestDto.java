@@ -10,6 +10,6 @@ public record CompRegistrationRequestDto(
     String email,
     LocalDate dob,
     CompetitorGroup competitorGroup,
-    Gender gender,
+    Gender division,
     boolean paid
 ) {}

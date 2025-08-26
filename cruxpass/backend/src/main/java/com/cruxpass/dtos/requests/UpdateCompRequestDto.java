@@ -8,15 +8,19 @@ import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Gender;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public record UpdateCompRequestDto(
     String name,
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime date,
+    long duration,
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime deadline,
     int capacity,
     Set<CompetitionType> types,
-    CompetitionFormat format,
+    CompetitionFormat compFormat,
     Set<CompetitorGroup> competitorGroups,
     Set<Gender> divisions,
-    CompetitionStatus status
+    CompetitionStatus compStatus
 ) {} 

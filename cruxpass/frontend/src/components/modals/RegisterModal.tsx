@@ -1,8 +1,8 @@
 // components/RegisterModal.tsx
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { CompRegistrationRequestDto } from '@/types/dto'
-import { useClimber } from '@/context/ClimberContext'
+import { CompRegistrationRequestDto } from '@/models/dtos'
+import { useClimberSession } from '@/context/ClimberSessionContext'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
 import {
   CompetitionEnumMap,
@@ -12,22 +12,24 @@ import {
   GENDER_OPTIONS,
   GenderEnumMap
 } from '@/constants/enum'
-import api from '@/services/api'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
 import { Button } from '@/components/ui/button'
+import { CompetitionSummary, Registration } from '@/models/domain'
+import { useCompetition } from '@/context/GymCompetitionContext'
 
 interface Props {
   open: boolean
   onClose: () => void
-  competition: Competition
-  onSuccess: (registration: any) => void
+  competition: CompetitionSummary
+  onSuccess: (registration: Registration) => void
 }
 
 export default function RegisterModal({ open, onClose, competition, onSuccess }: Props) {
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
-  const [selectedGender, setSelectedGender] = useState<string | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<CompetitorGroup | null>(null)
+  const [selectedDivision, setSelectedDivision] = useState<Gender | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const { climber } = useClimber()
+  const { climber } = useClimberSession()
+  const { registerClimber } = useCompetition()
 
   const divisions = competition.divisions || []
 
@@ -37,13 +39,13 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
   const isYouthGroup = (group: string) => group.includes('YOUTH') || group.includes('JUNIOR')
 
   const handleSubmit = async () => {
-    if (!selectedGroup || !climber || !selectedGender) {
-      setError('Please select both a competitor group and gender.')
+    if (!selectedGroup || !climber || !selectedDivision) {
+      setError('Please select both a competitor group and division.')
       return
     }
 
     const groupEnum = selectedGroup as CompetitorGroup
-    const genderEnum = selectedGender as Gender
+    const genderEnum = selectedDivision as Gender
 
     const isAgeEligible = isEligibleForGroup(climber.dob, groupEnum)
 
@@ -61,13 +63,13 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
       email: climber.email,
       dob: climber.dob,
       competitorGroup: groupEnum,
-      gender: genderEnum,
+      division: genderEnum,
       paid: true
     }
 
     try {
-      await api.post(`/gyms/${competition.gymId}/competitions/${competition.id}/registrations`, payload)
-      onSuccess({ gender: selectedGender, competitorGroup: selectedGroup as CompetitorGroup })
+      const res = await registerClimber(competition.gymId, competition.id, payload)
+      onSuccess(res as Registration)
       handleClose()
     } catch (err) {
       console.error(err)
@@ -78,23 +80,23 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
   const handleClose = () => {
     setError(null)
     setSelectedGroup(null)
-    setSelectedGender(climber?.gender || null)
+    setSelectedDivision(climber?.division || null)
     onClose()
   }
 
-  const handleGroupChange = (value: string) => {
+  const handleGroupChange = (value: CompetitorGroup) => {
     setSelectedGroup(value)
     setError(null)
   }
 
-  const handleGenderChange = (gender: string) => {
-    setSelectedGender(gender)
+  const handleGenderChange = (division: Gender) => {
+    setSelectedDivision(division)
     setError(null)
   }
 
   useEffect(() => {
-    if (open && climber?.gender) {
-      setSelectedGender(climber.gender)
+    if (open && climber?.division) {
+      setSelectedDivision(climber.division)
     }
   }, [open, climber])
 
@@ -126,12 +128,12 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
               <label className="font-semibold">Gender Division:</label>
               <div className="flex flex-wrap px-3 py-1 bg-shadow border border-green rounded-md shadow">
                 <CustomRadioGroup
-                  name="gender"
+                  name="division"
                   options={GENDER_OPTIONS.map(g => ({
                     value: g,
                     label: GenderEnumMap[g as keyof typeof GenderEnumMap]
                   }))}
-                  selected={selectedGender}
+                  selected={selectedDivision}
                   onChange={handleGenderChange}
                 />
               </div>

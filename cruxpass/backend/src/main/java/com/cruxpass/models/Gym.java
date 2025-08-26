@@ -28,11 +28,13 @@ public class Gym {
 
     @NotBlank
     private String name;
-    @NotBlank
+    
+    @Column(unique = true, nullable = false)
     private String email;
     @NotBlank
     private String phone;
-    @NotBlank
+    
+@   Column(unique = true, nullable = false)
     private String username;
     @NotBlank
     private String passwordHash;

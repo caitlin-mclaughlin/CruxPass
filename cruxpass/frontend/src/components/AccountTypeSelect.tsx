@@ -1,3 +1,4 @@
+import { AccountType, AccountTypeDisplay } from '@/constants/enum'
 import {
   Listbox,
   ListboxButton,
@@ -6,28 +7,25 @@ import {
 } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
-const accountTypes = [
-  { label: 'Climber', value: 'climber' },
-  { label: 'Gym', value: 'gym' }
-]
+const accountTypes: AccountType[] = [AccountType.CLIMBER, AccountType.GYM]
 
 export function AccountTypeSelect({
   value,
   onChange,
 }: {
-  value: string
-  onChange: (val: string) => void
+  value: AccountType
+  onChange: (val: AccountType) => void
 }) {
   return (
     <Listbox value={value} onChange={onChange}>
       {({ open }) => (
-        <div className="relative w-full">
+        <div className="relative w-full shadow-md">
           <ListboxButton
-            className="relative w-full cursor-default rounded-md bg-shadow border border-green py-2 pl-3 pr-10 text-left text-green text-green focus:outline-none"
+            className="relative w-full cursor-default rounded-md bg-shadow border border-green px-3 py-1 pr-10 text-left text-green text-green focus:outline-none"
           >
-            {accountTypes.find(t => t.value === value)?.label}
+            {AccountTypeDisplay[value]}
             <ChevronDownIcon
-              className="pointer-events-none absolute inset-y-2 right-2 h-5 w-5 text-green"
+              className="pointer-events-none absolute inset-y-1.5 right-2 h-5 w-5 text-green"
               aria-hidden="true"
             />
           </ListboxButton>
@@ -36,15 +34,15 @@ export function AccountTypeSelect({
             <ListboxOptions
               className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10"
             >
-              {accountTypes.map(({ label, value: val }) => (
-                <ListboxOption key={val} value={val}>
+              {accountTypes.map((type) => (
+                <ListboxOption key={type} value={type}>
                   {({ selected, focus }) => (
                     <div
-                      className={`cursor-pointer rounded-md select-none px-4 py-2 ${
+                      className={`cursor-pointer rounded-md select-none px-3 py-1 ${
                         focus ? 'bg-green text-background font-semibold' : 'text-green'
                       } ${selected ? 'font-semibold' : ''}`}
                     >
-                      {label}
+                      {AccountTypeDisplay[type]}
                     </div>
                   )}
                 </ListboxOption>

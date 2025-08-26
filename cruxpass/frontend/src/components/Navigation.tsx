@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LogOut, Search, Menu } from 'lucide-react'
+import { LogOut, Search, Menu, LogIn, User, ChartLine, Calendar, House } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useGymSession } from '@/context/GymSessionContext'
+import { useClimberSession } from '@/context/ClimberSessionContext'
+import { AccountType } from '@/constants/enum'
 
 export default function Navigation({ 
     onSearchClick,
@@ -12,14 +14,17 @@ export default function Navigation({
     showProfileOption: boolean
 }) {
   const location = useLocation()
-  const { setGymSession } = useGymSession()
-  const { logout } = useAuth()
+  const { gym } = useGymSession()
+  const { climber } = useClimberSession()
+  const { logout, accountType } = useAuth()
   const [open, setOpen] = useState(false)
 
-  const handleLogout = () => {
-    setGymSession?.(null)
-    logout()
-  }
+  useEffect (() => {
+    if ((accountType === AccountType.GYM && !gym) ||
+        (accountType === AccountType.CLIMBER && !climber)) {
+      showProfileOption = false;
+    }
+  }, [gym, climber])
 
   const linkClasses = (path: string) =>
     `block px-4 py-2 hover:bg-select transition ${
@@ -45,14 +50,14 @@ export default function Navigation({
         ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:flex md:flex-col`}
       >
         <div className="flex flex-col h-full py-6 space-y-2 bg-green">
-          <Link to="/dashboard" className={linkClasses('/dashboard')}>
-            Dashboard
+          <Link to="/dashboard" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
+            <House size={18} className="mr-2" /> Dashboard
           </Link>
-          <Link to="/leaderboards" className={linkClasses('/leaderboards')}>
-            Leaderboards
+          <Link to="/leaderboards" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
+            <ChartLine size={18} className="mr-2" /> Leaderboards
           </Link>
-          <Link to="/profile" className={linkClasses('/profile')}>
-            Profile
+          <Link to="/profile" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
+            <User size={18} className="mr-2" /> Profile
           </Link>
           <button
             onClick={onSearchClick}
@@ -64,7 +69,7 @@ export default function Navigation({
           <div className="mt-auto">
             {showProfileOption ? (
               <button
-                onClick={handleLogout}
+                onClick={() => logout()}
                 className="flex items-center w-full text-background bg-accent px-4 py-2 hover:bg-accentHighlight cursor-pointer"
               >
                 <LogOut size={18} className="mr-2" /> Sign out
@@ -74,7 +79,7 @@ export default function Navigation({
                 to="/"
                 className="flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"
               >
-                <LogOut size={18} className="mr-2" /> Sign in
+                <LogIn size={18} className="mr-2" /> Sign in
               </Link>
             )}
           </div>

@@ -1,8 +1,28 @@
+# application-prod.yml
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/cruxpass
+    url: jdbc:postgresql://pgbouncer:6432/cruxpass?preferQueryMode=simple
     username: postgres
     password: password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 5000
+      pool-name: CruxHikariPool
+      data-source-properties:
+        sendExtraFloatDigits: false
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
   secret: ${JWT_SECRET}
