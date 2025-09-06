@@ -40,8 +40,12 @@ export function GymSessionProvider({ children }: { children: ReactNode }) {
         const res = await getGymProfile();
         const data = {
           id: res.id, 
-          gymName: res.name, 
-          gymAddress: formatAddress(res.address)
+          name: res.name, 
+          email: res.email,
+          phone: res.phone,
+          username: res.username,
+          address: res.address,
+          createdAt: res.createdAt
         }
         setGym(data as GymData);
       } catch (err) {

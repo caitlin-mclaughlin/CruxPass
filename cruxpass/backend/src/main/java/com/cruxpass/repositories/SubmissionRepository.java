@@ -1,5 +1,7 @@
 package com.cruxpass.repositories;
 
+import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.Gender;
 import com.cruxpass.models.Submission;
 
 import java.util.List;
@@ -15,14 +17,29 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     Optional<List<Submission>> findByClimberId(Long id);
 
     @Query("""
-      SELECT s FROM Submission s 
-      JOIN FETCH s.routes 
-      WHERE s.competition.id = :compId 
-        AND s.climber.id = :climberId
+        SELECT s 
+        FROM Submission s
+        LEFT JOIN FETCH s.climber
+        LEFT JOIN FETCH s.routes r
+        LEFT JOIN FETCH r.route
+        WHERE s.competition.id = :competitionId
+            AND s.competitorGroup = :group
+            AND (:division IS NULL OR s.division = :division)
+    """)
+    Optional<List<Submission>> findByCompetitionIdAndGroupAndDivision(
+            @Param("competitionId") Long competitionId,
+            @Param("group") CompetitorGroup group,
+            @Param("division") Gender division);
+        
+    @Query("""
+        SELECT s FROM Submission s
+        LEFT JOIN FETCH s.routes sr
+        LEFT JOIN FETCH sr.route r
+        WHERE s.competition.id = :compId 
+            AND s.climber.id = :climberId
     """)
     Optional<Submission> findByCompetitionIdAndClimberIdWithRoutes(
         @Param("compId") Long compId, 
         @Param("climberId") Long climberId
     );
-
 }

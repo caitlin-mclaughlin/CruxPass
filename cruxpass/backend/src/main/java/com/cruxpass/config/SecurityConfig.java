@@ -34,9 +34,11 @@ public class SecurityConfig {
                     "/api/auth/**",
                     "/api/search/**"
                 ).permitAll()
+                .requestMatchers("/ws/**").permitAll() // <--- allow websocket handshake
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
+
 }

@@ -21,10 +21,11 @@ public class RegistrationMapper {
             reg.getId(),
             reg.getCompetition().getGym().getId(),
             reg.getCompetition().getId(),
+            reg.getClimber().getName(),
+            reg.getClimber().getDob(),
+            reg.getClimber().getEmail(),
             reg.getCompetitorGroup(),
             reg.getDivision(),
-            reg.getClimber().getName(),
-            reg.getClimber().getEmail(),
             reg.isPaid()
         );
     }
@@ -42,9 +43,11 @@ public class RegistrationMapper {
         return new SimpleRegistrationResponseDto(
             reg.getId(),
             reg.getCompetition().getId(),
+            reg.getClimber().getName(),
+            reg.getClimber().getDob(),
+            reg.getClimber().getEmail(),
             reg.getCompetitorGroup(),
-            reg.getDivision(),
-            reg.getClimber().getName()
+            reg.getDivision()
         );
     }
 

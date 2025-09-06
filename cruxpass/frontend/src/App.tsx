@@ -18,6 +18,7 @@ import { GymSessionProvider } from '@/context/GymSessionContext'
 import { ClimberSessionProvider } from './context/ClimberSessionContext';
 import GymCompetitionRouteWrapper from '@/components/GymCompetitionRouteWrapper'
 import { GlobalCompetitionsProvider } from './context/GlobalCompetitionsContext';
+import LeaderboardRouteWrapper from './components/LeaderboardRouteWrapper';
 
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
@@ -87,9 +88,9 @@ export default function App() {
                   <Route
                     path="/competitions/:competitionId/leaderboard"
                     element={
-                      <GymCompetitionRouteWrapper>
+                      <LeaderboardRouteWrapper>
                         <LeaderboardPage />
-                      </GymCompetitionRouteWrapper>
+                      </LeaderboardRouteWrapper>
                     }
                   />
                   <Route 

@@ -9,25 +9,24 @@ import { CalendarPlus } from 'lucide-react'
 import { useGymSession } from '@/context/GymSessionContext'
 import { useClimberSession } from '@/context/ClimberSessionContext'
 import { useGlobalCompetitions } from '@/context/GlobalCompetitionsContext'
-import { formatAddress, formatDate, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
-import { CompetitionEnumMap, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
+import { formatAddress, formatDate, formatGroupsInOrder } from '@/utils/formatters'
+import { CompetitionEnumMap, CompetitorGroup, GenderEnumMap } from '@/constants/enum'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
-import { CompetitionFormPayload, SubmissionRequestDto } from '@/models/dtos'
-import { CompetitionSummary, Registration, Route, SubmittedRoute } from '@/models/domain'
-import { displayDateTime, pretty } from '@/utils/datetime'
-import { CompetitionProvider, useCompetition } from '@/context/GymCompetitionContext'
+import { CompetitionFormPayload } from '@/models/dtos'
+import { CompetitionSummary } from '@/models/domain'
+import { displayDateTime } from '@/utils/datetime'
+import { ClimberCompetitionProvider } from '@/context/ClimberCompetitionContext'
+import { Button } from '@/components/ui/Button'
 
 export default function DashboardPage() {
   const { 
     competitions = [], 
-    loading: 
-    competitionsLoading,
+    loading: competitionsLoading,
     refreshCompetitions,
   } = useGlobalCompetitions()
 
   const { gym, createCompetition, refreshGym } = useGymSession()
   const { climber } = useClimberSession()
-  const { submitScores, refreshSubmissions } = useCompetition()
   const navigate = useNavigate()
 
   const [expandedIds, setExpandedIds] = useState<number[]>([])
@@ -35,20 +34,29 @@ export default function DashboardPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [showScoresModal, setShowScoresModal] = useState(false)
   const [registerComp, setRegisterComp] = useState<CompetitionSummary | null>(null)
-  const [existingSubmissions, setExistingSubmissions] = useState<SubmittedRoute[]>()
 
-  const gymName = gym?.gymName ?? ""
-  const gymAddress = gym?.gymAddress ?? ""
+  // Refresh competitions whenever Dashboard mounts
+  useEffect(() => {
+    refreshCompetitions()
+  }, [refreshCompetitions])
+
+  const gymName = gym?.name ?? ""
+  const gymAddress = gym ? formatAddress(gym.address) : ""
 
   const sortedCompetitions = useMemo(
-    () => (competitions ?? []).slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    () => (competitions ?? []).slice().sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    ),
     [competitions]
   )
-  const liveRegisteredComp = sortedCompetitions.find(c => c.compStatus === 'LIVE' && c.registered)
 
+  const liveRegisteredComp = sortedCompetitions.find(
+    c => c.compStatus === 'LIVE' && c.registered
+  )
+  
   // Create competition
   const handleNewCompetition = async (data: CompetitionFormPayload) => {
-    if (!gym?.id) return
+    if (!gym) return
     try {
       await refreshGym()
       await createCompetition(data)
@@ -65,26 +73,29 @@ export default function DashboardPage() {
       navigate('/', { state: { redirectTo: `/dashboard` } })
       return
     }
-    setRegisterComp(comp)
-    setShowRegisterModal(true)
+    if (climber) {
+      setRegisterComp(comp)
+      setShowRegisterModal(true)
+    }
   }
 
   // Open add scores modal
   const openScoresModal = () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
+    if (!climber) {
       navigate('/', { state: { redirectTo: `/dashboard` } })
       return
     }
     setShowScoresModal(true)
   }
 
+  const handleShowRegistrations = (competitionId: number) => {
+    if (!gym) return
+    navigate(`/competitions/${competitionId}`, { state: { redirectTo: `/dashboard` } })
+  }
+
   // UI helpers
   const toggleExpanded = (id: number) =>
     setExpandedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
-
-  const handleShowRegistrations = (competitionId: number) =>
-    navigate(`/competitions/${competitionId}`, { state: { redirectTo: `/dashboard` } })
 
   const isClimberEligible = (comp: CompetitionSummary) =>
     climber ? comp.competitorGroups.some((g: string) => isEligibleForGroup(climber.dob, g as CompetitorGroup)) : true
@@ -93,16 +104,15 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 bg-background text-green flex flex-col h-screen">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h1 className="text-2xl font-bold">Upcoming Competitions</h1>
         {gym && (
-          <button
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center bg-green text-background font-bold px-4 py-2 text-1xl shadow rounded-md hover:bg-select cursor-pointer"
           >
-            <CalendarPlus size={18} className="mr-2" /> 
+            <CalendarPlus size={18} /> 
             <span className="relative top-[1px]">New Competition</span>
-          </button>
+          </Button>
         )}
       </div>
 
@@ -117,18 +127,16 @@ export default function DashboardPage() {
       {climber && liveRegisteredComp && (
         <div className="bg-green text-background p-4 mb-4 rounded-md shadow-md flex justify-between items-center">
           <div>You are currently competing in <strong>{liveRegisteredComp.name}</strong>!</div>
-          <button
+          <Button
             onClick={async () => openScoresModal()}
-            className="bg-shadow text-green font-bold px-3 py-1 rounded-md hover:bg-background"
           >
             Enter Scores
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => navigate(`/competitions/${liveRegisteredComp.id}/leaderboard`)}
-            className="bg-shadow text-green font-bold px-3 py-1 rounded-md hover:bg-background"
           >
             View Live Leaderboard
-          </button>
+          </Button>
         </div>
       )}
 
@@ -139,13 +147,13 @@ export default function DashboardPage() {
           return (
             <div
               key={comp.id}
-              className={`border p-4 rounded-md shadow flex items-center justify-between ${
+              className={`border px-3 py-2 rounded-md shadow-md flex items-center justify-between ${
                 isHost ? 'bg-shadow border-highlight text-highlight' : 'bg-shadow text-green'
               }`}
             >
               <div>
                 <div
-                  className="flex items-center gap-x-2 font-semibold cursor-pointer"
+                  className="flex items-center gap-x-2 mb-2 font-semibold cursor-pointer"
                   onClick={() => toggleExpanded(comp.id)}
                 >
                   <span>{comp.name}</span>
@@ -162,7 +170,7 @@ export default function DashboardPage() {
                 )}
 
                 {expandedIds.includes(comp.id) && (
-                  <div className="mt-2 text-sm space-y-1">
+                  <div className="text-sm space-y-1">
                     <div><strong>Date & Time:</strong> {displayDateTime(comp.date)}</div>
                     <div><strong>Registration Deadline:</strong> {displayDateTime(comp.deadline)}</div>
                     <div><strong>Host Gym:</strong> {comp.hostGymName}</div>
@@ -184,62 +192,55 @@ export default function DashboardPage() {
               </div>
 
               {!gym ? (
-                <button
-                  className={`px-4 py-2 rounded-md font-semibold shadow text-background ${
-                    comp.registered
-                      ? 'bg-highlight'
-                      : isClimberEligible(comp)
-                        ? 'bg-green hover:bg-select'
-                        : 'bg-accent cursor-not-allowed'
+                <Button
+                  className={`${comp.registered
+                    ? 'bg-highlight'
+                    : isClimberEligible(comp)
+                      ? 'bg-green hover:bg-select'
+                      : 'bg-accent cursor-not-allowed'
                   }`}
                   onClick={() => openRegisterModal(comp)}
                   disabled={comp.registered || !isClimberEligible(comp)}
                 >
                   {comp.registered ? 'Registered' : isClimberEligible(comp) ? 'Register' : 'Not Eligible'}
-                </button>
+                </Button>
               ) : (
                 isHost && (
-                  <button
-                    className="px-4 py-2 rounded-md font-semibold shadow cursor-pointer text-background bg-green hover:bg-select"
+                  <Button
                     onClick={() => handleShowRegistrations(comp.id)}
                   >
                     See Registrations
-                  </button>
+                  </Button>
                 )
               )}
             </div>
           )
         })}
-
       </div>
 
       {registerComp && (
-        <RegisterModal
-          open={showRegisterModal}
-          onClose={() => setShowRegisterModal(false)}
-          competition={registerComp}
-          onSuccess={async (registration: Registration) => {
-            await refreshCompetitions()
-            setShowRegisterModal(false)
-          }}
-        />
+        <ClimberCompetitionProvider id={registerComp.id}>
+          <RegisterModal
+            open={showRegisterModal}
+            onClose={() => setShowRegisterModal(false)}
+            competition={registerComp}
+            onSuccess={async () => {
+              await refreshCompetitions()
+              setShowRegisterModal(false)
+            }}
+          />
+        </ClimberCompetitionProvider>
       )}
       
       {liveRegisteredComp && liveRegisteredComp.registration && (
-        <CompetitionProvider id={liveRegisteredComp.id}>
+        <ClimberCompetitionProvider id={liveRegisteredComp.id}>
           <AddScoresModal
             open={showScoresModal}
             onClose={() => setShowScoresModal(false)}
-            onSuccess={async (routes: SubmittedRoute[]) => {
-              await refreshSubmissions(liveRegisteredComp.gymId, liveRegisteredComp.id)
-              setShowScoresModal(false)
-            }}
             gymId={liveRegisteredComp.gymId}
             competitionId={liveRegisteredComp.id}
-            competitorGroup={liveRegisteredComp.registration.competitorGroup as CompetitorGroup}
-            division={liveRegisteredComp.registration.division as Gender}
           />
-        </CompetitionProvider>
+        </ClimberCompetitionProvider>
       )}
     </div>
   )

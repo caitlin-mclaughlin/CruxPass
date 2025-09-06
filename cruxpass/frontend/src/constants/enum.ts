@@ -50,18 +50,20 @@ export const GenderEnumMap = {
   NONBINARY: 'Non-Binary',
 } as const;
 
-/** COMPETITOR GROUP - GENDER KEY **/
-export type GroupGenderKey = `${CompetitorGroup}-${Gender}`
+/** COMPETITOR GROUP - DIVISION KEY **/
+export type GroupDivisionKey = `${CompetitorGroup}-${Gender}`
 
 /** ACCOUNT TYPES **/
 export enum AccountType {
   CLIMBER = "CLIMBER",
-  GYM = "GYM"
+  GYM = "GYM",
+  SERIES = "SERIES"
 }
 
 export const AccountTypeDisplay: Record<AccountType, string> = {
   [AccountType.CLIMBER]: "Climber",
-  [AccountType.GYM]: "Gym"
+  [AccountType.GYM]: "Gym",
+  [AccountType.SERIES]: "Series Organizer"
 }
 
 export const accountTypeOptions = Object.values(AccountType).map((role) => ({

@@ -1,7 +1,8 @@
-// context/GlobalCompetitionsContext
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+// context/GlobalCompetitionsContext.tsx
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { CompetitionSummary, Registration, Route } from '@/models/domain';
 import { getAllCompetitions, getRegistrationsForCompetition, getRoutesForCompetition } from '@/services/globalCompetitionService';
+import { PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
 
 interface GlobalCompetitionsContextValue {
   competitions: CompetitionSummary[];
@@ -13,12 +14,12 @@ interface GlobalCompetitionsContextValue {
 }
 
 const GlobalCompetitionsContext = createContext<GlobalCompetitionsContextValue>({
-    competitions: [],
-    loading: true,
-    error: null,
-    refreshCompetitions: async () => {},
-    getRegistrationsForComp: async () => [],
-    getRoutesForComp: async () => []
+  competitions: [],
+  loading: true,
+  error: null,
+  refreshCompetitions: async () => {},
+  getRegistrationsForComp: async () => [],
+  getRoutesForComp: async () => []
 });
 
 export function GlobalCompetitionsProvider({ children }: { children: ReactNode }) {
@@ -26,11 +27,8 @@ export function GlobalCompetitionsProvider({ children }: { children: ReactNode }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    refreshCompetitions();
-  }, []);
-
-  async function refreshCompetitions() {
+  // stable function - no deps
+  const refreshCompetitions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -41,42 +39,48 @@ export function GlobalCompetitionsProvider({ children }: { children: ReactNode }
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function getRegistrationsForComp(competitionId: number): Promise<Registration[]> {
-    if (competitionId) {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getRegistrationsForCompetition(competitionId);
-        return res;
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error'));
-      } finally {
-        setLoading(false);
-      }
+  const getRegistrationsForComp = useCallback(async (competitionId: number): Promise<Registration[]> => {
+    if (!competitionId) return [];
+    try {
+      const res =  await getRegistrationsForCompetition(competitionId);
+      const data: Registration[] = res.map((r: PublicRegistrationDto) => ({
+        climberName: r.climberName,
+        climberDob: r.climberDob,
+        division: r.division,
+        competitorGroup: r.competitorGroup,
+      }));
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+      return [];
     }
-    return [];
-  }
+  }, []);
 
-  async function getRoutesForComp(competitionId: number): Promise<Route[]> {
-    if (competitionId) {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getRoutesForCompetition(competitionId);
-        return res;
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error'));
-      } finally {
-        setLoading(false);
-      }
+  const getRoutesForComp = useCallback(async (competitionId: number): Promise<Route[]> => {
+    if (!competitionId) return [];
+    try {
+      const res =  await getRoutesForCompetition(competitionId);
+      const data: Route[] = res.map((r: RouteResponseDto) => ({
+        id: r.id,
+        number: r.number,
+        pointValue: r.pointValue,
+      }));
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+      return [];
     }
-    return [];
-  }
+  }, []);
+
+  // run refresh once on mount
+  useEffect(() => {
+    refreshCompetitions();
+  }, []);
 
   return (
-    <GlobalCompetitionsContext.Provider value={{ 
+    <GlobalCompetitionsContext.Provider value={{
       competitions,
       loading,
       error,
@@ -94,4 +98,3 @@ export const useGlobalCompetitions = () => {
   if (!context) throw new Error('useCompetitions must be used within GlobalCompetitionsProvider');
   return context;
 }
-

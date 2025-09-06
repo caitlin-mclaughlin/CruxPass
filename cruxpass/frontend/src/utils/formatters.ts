@@ -1,7 +1,8 @@
-import { COMPETITOR_GROUPS, CompetitionEnumMap } from '@/constants/enum'
+import { COMPETITOR_GROUPS, CompetitionEnumMap, CompetitorGroup, Gender, GenderEnumMap, GroupDivisionKey } from '@/constants/enum'
 import { Address } from '@/models/domain';
 
 export function formatPhoneNumber(value: string): string {
+  if (!value) return ""; 
   const digits = value.replace(/\D/g, "").slice(0, 10); // max 10 digits
 
   const parts = [];
@@ -69,18 +70,21 @@ export function formatGroupsInOrder(groups: string[]): string {
   return ordered.map(competitorGroup => CompetitionEnumMap[competitorGroup]).join(', ')
 }
 
-export function parseAddress(address: string) {
-    // Naive parser: assumes "123 Main St, Madison, WI 53703"
-    const parts = address.split(',')
-    const streetAddress = parts[0]?.trim() || ''
-    const city = parts[1]?.trim() || ''
-    const stateZip = parts[2]?.trim().split(' ') || []
+export function formatGroupDivision(group: CompetitorGroup, division: Gender): string {
+  return `${GenderEnumMap[division]}'s ${CompetitionEnumMap[group]}`
+}
 
-    return {
-      streetAddress,
-      apartmentNumber: null,
-      city,
-      state: stateZip[0] || '',
-      zipCode: stateZip[1] || ''
-    }
+export function parseAddress(address: string): Address {
+  // Naive parser: assumes "123 Main St, Madison, WI 53703"
+  const parts = address.split(',')
+  const streetAddress = parts[0]?.trim() || ''
+  const city = parts[1]?.trim() || ''
+  const stateZip = parts[2]?.trim().split(' ') || []
+
+  return {
+    streetAddress,
+    city,
+    state: stateZip[0] || '',
+    zipCode: stateZip[1] || ''
   }
+}

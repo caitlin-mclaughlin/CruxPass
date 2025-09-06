@@ -4,10 +4,11 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+  DialogTitle } from '@/components/ui/Dialog'
+import { Button } from '@/components/ui/Button'
 import { Route } from '@/models/domain'
 import { RouteDto } from '@/models/dtos'
+import { Input } from '../ui/Input'
 
 interface Props {
   open: boolean
@@ -94,7 +95,7 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
 
         <div>
           <div className="relative w-full">
-            <input
+            <Input
               type="number"
               step={10}
               min={1}
@@ -108,10 +109,10 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
                 }
 
               }}
-              className={`form-input`}
+              className="py-5"
             />
 
-            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col justify-center gap-0.5">
+            <div className="absolute right-1 top-1/2 -translate-y-5 flex flex-col justify-center">
               <button
                 type="button"
                 className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-none"
@@ -136,21 +137,21 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
 
         {(typeof numRoutes === 'number' && numRoutes > 0) && (
           <div>
-            <div className="max-h-80 overflow-y-auto bg-shadow border shadow rounded-md scrollbar-thin-green">
-            <table className="w-full text-left bg-background border-collapse">
+            <div className="max-h-80 overflow-y-auto border shadow-md rounded-md scrollbar-thin-green">
+            <table className="w-full text-left bg-shadow border-collapse">
                 <thead>
-                  <tr>
+                  <tr className="bg-green text-shadow">
                     <th className="p-2 border-r text-center">Route #</th>
-                    <th className="p-2">Point Value</th>
+                    <th className="p-2 text-center">Point Value</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Array.from({ length: numRoutes }, (_, i) => (
                     <tr key={i} className="border-t">
                       <td className="px-2 py-2 border-r text-center">{i + 1}</td>
-                      <td className="p-2">
+                      <td className="px-3 py-2">
                         <div className="relative w-full">
-                          <input
+                          <Input
                             type="number"
                             step={10}
                             min={0}
@@ -167,12 +168,12 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
                                 handlePointValueChange(i, parseInt(val, 10))
                               }
                             }}
-                            className={`form-input bg-shadow pr-10 ${
+                            className={`bg-background py-5 pr-10 ${
                               errors[i] ? 'border-accent focus:border-accent' : ''
                             }`}
                           />
 
-                          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex flex-col justify-center gap-0.5">
+                          <div className="absolute right-1 top-1/2 -translate-y-5 flex flex-col justify-center">
                             <button
                               type="button"
                               className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-select focus:text-select"

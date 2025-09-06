@@ -5,38 +5,37 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import debounce from 'lodash.debounce'
-import { Route, SubmittedRoute } from '@/models/domain'
-import { useGlobalCompetitions } from '@/context/GlobalCompetitionsContext'
+} from '@/components/ui/Dialog'
+import { Button } from '@/components/ui/Button'
 import { useClimberCompetition } from '@/context/ClimberCompetitionContext'
 import { SubmissionRequestDto } from '@/models/dtos'
-import { CompetitorGroup, Gender } from '@/constants/enum'
+import { useLeaderboard } from '@/context/LeaderboardContext'
+import { Input } from '../ui/Input'
 
 interface Props {
   open: boolean
   onClose: () => void
-  onSuccess: (subs: SubmittedRoute[]) => void
   gymId: number
   competitionId: number
-  competitorGroup: CompetitorGroup
-  division: Gender
 }
 
 export default function AddScoresModal({
   open, 
   onClose, 
-  onSuccess, 
   gymId,
-  competitionId,
-  competitorGroup,
-  division
+  competitionId
 }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { getRoutesForComp } = useGlobalCompetitions()
-  const { registration, routes, submissions, refreshAll, refreshRegistration, refreshSubmissions, updateSubmissions } = useClimberCompetition()
+  const {
+    registration,
+    routes,
+    submissions,
+    refreshAll,
+    setSubmissions,
+    updateSubmissions
+  } = useClimberCompetition()
+  const { updateGroupLeaderboard, competition } = useLeaderboard();
 
   // Fetch routes + existing submissions
   useEffect(() => {
@@ -60,12 +59,12 @@ export default function AddScoresModal({
 
   // Merge routes and submissions
   const rows = useMemo(() => {
-    if (!routes || !submissions) return;
+    if (!routes || !submissions) return [];
     return routes.map((route) => {
-      const sub = submissions.find((s) => s.routeId === route.id)
-      return sub ?? { routeId: route.id, attempts: 0, send: false }
+      const sub = submissions.find((s) => s.routeId === route.id);
+      return sub ?? { routeId: route.id, attempts: 0, send: false };
     });
-  }, [routes, submissions])
+  }, [routes, submissions]);
 /*
   const debouncedSave = useMemo(() => debounce((updatedSubs: SubmittedRoute[]) => {
     handleSubmitScores()
@@ -87,31 +86,48 @@ export default function AddScoresModal({
   }, [])
 */
   const handleSubmitScores = async () => {
-    if (!competitionId || !gymId) return;
+    if (!registration || !competitionId || !gymId) return;
 
     const payload: SubmissionRequestDto = {
-      competitorGroup,
-      division,
+      competitorGroup: registration.competitorGroup,
+      division: registration.division,
       routes: submissions.filter(r => r.attempts > 0),
     };
 
     try {
+      setLoading(true);
+      setError(null);
+      // Submit to backend
       await updateSubmissions(gymId, competitionId, payload);
-      refreshSubmissions(gymId, competitionId);
-      onSuccess(submissions);
+
+      if (competitionId) {
+        const key = `${registration.competitorGroup}-${registration.division}`;
+        const localLeaderboard = submissions.map((sub, idx) => ({
+          place: idx + 1, // temporary, backend will correct via WebSocket
+          climberName: registration.climberName,
+          totalPoints: sub.attempts, // optional: compute from points if needed
+          totalAttempts: sub.attempts,
+          competitorGroup: registration.competitorGroup,
+          division: registration.division
+        }));
+        updateGroupLeaderboard(key as any, localLeaderboard);
+      }
+
+      onClose();
     } catch (err) {
-      console.error('Failed to submit scores', err);
+      console.error("Failed to submit scores", err);
+      setError("Failed to submit scores. Try again.");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    const hasInvalid = submissions.some(
-      (sub) => sub.send && (!sub.attempts || isNaN(sub.attempts))
-    );
+    const hasInvalid = submissions.some(sub => sub.send && (!sub.attempts || isNaN(sub.attempts)));
     if (hasInvalid) return;
     await handleSubmitScores();
     onClose();
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(val: any) => { if (!val) onClose() }}>
@@ -133,10 +149,10 @@ export default function AddScoresModal({
           </div>
         ) : (
           // Success state (your existing table)
-          <div className="overflow-y-auto max-h-96 mt-2 bg-shadow border shadow rounded-md scrollbar-thin-green">
+          <div className="overflow-y-auto max-h-96 bg-shadow border shadow-md rounded-md scrollbar-thin-green">
             <table className="w-full border-collapse bg-background text-green">
               <thead>
-                <tr>
+                <tr className="bg-green text-shadow">
                   <th className="p-2 border-r">Route #</th>
                   <th className="p-2 border-r">Points</th>
                   <th className="py-2 flex justify-center text-center border-r">Attempts</th>
@@ -148,7 +164,7 @@ export default function AddScoresModal({
                   rows.map((row) => {
                     const route = routes.find((r) => r.id === row.routeId);
                     return (
-                      <tr key={row.routeId} className="border-t">
+                      <tr key={row.routeId} className="bg-shadow border-t">
                         <td className="p-2 text-center border-r">
                           {route?.number ?? "—"}
                         </td>
@@ -159,11 +175,11 @@ export default function AddScoresModal({
                         {/* Attempts */}
                         <td className="py-2 flex justify-center border-r">
                           <div className="relative max-w-20">
-                            <input
+                            <Input
                               type="number"
                               min="0"
                               step="1"
-                              className="form-input bg-shadow pr-5 text-center"
+                              className="bg-background pr-5 text-center"
                               value={row.attempts.toString()}
                               onChange={(e) => {
                                 const parsed = parseInt(e.target.value, 10)
@@ -182,10 +198,10 @@ export default function AddScoresModal({
                                 })
                               }}
                             />
-                            <div className="absolute left-14 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                            <div className="absolute left-14 top-1/2 -translate-y-1/2 flex flex-col">
                               <button
                                 type="button"
-                                className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer"
+                                className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-none"
                                 onClick={() => {
                                   setSubmissions((prev) => {
                                     const existingIndex = prev.findIndex(
@@ -214,7 +230,7 @@ export default function AddScoresModal({
                               </button>
                               <button
                                 type="button"
-                                className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer"
+                                className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-b focus-visible:outline-none"
                                 onClick={() => {
                                   setSubmissions((prev) => {
                                     const existingIndex = prev.findIndex(
@@ -258,11 +274,11 @@ export default function AddScoresModal({
                               })
                             }}
                             className={`relative inline-flex h-6 w-11 border border-green items-center rounded-full transition-colors focus:outline-none ${
-                              row.send ? 'bg-green' : 'bg-shadow'
+                              row.send ? 'bg-green' : 'bg-background'
                             }`}
                           >
                             <span
-                              className={`inline-block h-4 w-4 transform rounded-full border border-green bg-background transition-transform ${
+                              className={`inline-block h-4 w-4 transform rounded-full border border-green bg-shadow transition-transform ${
                                 row.send? 'translate-x-6' : 'translate-x-1'
                               }`}
                             />

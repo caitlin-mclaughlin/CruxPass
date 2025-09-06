@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useClimberSession } from '@/context/ClimberSessionContext'
 import { useGymSession } from '@/context/GymSessionContext'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/components/ui/Input'
 import { useNavigate } from 'react-router-dom'
 import { AccountTypeSelect } from '@/components/AccountTypeSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
@@ -136,16 +136,28 @@ export default function Login() {
     try {
       if (isCreating) {
         if (!formData.accountType) return
-        await register(formData.accountType, {
-          name: formData.name,
-          email: formData.email,
-          username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
-          phone: stripNonDigits(formData.phone),
-          dob: formData.dob ? formData.dob.toISOString().split('T')[0] : null,
-          division: formData.division || null,
-          password: formData.password,
-          address: formData.address
-        });
+        if (formData.accountType === AccountType.CLIMBER) {
+          await register(AccountType.CLIMBER, {
+            name: formData.name,
+            email: formData.email,
+            username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
+            phone: stripNonDigits(formData.phone),
+            dob: formData.dob?.toISOString().split('T')[0],
+            division: formData.division,
+            password: formData.password,
+            address: formData.address
+          });
+        } else {
+          // GYM registration
+          await register(AccountType.GYM, {
+            name: formData.name,
+            email: formData.email,
+            username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
+            phone: stripNonDigits(formData.phone),
+            password: formData.password,
+            address: formData.address
+          });
+        }
       } else {
         await login({
           emailOrUsername: formData.emailOrUsername,

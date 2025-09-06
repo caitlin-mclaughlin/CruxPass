@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useCompetition } from '@/context/GymCompetitionContext'
+import { useGymCompetition } from '@/context/GymCompetitionContext'
 import { useGymSession } from '@/context/GymSessionContext'
 import CreateCompetitionModal from '@/components/modals/CreateCompetitionModal'
 import AddRoutesModal from '@/components/modals/AddRoutesModal'
 import { CalendarCheck, PencilLine } from 'lucide-react'
-import { formatAddress, formatDateTimePretty, formatGroupsInOrder } from '@/utils/formatters'
+import { formatAddress, formatGroupsInOrder } from '@/utils/formatters'
 import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
-import { CompetitionSummary, Registration, Route } from '@/models/domain'
+import { GymRegistration } from '@/models/domain'
 import { CompetitionFormPayload, RouteDto } from '@/models/dtos'
-import { displayDateTime, parseBackendLocal, pretty } from '@/utils/datetime'
+import { displayDateTime } from '@/utils/datetime'
+import { Button } from '@/components/ui/Button'
 
 export default function CompetitionPage() {
   const { competitionId } = useParams<{ competitionId: string }>()
@@ -26,7 +27,7 @@ export default function CompetitionPage() {
     updateCompetition,
     updateRegistrations,
     updateRoutes
-  } = useCompetition()
+  } = useGymCompetition()
   const { gym } = useGymSession()
 
   const [loadingRegs, setLoadingRegs] = useState(true)
@@ -58,7 +59,7 @@ export default function CompetitionPage() {
 
   // Group registrations by division and group for display
   const groupByGroupAndDivision = () => {
-    const grouped: Record<string, Registration[]> = {}
+    const grouped: Record<string, GymRegistration[]> = {}
     if (!registrations) return
     for (const reg of registrations) {
       const key = `${GenderEnumMap[reg.division as keyof typeof GenderEnumMap]}'s ${CompetitionEnumMap[reg.competitorGroup as keyof typeof CompetitionEnumMap]}`
@@ -99,10 +100,11 @@ export default function CompetitionPage() {
 
   return (
     <div className="h-screen p-8 text-green bg-background">
-      <h1 className="text-2xl font-bold mb-4">{competition.name}</h1>
+      <h1 className="text-2xl font-bold mb-2">{competition.name}</h1>
 
       {/* Competition Details Box */}
-      <div className="mb-2 border rounded-md p-4 bg-shadow max-w-3xl">
+      <h2 className="text-xl mb-1 font-semibold">Details</h2>
+      <div className="mb-3 border rounded-md px-3 py-2 bg-shadow shadow-md max-w-3xl">
         <div><strong>Date & Time:</strong> {displayDateTime(competition.date)}</div>
         <div><strong>Registration Deadline:</strong> {displayDateTime(competition.deadline)}</div>
         <div><strong>Host Gym:</strong> {competition.hostGymName}</div>
@@ -119,39 +121,38 @@ export default function CompetitionPage() {
 
       {gym && gym.id === competition.gymId && (
         <div className="flex justify-between max-w-3xl">
-          <button
-              className="mb-4 flex items-center bg-green text-background px-4 py-1.5 rounded-md font-semibold shadow hover:bg-select"
+          <Button
               onClick={() => {
               setShowEditModal(true)
             }}
           >
-            <CalendarCheck size={18} className="mr-2" /> 
+            <CalendarCheck size={18} /> 
             <span className="relative top-[1px]">Edit Competition</span>
-          </button>
+          </Button>
 
-          <button
-              className="mb-4 flex items-center bg-green text-background px-4 py-1.5 rounded-md font-semibold shadow hover:bg-select"
+          <Button
+              className="mb-3"
               onClick={() => {
                 fetchRoutes()
                 setShowRouteModal(true)
               }}
           >
-            <PencilLine size={18} className="mr-2" /> 
+            <PencilLine size={18} /> 
             <span className="relative top-[1px]">Edit Routes</span>
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Registration Box */}
       <h2 className="text-xl mb-1 font-semibold">Registrations</h2>
-      <div className="border rounded-md p-4 bg-shadow max-w-3xl">
+      <div className="border rounded-md px-3 py-2 bg-shadow shadow-md max-w-3xl">
         {Object.entries(groupedRegs).map(([groupLabel, climbers]) => (
           <div key={groupLabel} className="mb-2">
             <h3 className="font-semibold underline mb-1">{groupLabel}</h3>
             <ul className="ml-6 list-disc">
               {climbers.map((c, idx) => (
                 <li key={idx}>
-                  {c.climberName} – <span>{c.email}</span>
+                  {c.climberName} – <span>{c.climberEmail}</span>
                 </li>
               ))}
             </ul>

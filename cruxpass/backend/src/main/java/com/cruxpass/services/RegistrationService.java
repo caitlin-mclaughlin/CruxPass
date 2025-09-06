@@ -34,6 +34,10 @@ public class RegistrationService {
         return repository.findByClimberAndCompetition(climber, competition).orElse(null);
     }
 
+    public Registration getByClimberIdAndCompetitionId(Long climberId, Long competitionId) {
+        return repository.findByClimberIdAndCompetitionId(climberId, competitionId).orElse(null);
+    }
+
     public boolean existsByClimberAndCompetition(Climber climber, Competition competition) {
         return repository.existsByClimberAndCompetition(climber, competition);
     }

@@ -78,9 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log("JWT payload:", payload);
+
       const role = (payload.role || payload.type || (payload.roles && payload.roles[0]))?.toString().toUpperCase();
       if (role === 'CLIMBER') return AccountType.CLIMBER;
       if (role === 'GYM') return AccountType.GYM;
+      if (role === 'SERIES') return AccountType.SERIES;
       logout()
       return null;
     } catch {

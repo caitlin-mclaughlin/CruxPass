@@ -47,7 +47,7 @@ public class CompRouteController {
     ) {
         currentUserService.validateGymAccess(gymId, authHeader);
             
-        Competition comp = competitionService.getById(competitionId);
+        Competition comp = competitionService.getById(competitionId).orElse(null);
         if (comp == null) return ResponseEntity.notFound().build();
         if (comp.getGym().getId() != gymId)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -83,7 +83,7 @@ public class CompRouteController {
 
         Gym gym = gymService.getById(gymId);
         if (gym == null) return ResponseEntity.notFound().build();
-        Competition comp = competitionService.getById(competitionId);
+        Competition comp = competitionService.getById(competitionId).orElse(null);
         if (comp == null) return ResponseEntity.notFound().build();
         if (comp.getGym().getId() != gym.getId())
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

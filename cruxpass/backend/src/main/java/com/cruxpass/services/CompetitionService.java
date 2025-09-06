@@ -1,8 +1,8 @@
 package com.cruxpass.services;
 import com.cruxpass.models.Competition;
-import com.cruxpass.models.Gym;
 import com.cruxpass.repositories.CompetitionRepository;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +20,8 @@ public class CompetitionService {
         return competitionRepository.findAll();
     }
 
-    public Competition getById(Long id) {
-        return competitionRepository.findById(id).orElse(null);
+    public Optional<Competition> getById(Long id) {
+        return competitionRepository.findById(id);
     }
 
     public Competition getByIdWithRegistrations(Long id) {

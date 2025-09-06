@@ -1,13 +1,11 @@
 package com.cruxpass.models;
 
-import org.springframework.lang.NonNull;
-
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,13 +27,11 @@ public class SubmittedRoute {
     private boolean send;
 
     @JoinColumn(name = "route_id", nullable = false)
-    @OneToOne
-    @NonNull
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Route route;
 
     @JoinColumn(name = "submission_id", nullable = false)
-    @ManyToOne
-    @NonNull
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Submission submission;
 
 }

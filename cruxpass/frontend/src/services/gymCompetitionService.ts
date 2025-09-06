@@ -12,9 +12,9 @@ export async function getCompetition(gymId: number, competitionId: number) {
   return res;
 }
 
-export async function getRegistrationsForComp(gymId: number, competitionId: number) {
-  const res = api.get(`/gyms/${gymId}/competitions/${competitionId}/registrations`);
-  return res;
+export async function getRegistrationsForComp(gymId: number, competitionId: number): Promise<RegistrationResponseDto[]> {
+  const res = await api.get(`/gyms/${gymId}/competitions/${competitionId}/registrations`);
+  return res.data;
 } 
 
 export async function getRoutesForComp(gymId: number, competitionId: number): Promise<RouteResponseDto[]>  {

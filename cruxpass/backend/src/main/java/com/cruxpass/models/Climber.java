@@ -11,6 +11,7 @@ import com.cruxpass.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,6 +32,7 @@ public class Climber {
     @NotBlank
     private String name;
     @NotBlank
+    @Email
     private String email;
     @NotBlank
     private String phone;

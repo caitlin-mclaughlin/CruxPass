@@ -34,7 +34,18 @@ export function ClimberSessionProvider({ children }: { children: ReactNode }) {
     setError(null);
     if (accountType === AccountType.CLIMBER && token) {
       try {
-        const { data } = await getClimberProfile();
+        const res = await getClimberProfile();
+        const data = {
+          id: res.id,
+          name: res.name,
+          email: res.email,
+          phone: res.phone,
+          username: res.username,
+          dob: res.dob,
+          division: res.division,
+          address: res.address,
+          createdAt: res.createdAt
+        } as ClimberData
         setClimber(data);
       } catch (err) {
         logout()

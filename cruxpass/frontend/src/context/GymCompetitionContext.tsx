@@ -1,12 +1,12 @@
 // context/CompetitionContext
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { CompetitionSummary, Registration, Route, SubmittedRoute } from '@/models/domain'
+import { CompetitionSummary, GymRegistration, Registration, Route, SubmittedRoute } from '@/models/domain'
 import { getCompetition, getRegistrationsForComp, getRoutesForComp, getSubmissionsForComp, updateCompetitionInfo, updateRegistrationsForComp, updateRoutesForComp } from '@/services/gymCompetitionService';
-import { CompetitionFormPayload, CompRegistrationRequestDto, RouteDto, SubmissionRequestDto } from '@/models/dtos';
+import { CompetitionFormPayload, CompRegistrationRequestDto, RegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto } from '@/models/dtos';
 
 interface GymCompetitionContextType {
   competition: CompetitionSummary | null;
-  registrations: Registration[] | null;
+  registrations: GymRegistration[] | null;
   routes: Route[] | null;
   submissions: SubmittedRoute[] | null;
   loading: boolean;
@@ -44,7 +44,7 @@ const GymCompetitionContext = createContext<GymCompetitionContextType>({
 
 export function GymCompetitionProvider({ id, children }: { id?: number, children: ReactNode }) {
   const [competition, setCompetition] = useState<CompetitionSummary | null>(null);
-  const [registrations, setRegistrations] = useState<Registration[] | null>(null);
+  const [registrations, setRegistrations] = useState<GymRegistration[] | null>(null);
   const [routes, setRoutes] = useState<Route[] | null>(null);
   const [submissions, setSubmissions] = useState<SubmittedRoute[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,15 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
     setLoading(true);
     setError(null);
     try {
-      const { data } = await getRegistrationsForComp(gymId, targetId);
+      const res = await getRegistrationsForComp(gymId, targetId);
+      const data: GymRegistration[] = res.map((r: RegistrationResponseDto) => ({
+        climberName: r.climberName,
+        climberDob: r.climberDob,
+        climberEmail: r.climberEmail,
+        competitorGroup: r.competitorGroup,
+        division: r.division,
+        paid: r.paid,
+      }));
       setRegistrations(data);
     } catch (err) {
       console.warn('Could not fetch registration info', err);
@@ -110,7 +118,7 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
     setError(null);
     try {
       const res = await getRoutesForComp(gymId, targetId);
-      const data: Route[] = res.map((r: any) => ({
+      const data: Route[] = res.map((r: RouteResponseDto) => ({
         id: r.id,
         number: r.number,
         pointValue: r.pointValue,

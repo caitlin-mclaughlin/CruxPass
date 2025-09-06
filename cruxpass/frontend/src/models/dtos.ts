@@ -2,9 +2,21 @@ import { CompetitionFormat, CompetitionStatus, CompetitionType, CompetitorGroup,
 import { Address, SubmittedRoute } from "./domain";
 
 export type AuthRequestDto = {
-  emailOrUsername: string;
-  password: string;
+  emailOrUsername: string
+  password: string
 };
+
+export type ClimberResponseDto = {
+  id: number
+  name: string
+  email: string
+  phone: string
+  username: string
+  dob: string
+  division: Gender
+  address: Address
+  createdAt: string
+}
 
 export type CompetitionFormPayload = {
   name: string
@@ -27,14 +39,21 @@ export type CompetitionFormPayload = {
 };
 
 export type CompRegistrationRequestDto = {
-  id?: number;
-  climberName: string;
-  email: string;
-  dob: string;
-  competitorGroup: CompetitorGroup;
-  division: Gender;
-  paid: boolean;
+  id?: number
+  climberName: string
+  email: string
+  dob: string
+  competitorGroup: CompetitorGroup
+  division: Gender
+  paid: boolean
 };
+
+export type GroupLeaderboardUpdateDto = {
+  competitionId: number
+  group: CompetitorGroup
+  division: Gender
+  leaderboard: RankedSubmissionDto[]
+}
 
 export type GymResponseDto = {
   id: number
@@ -46,65 +65,105 @@ export type GymResponseDto = {
   createdAt: string
 }
 
+export type PublicRegistrationDto = {
+  id: number;
+  compId: number
+  climberName: string
+  climberDob: string
+  competitorGroup: CompetitorGroup
+  division: Gender
+}
+
 export type RankedSubmissionDto = {
-  place: number;
-  name: string;
-  totalPoints: number;
-  points: number[];
-  attempts: number[];
-  competitorGroup: CompetitorGroup;
-  division: Gender;
+  place: number
+  climberName: string
+  totalPoints: number
+  totalAttempts: number
+  competitorGroup: CompetitorGroup
+  division: Gender
 };
 
 export type RegisterRequestDto = {
-  name: string;
-  username: string | null;
-  email: string;
-  phone: string;
-  dob: string | null;
-  division: Gender | null;
-  password: string;
-  address: Address;
+  name: string
+  username: string | null
+  email: string
+  phone: string
+  dob?: string | null
+  division?: Gender | null
+  password: string
+  address: Address
 };
 
 export type RegistrationResponseDto = {
-  id: number;
-  ymId: number;
-  compId: number;
-  competitorGroup: CompetitorGroup;
-  division: Gender;
-  climberName: string;
-  email: string;
-  paid: boolean;
+  id: number
+  gymId: number
+  compId: number
+  climberName: string
+  climberDob: string
+  climberEmail: string
+  competitorGroup: CompetitorGroup
+  division: Gender
+  paid: boolean
 }
 
 export type RouteDto = {
-  number: number,
+  number: number
   pointValue: number
 };
 
 export type RouteResponseDto = {
-  id: number,
-  number: number,
+  id: number
+  number: number
   pointValue: number
 };
 
+export type SeriesDto = {
+  name: string
+  description?: string
+  startDate: string
+  endDate: string
+}
+
+export type SeriesRegistrationDto = {
+    seriesId: number
+    climberId: number
+    group: CompetitorGroup
+    division: Gender
+}
+
+export type SeriesLeaderboardEntryDto = {
+  climberId: number;
+  name: string;
+  group: string;
+  division: string;
+  totalSeriesPoints: number;
+  placementCounts: number[]; // index 0 = 1st place count, etc.
+  rawClimbingPoints: number;
+  totalAttempts: number;
+  competitionResults: {
+    competitionId: number;
+    competitionName: string;
+    placement: number;
+    seriesPoints: number;
+  }[];
+}
+
 export type SimpleRegistrationDto = {
-  division: Gender;
-  compGroup: CompetitorGroup;
+  division: Gender
+  compGroup: CompetitorGroup
 };
 
 export type SubmittedRouteDto = {
-  routeId: number,
-  attempts: number,
+  routeId: number
+  attempts: number
   send: boolean
 };
 
 export type SubmittedRouteResponseDto = {
-  routeId: number,
-  number: number,
-  pointValue: number,
-  attempts: number,
+  routeId: number
+  number: number
+  pointValue: number
+  attempts: number
   send: boolean
 };
 
@@ -115,8 +174,8 @@ export type SubmissionRequestDto = {
 };
 
 export type SubmissionResponseDto = {
-  submissionId: number,
-  competitionId: number,
-  climberId: number,
+  submissionId: number
+  competitionId: number
+  climberId: number
   routes: SubmittedRouteDto[]
 };

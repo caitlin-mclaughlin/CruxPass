@@ -31,7 +31,7 @@ public class CompetitionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CompetitionResponseDto> getCompetition(@PathVariable Long id) {
-        var comp = competitionService.getById(id);
+        Competition comp = competitionService.getById(id).orElse(null);
         if (comp == null) return null;
 
         return ResponseEntity.ok(compMap.toResponseDto(comp));
@@ -68,7 +68,7 @@ public class CompetitionController {
             Gym gym = currentUserService.getGymFromToken(authHeader);
             if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-            Competition comp = competitionService.getById(id);
+            Competition comp = competitionService.getById(id).orElse(null);
             if (comp == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }

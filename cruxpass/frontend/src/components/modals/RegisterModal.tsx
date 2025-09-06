@@ -1,6 +1,6 @@
 // components/RegisterModal.tsx
 import { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { CompRegistrationRequestDto } from '@/models/dtos'
 import { useClimberSession } from '@/context/ClimberSessionContext'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
@@ -13,23 +13,23 @@ import {
   GenderEnumMap
 } from '@/constants/enum'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { CompetitionSummary, Registration } from '@/models/domain'
-import { useCompetition } from '@/context/GymCompetitionContext'
+import { useClimberCompetition } from '@/context/ClimberCompetitionContext'
 
 interface Props {
   open: boolean
   onClose: () => void
   competition: CompetitionSummary
-  onSuccess: (registration: Registration) => void
+  onSuccess: () => void
 }
 
 export default function RegisterModal({ open, onClose, competition, onSuccess }: Props) {
   const [selectedGroup, setSelectedGroup] = useState<CompetitorGroup | null>(null)
   const [selectedDivision, setSelectedDivision] = useState<Gender | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const { climber } = useClimberSession()
-  const { registerClimber } = useCompetition()
+  const { climber, refreshClimber } = useClimberSession()
+  const { updateRegistration, refreshRegistration } = useClimberCompetition()
 
   const divisions = competition.divisions || []
 
@@ -68,8 +68,8 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
     }
 
     try {
-      const res = await registerClimber(competition.gymId, competition.id, payload)
-      onSuccess(res as Registration)
+      const res = await updateRegistration(competition.gymId, competition.id, payload)
+      onSuccess()
       handleClose()
     } catch (err) {
       console.error(err)
@@ -94,9 +94,17 @@ export default function RegisterModal({ open, onClose, competition, onSuccess }:
     setError(null)
   }
 
+  const refresh = async () => {
+    await refreshClimber()
+    await refreshRegistration(competition.gymId, competition.id)
+  }
+
   useEffect(() => {
-    if (open && climber?.division) {
-      setSelectedDivision(climber.division)
+    if (open) {
+      refresh
+      if (climber?.division) {
+        setSelectedDivision(climber.division)
+      }
     }
   }, [open, climber])
 

@@ -7,14 +7,19 @@ import com.cruxpass.dtos.responses.AuthResponse;
 import com.cruxpass.dtos.responses.ClimberResponseDto;
 import com.cruxpass.dtos.responses.GymResponseDto;
 import com.cruxpass.enums.AccountType;
+import com.cruxpass.mappers.SeriesMapper;
 import com.cruxpass.models.Gym;
+import com.cruxpass.models.Series;
 import com.cruxpass.models.Climber;
 import com.cruxpass.security.JwtUtil;
 import com.cruxpass.services.GymService;
+import com.cruxpass.services.SeriesService;
 import com.cruxpass.services.ClimberService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
@@ -23,20 +28,18 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final ClimberService climberService;
     private final GymService gymService;
+    private final SeriesService seriesService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authManager;
 
-    public AuthController(ClimberService climberService, GymService gymService, JwtUtil jwtUtil, AuthenticationManager authManager) {
-        this.climberService = climberService;
-        this.gymService = gymService;
-        this.jwtUtil = jwtUtil;
-        this.authManager = authManager;
-    }
-
+    @Autowired
+    private final SeriesMapper seriesMap;
+    
     @PutMapping("/register/{type}")
     public ResponseEntity<AuthResponse> register(
             @PathVariable AccountType type,
@@ -54,6 +57,11 @@ public class AuthController {
                 id = gym.getId();
                 break;
             }
+            case SERIES-> {
+                Series series = seriesService.createSimpleSeries(dto);
+                id = series.getId();
+                break;
+            }
             default -> {
                 return ResponseEntity.badRequest().build();
             }
@@ -62,6 +70,7 @@ public class AuthController {
         String email = switch (type) {
             case CLIMBER -> climberService.getByUsername(dto.username).getEmail();
             case GYM -> gymService.getByUsername(dto.username).getEmail();
+            case SERIES -> seriesService.getByUsername(dto.username).getEmail();
             default -> null;
         };
 
@@ -76,7 +85,7 @@ public class AuthController {
         String id = dto.emailOrUsername;
 
         // Try to find climber by email or username
-        var climber = climberService.getByEmailOrUsername(id);
+        Climber climber = climberService.getByEmailOrUsername(id);
         if (climber != null) {
             if (!climberService.passwordMatches(climber, dto.password)) {
                 throw new IllegalArgumentException("Invalid password");
@@ -86,12 +95,22 @@ public class AuthController {
         }
 
         // Try to find gym
-        var gym = gymService.getByEmailOrUsername(id);
+        Gym gym = gymService.getByEmailOrUsername(id);
         if (gym != null) {
             if (!gymService.passwordMatches(gym, dto.password)) {
                 throw new IllegalArgumentException("Invalid password");
             }
             String token = jwtUtil.generateToken(gym.getEmail(), AccountType.GYM, gym.getId());
+            return ResponseEntity.ok(new AuthResponse(token));
+        }
+
+        // Try to find series
+        Series series = seriesService.getByUsername(id);
+        if (series != null) {
+            if (!seriesService.passwordMatches(series, dto.password)) {
+                throw new IllegalArgumentException("Invalid password");
+            }
+            String token = jwtUtil.generateToken(series.getEmail(), AccountType.SERIES, series.getId());
             return ResponseEntity.ok(new AuthResponse(token));
         }
 
@@ -136,6 +155,14 @@ public class AuthController {
                         new AddressDto(gym.getAddress()),
                         gym.getCreatedAt()
                     )
+                ));
+            }
+        } else if (role == AccountType.SERIES) {
+            Series series = seriesService.getById(id);
+            if (series != null) {
+                return ResponseEntity.ok(Map.of(
+                    "type", "series",
+                    "series", seriesMap.toDto(series)
                 ));
             }
         }

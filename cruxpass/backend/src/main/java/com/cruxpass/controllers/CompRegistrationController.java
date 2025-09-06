@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -43,7 +42,7 @@ public class CompRegistrationController {
         @RequestHeader("Authorization") String authHeader
     ) {
         currentUserService.validateGymAccess(gymId, authHeader);
-        Competition comp = competitionService.getById(competitionId);
+        Competition comp = competitionService.getById(competitionId).orElse(null);
         if (comp == null) return ResponseEntity.notFound().build();
 
         List<Registration> regs = registrationService.getByCompetition(comp);
@@ -69,7 +68,22 @@ public class CompRegistrationController {
         return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
 
-    @PutMapping
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyRegistration(
+        @PathVariable Long gymId,
+        @PathVariable Long competitionId,
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        Climber climber = currentUserService.getClimberFromToken(authHeader);
+        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
+
+        Registration reg = registrationService.getByClimberIdAndCompetitionId(climber.getId(), competitionId);
+        if (reg == null) return ResponseEntity.notFound().build();
+
+        return ResponseEntity.ok(regMap.toResponseDto(reg));
+    }
+
+    @PutMapping("/me")
     public ResponseEntity<?> registerForCompetition(
         @PathVariable Long gymId,
         @PathVariable Long competitionId,
@@ -79,7 +93,7 @@ public class CompRegistrationController {
         Climber climber = currentUserService.getClimberFromToken(authHeader);
         if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
 
-        Competition competition = competitionService.getById(competitionId);
+        Competition competition = competitionService.getById(competitionId).orElse(null);
         if (competition == null) return ResponseEntity.notFound().build();
         if (competition.getGym().getId() != gymId) return ResponseEntity.badRequest().build();
 

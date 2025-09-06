@@ -3,14 +3,12 @@ package com.cruxpass.dtos;
 import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Gender;
 
-import java.util.List;
-
 public record RankedSubmissionDto(
-    int placement,
-    String name,
-    int totalScore,
-    List<Integer> routePoints,
-    List<Integer> attempts,
+    int place,
+    Long climberId,
+    String climberName,
+    int totalPoints, // sum of top 5
+    int totalAttempts, // sum of top 5
     CompetitorGroup competitorGroup,
     Gender division
 ) {}

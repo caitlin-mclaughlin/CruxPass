@@ -10,18 +10,17 @@ import { AccountType, GENDER_OPTIONS, GenderEnumMap } from "@/constants/enum";
 import CustomRadioGroup from "@/components/ui/CustomRadioGroup";
 import { UserPen } from "lucide-react";
 import SegmentedDateInput from "@/components/ui/SegmentedDateInput";
-import { getClimberProfile } from "@/services/climberService";
-import { getGymProfile } from "@/services/gymService";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/Input";
+import { ClimberData, GymData } from "@/models/domain";
+import { Button } from "@/components/ui/Button";
 
 export default function ProfilePage() {
   const { token } = useAuth();
-  const { climber, updateClimberProfile } = useClimberSession();
-  const { gym, updateGymProfile } = useGymSession();
+  const { climber, updateClimberProfile, refreshClimber } = useClimberSession();
+  const { gym, updateGymProfile, refreshGym} = useGymSession();
 
-  const hasInitialized = useRef(false);
   const [profileType, setProfileType] = useState<AccountType | null>(null);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<ClimberData | GymData>();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -31,39 +30,20 @@ export default function ProfilePage() {
 
   // Fetch profile using context + services
   useEffect(() => {
-    if (!token || hasInitialized.current) return;
-    hasInitialized.current = true;
+    if (!token) return;
 
-    async function loadProfile() {
-      try {
-        if (climber) {
-          setProfileType(AccountType.CLIMBER);
-          setFormData({ ...climber });
-        } else if (gym) {
-          setProfileType(AccountType.GYM);
-          setFormData({ ...gym });
-        } else {
-          // Fallback in case context hasn't populated yet
-          const climberRes = await getClimberProfile().catch(() => null);
-          if (climberRes) {
-            setProfileType(AccountType.CLIMBER);
-            setFormData(climberRes.data);
-            return;
-          }
-          const gymRes = await getGymProfile().catch(() => null);
-          if (gymRes) {
-            setProfileType(AccountType.GYM);
-            setFormData(gymRes);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load profile:", err);
-      } finally {
-        setLoading(false);
-      }
+    if (climber) {
+      setProfileType(AccountType.CLIMBER);
+      setFormData(climber);
+      setLoading(false);
+      console.log("Loaded climber profile data:", climber.name);
+    } else if (gym) {
+      setProfileType(AccountType.GYM);
+      setFormData(gym);
+      setLoading(false);
+      console.log("Loaded gym profile data:", gym.name);
     }
 
-    loadProfile();
   }, [token, climber, gym]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +67,8 @@ export default function ProfilePage() {
   };
 
   const handleSubmit = async () => {
-    if (profileType === AccountType.CLIMBER) {
+    if (!formData) return
+    if ('dob' in formData) {
       const dobDate = new Date(formData.dob);
       const age = today.getFullYear() - dobDate.getFullYear();
       if (age < MIN_AGE || age > MAX_AGE) {
@@ -110,7 +91,7 @@ export default function ProfilePage() {
   };
 
   if (loading) return <div className="h-screen p-8 bg-background text-green">Loading...</div>;
-  if (!formData) return <div className="h-screen p-8 bg-background text-green">No profile found.</div>;
+  if (!formData && !climber && !gym) return <div className="h-screen p-8 bg-background text-green">No profile found.</div>;
 
   const renderInput = (label: string, name: string, value: any) => (
     <>
@@ -132,53 +113,57 @@ export default function ProfilePage() {
 
   return (
     <div className="h-screen p-8 bg-background text-green">
-      <h1 className="text-xl font-semibold mb-4">
+      <h1 className="text-2xl font-bold mb-2">
         {profileType === AccountType.CLIMBER ? 'Climber Profile' : 'Gym Profile'}
       </h1>
 
-      <div className="grid grid-cols-2 gap-y-3 max-w-md rounded-md px-2 py-2 bg-shadow border border-green">
-        {renderInput(profileType === AccountType.CLIMBER ? 'Name:' : 'Gym Name:', 'name', formData.name)}
-        {renderInput('Email:', 'email', formData.email)}
-        {renderInput('Phone:', 'phone', formatPhoneNumber(formData.phone))}
-        {renderInput('Username:', 'username', formData.username)}
+      <div className="grid grid-cols-2 gap-y-3 max-w-md rounded-md shadow -md px-3 py-2 bg-shadow border border-green">
+        {renderInput(profileType === AccountType.CLIMBER ? 'Name:' : 'Gym Name:', 'name', formData?.name)}
+        {renderInput('Email:', 'email', formData?.email)}
+        {renderInput('Phone:', 'phone', formatPhoneNumber(formData?.phone ?? ''))}
+        {renderInput('Username:', 'username', formData?.username)}
 
-        {profileType === AccountType.CLIMBER && (
+        {profileType === AccountType.CLIMBER && formData && 'dob' in formData && (
           <>
-            <div className="font-medium text-green">Date of Birth:</div>
-            <div className="text-green">
-              {editing ? (
-                <div className="w-full bg-background border rounded-md shadow-md">
-                  <SegmentedDateInput
-                    onChange={handleDobChange}
-                    value={new Date(formData.dob + "T00:00:00")}
-                  />
-                </div>
-              ) : (
-                formatDate(new Date(formData.dob + "T00:00:00"))
-              )}
-            </div>
+            {'dob' in formData && (
+              <>
+              <div className="font-medium text-green">Date of Birth:</div>
+              <div className="text-green">
+                {editing ? (
+                  <div className="w-full bg-background border rounded-md shadow-md">
+                    <SegmentedDateInput
+                      onChange={handleDobChange}
+                      value={new Date(formData?.dob + "T00:00:00")}
+                    />
+                  </div>
+                ) : (
+                  formatDate(new Date(formData.dob + "T00:00:00"))
+                )}
+              </div>
 
-            <div className="font-medium text-green">Gender (Division):</div>
-            <div className="text-green">
-              {editing ? (
-                <CustomRadioGroup
-                  name="division"
-                  options={GENDER_OPTIONS.map(g => ({ 
-                    value: g, 
-                    label: GenderEnumMap[g as keyof typeof GenderEnumMap] 
-                  }))}
-                  selected={formData.division}
-                  onChange={(g: string) => {
-                    setFormData((prev: any) => ({ 
-                      ...prev, 
-                      division: g
-                    }))
-                  }}
-                />
-              ) : (
-                GenderEnumMap[formData.division as keyof typeof GenderEnumMap] || ''
-              )}
-            </div>
+              <div className="font-medium text-green">Gender (Division):</div>
+              <div className="text-green">
+                {editing ? (
+                  <CustomRadioGroup
+                    name="division"
+                    options={GENDER_OPTIONS.map(g => ({ 
+                      value: g, 
+                      label: GenderEnumMap[g as keyof typeof GenderEnumMap] 
+                    }))}
+                    selected={formData.division}
+                    onChange={(g: string) => {
+                      setFormData((prev: any) => ({ 
+                        ...prev, 
+                        division: g
+                      }))
+                    }}
+                  />
+                ) : (
+                  GenderEnumMap[formData.division as keyof typeof GenderEnumMap] || ''
+                )}
+              </div>
+            </>
+            )}
           </>
         )}
 
@@ -189,67 +174,69 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 gap-2">
               <Input
                 name="address.streetAddress"
-                value={formData.address?.streetAddress || ''}
+                value={formData?.address?.streetAddress || ''}
                 placeholder="Street Address"
                 onChange={handleChange}
                 className="bg-background border-b border-green shadow-md outline-none"
               />
               <Input
                 name="address.apartmentNumber"
-                value={formData.address?.apartmentNumber || ''}
+                value={formData?.address?.apartmentNumber || ''}
                 placeholder="Apartment Number"
                 onChange={handleChange}
                 className="bg-background border-b border-green shadow-md outline-none"
               />
               <Input
                 name="address.city"
-                value={formData.address?.city || ''}
+                value={formData?.address?.city || ''}
                 placeholder="City"
                 onChange={handleChange}
                 className="bg-background border-b border-green shadow-md outline-none"
               />
               <Input
                 name="address.state"
-                value={formData.address?.state || ''}
+                value={formData?.address?.state || ''}
                 placeholder="State"
                 onChange={handleChange}
                 className="bg-background border-b border-green shadow-md outline-none"
               />
               <Input
                 name="address.zipCode"
-                value={formData.address?.zipCode || ''}
+                value={formData?.address?.zipCode || ''}
                 placeholder="Zip Code"
                 onChange={handleChange}
                 className="bg-background border-b border-green shadow-md outline-none"
               />
             </div>
           ) : (
-            formatAddress(formData.address).split('\n').map((line, idx) => (
-              <div key={idx}>{line}</div>
-            ))
+            <>
+              {formData?.address &&
+                formatAddress(formData.address).split('\n').map((line, idx) => (
+                  <div key={idx}>{line}</div>
+                ))
+              }
+            </>
           )}
         </div>
-
         <div className="font-medium text-green">
           {profileType === AccountType.CLIMBER ? 'User Since:' : 'Gym Since:'}
         </div>
-        <div className="text-green">{new Date(formData.createdAt).toLocaleDateString()}</div>
+        <div className="text-green">{new Date(formData?.createdAt ?? "").toLocaleDateString()}</div>
       </div>
 
-      <div className="mt-6 space-x-4">
+      <div className="mt-3 space-x-4">
         {editing ? (
           <>
             <button onClick={handleSubmit} className="bg-green text-background px-4 py-1 rounded-md font-semibold">Save</button>
             <button onClick={() => { setEditing(false); setFormData(formData); }} className="bg-accent text-background px-4 py-1 rounded-md font-semibold">Cancel</button>
           </>
         ) : (
-          <button 
+          <Button
             onClick={() => setEditing(true)} 
-            className="flex items-center bg-green text-background px-4 py-1.5 rounded-md font-semibold hover:bg-select"
           >
-            <UserPen size={18} className="mr-2" />
+            <UserPen size={18} />
             <span className="relative top-[1px]">Edit Profile</span>
-          </button>
+          </Button>
         )}
       </div>
     </div>

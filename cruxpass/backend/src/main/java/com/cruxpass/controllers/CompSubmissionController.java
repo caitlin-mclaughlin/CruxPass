@@ -12,6 +12,7 @@ import com.cruxpass.models.Competition;
 import com.cruxpass.models.Submission;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
+import com.cruxpass.services.LeaderboardBroadcastService;
 import com.cruxpass.services.SubmissionService;
 
 import java.util.List;
@@ -34,13 +35,19 @@ public class CompSubmissionController {
     private final CompetitionService competitionService;
     private final SubmissionService submissionService;
     private final CurrentUserService currentUserService;
+    private final LeaderboardBroadcastService leaderboardService;
     @Autowired
     private SubmissionMapper subMap;
 
-    public CompSubmissionController(CompetitionService competitionService, SubmissionService submissionService, CurrentUserService currentUserService) {
+    public CompSubmissionController(
+        CompetitionService competitionService,
+        SubmissionService submissionService,
+        CurrentUserService currentUserService,
+        LeaderboardBroadcastService leaderboardService) {
         this.competitionService = competitionService;
         this.submissionService = submissionService;
         this.currentUserService = currentUserService;
+        this.leaderboardService = leaderboardService;
     }
 
     @PutMapping("/me")
@@ -53,7 +60,7 @@ public class CompSubmissionController {
         Climber climber = currentUserService.getClimberFromToken(authHeader);
         if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
 
-        Competition comp = competitionService.getById(competitionId);
+        Competition comp = competitionService.getById(competitionId).orElse(null);
         if (comp == null) return ResponseEntity.notFound().build();
         if (comp.getGym().getId() != gymId) return ResponseEntity.badRequest().build();
 
@@ -62,6 +69,7 @@ public class CompSubmissionController {
         }
 
         SubmissionResponseDto response = submissionService.submitOrUpdateScores(comp, climber, dto);
+        leaderboardService.handleNewSubmission(competitionId, climber.getId());
         return ResponseEntity.ok(response);
     }
 
@@ -76,9 +84,9 @@ public class CompSubmissionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        Submission sub = submissionService.getByCompetitionAndClimber(competitionId, climber.getId());
+        Submission sub = submissionService.getByCompetitionIdAndClimberId(competitionId, climber.getId());
         if (sub == null) return ResponseEntity.notFound().build();
-
+        
         List<SubmittedRouteDto> submittedRoutes = sub.getRoutes().stream()
             .map(subMap::toSubmittedRouteDto)
             .toList();
@@ -98,7 +106,7 @@ public class CompSubmissionController {
 
         return ResponseEntity.ok(dtos);
     }
-
+/*
     @GetMapping("/leaderboard")
     public ResponseEntity<List<RegionalScoreDto>> regionalLeaderboard(
         @PathVariable Long gymId,
@@ -111,5 +119,5 @@ public class CompSubmissionController {
         if (dtos == null) return ResponseEntity.notFound().build();
 
         return ResponseEntity.ok(dtos);
-    }
+    }*/
 }

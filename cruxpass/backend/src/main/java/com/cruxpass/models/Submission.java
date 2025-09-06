@@ -17,17 +17,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Data
 @Entity
 @NoArgsConstructor
+@Table(
+    name = "submission",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"competition_id", "climber_id"})
+    }
+)
 public class Submission {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "climber_id", nullable = false)
     private Climber climber;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "competition_id", nullable = false)
     private Competition competition;
 
@@ -39,6 +45,10 @@ public class Submission {
     private Gender division;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "submission")
+    @OneToMany(
+        mappedBy = "submission",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private List<SubmittedRoute> routes;
 }

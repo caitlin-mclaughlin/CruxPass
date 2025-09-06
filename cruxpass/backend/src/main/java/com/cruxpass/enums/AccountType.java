@@ -2,5 +2,6 @@ package com.cruxpass.enums;
 
 public enum AccountType {
     CLIMBER,
-    GYM
+    GYM,
+    SERIES
 }

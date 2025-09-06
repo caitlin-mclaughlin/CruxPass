@@ -18,7 +18,7 @@ export async function getMySubmissionsForComp(gymId: number, competitionId: numb
 }
 
 export async function getRoutesForComp(gymId: number, competitionId: number): Promise<RouteResponseDto[]>  {
-  const res = await api.get(`/gyms/${gymId}/competitions/${competitionId}/routes`);
+  const res = await api.get<RouteResponseDto[]>(`/competitions/${competitionId}/routes`);
   return res.data;
 } 
 

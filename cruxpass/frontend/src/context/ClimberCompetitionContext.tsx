@@ -16,6 +16,7 @@ interface ClimberCompetitionContextType {
   refreshRegistration: (gymId: number, competitionId: number) => Promise<void>;
   refreshRoutes: (gymId: number, competitionId: number) => Promise<void>;
   refreshSubmissions: (gymId: number, competitionId: number) => Promise<void>;
+  setSubmissions: React.Dispatch<React.SetStateAction<SubmittedRoute[]>>; 
   updateRegistration: (gymId: number, competitionId: number, data: CompRegistrationRequestDto) => Promise<void>;
   updateSubmissions: (gymId: number, competitionId: number, data: SubmissionRequestDto) => Promise<void>;
 }
@@ -32,6 +33,7 @@ const ClimberCompetitionContext = createContext<ClimberCompetitionContextType>({
   refreshRegistration: async () => {},
   refreshRoutes: async () => {},
   refreshSubmissions: async () => {},
+  setSubmissions: () => {},
   updateRegistration: async () => {},
   updateSubmissions: async () => {},
 });
@@ -43,7 +45,6 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
   const [submissions, setSubmissions] = useState<SubmittedRoute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
 
   async function refreshAll(gymId: number, competitionId: number) {
     const targetId = id ?? competitionId;
@@ -75,7 +76,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
     } catch (err) {
       console.warn('Could not fetch competition info', err);
       setCompetition(null);
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -92,7 +93,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
     } catch (err) {
       console.warn('Could not fetch registration info', err);
       setRegistration(null);
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -114,7 +115,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
     } catch (err) {
       console.warn('Could not fetch route info', err);
       setRoutes([]);
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -164,7 +165,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
       setRegistration(regData);
     } catch (err) {
       console.warn('Could not register climber', err);
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
       return;
     }
   }
@@ -183,7 +184,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
       setSubmissions(res.routes as SubmittedRoute[]);
     } catch (err) {
       console.warn('Could not register climber', err);
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -204,7 +205,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
       competition, 
       registration, 
       routes,
-      submissions, 
+      submissions,
       loading, 
       error,
       refreshAll, 
@@ -212,6 +213,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
       refreshRegistration,
       refreshRoutes,
       refreshSubmissions,
+      setSubmissions,
       updateRegistration,
       updateSubmissions 
     }}>

@@ -13,8 +13,12 @@ export interface ClimberData {
   id: number
   name: string
   email: string
+  phone: string
+  username: string
   division: Gender
   dob: string
+  address: Address
+  createdAt: string
 }
 
 export interface CompetitionSummary {
@@ -49,21 +53,58 @@ export interface CompetitionData {
 
 export interface GymData {
   id: number
-  gymName: string
-  gymAddress: string
+  name: string
+  email: string
+  phone: string
+  username: string
+  address: Address
+  createdAt: string
 }
+
+export type RankedSubmission = {
+  place: number
+  climberName: string
+  totalPoints: number
+  totalAttempts: number
+  competitorGroup: CompetitorGroup
+  division: Gender
+  movement?: "up" | "down" | "same";
+};
 
 export type Registration = {
   climberName: string
-  email: string
+  climberDob: string
   division: Gender
   competitorGroup: CompetitorGroup
+}
+
+export type GymRegistration = {
+  climberName: string
+  climberDob: string
+  climberEmail: string
+  competitorGroup: CompetitorGroup
+  division: Gender
+  paid: boolean
 }
 
 export interface Route {
   id: number | null
   number: number
   pointValue: number
+}
+
+export interface Series {
+  name: string
+  description?: string
+  startDate: string
+  endDate: string
+}
+
+export interface SeriesRegistration {
+    seriesId: number
+    climberId: number
+    group: CompetitorGroup
+    division: Gender
 }
 
 export interface SubmittedRoute {
