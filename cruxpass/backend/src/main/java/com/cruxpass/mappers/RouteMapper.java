@@ -1,7 +1,5 @@
 package com.cruxpass.mappers;
 
-import org.springframework.stereotype.Component;
-
 import com.cruxpass.dtos.RouteDto;
 import com.cruxpass.dtos.responses.RouteResponseDto;
 import com.cruxpass.models.Competition;
@@ -9,6 +7,8 @@ import com.cruxpass.models.Gym;
 import com.cruxpass.models.Route;
 
 import java.util.List;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class RouteMapper {

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/series")
+@RequestMapping("/api/series")
 public class SeriesController {
 
     private final SeriesService seriesService;

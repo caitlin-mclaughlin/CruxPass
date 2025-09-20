@@ -3,8 +3,10 @@ package com.cruxpass.mappers;
 import com.cruxpass.models.Climber;
 import com.cruxpass.dtos.requests.UpdateClimberRequestDto;
 import com.cruxpass.dtos.responses.ClimberResponseDto;
-import com.cruxpass.dtos.AddressDto;
+
 import org.springframework.stereotype.Component;
+
+import com.cruxpass.dtos.AddressDto;
 
 @Component
 public class ClimberMapper {

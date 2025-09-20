@@ -16,19 +16,19 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ClimberService {
 
-    private final ClimberRepository repository;
+    private final ClimberRepository climberRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public ClimberService(ClimberRepository repository, PasswordEncoder passwordEncoder) {
-        this.repository = repository;
+    public ClimberService(ClimberRepository climberRepo, PasswordEncoder passwordEncoder) {
+        this.climberRepo = climberRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public Climber createUser(RegisterRequest dto) {
-        if (repository.findByEmail(dto.email).isPresent()) {
+        if (climberRepo.findByEmail(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-        } else if (repository.findByUsername(dto.username).isPresent()) {
+        } else if (climberRepo.findByUsername(dto.username).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already in use");
         }
 
@@ -52,34 +52,34 @@ public class ClimberService {
         );
         climber.setAddress(addr);
 
-        return repository.save(climber);
+        return climberRepo.save(climber);
     }
 
     @Transactional
     public Climber save(Climber climber) {
-        return repository.save(climber);
+        return climberRepo.save(climber);
     }
 
     public List<Climber> getAll() {
-        return repository.findAll();
+        return climberRepo.findAll();
     }
 
     public Climber getById(Long id) {
-        return repository.findById(id).orElse(null);
+        return climberRepo.findById(id).orElse(null);
     }
 
     public Climber getByEmail(String email) {
         System.out.println("Looking for gym with email: " + email);
         if (email == null) return null;
-        return repository.findByEmail(email).orElse(null);
+        return climberRepo.findByEmail(email).orElse(null);
     }
 
     public Climber getByUsername(String username) {
-        return repository.findByUsername(username).orElse(null);
+        return climberRepo.findByUsername(username).orElse(null);
     }
     
     public Climber getByEmailOrUsername(String id) {
-        return (repository.findByEmail(id).or(() -> repository.findByUsername(id))).orElse(null);
+        return (climberRepo.findByEmail(id).or(() -> climberRepo.findByUsername(id))).orElse(null);
     }
 
     public boolean passwordMatches(Climber climber, String rawPassword) {

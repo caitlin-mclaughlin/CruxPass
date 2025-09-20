@@ -87,11 +87,11 @@ export type RegisterRequestDto = {
   name: string
   username: string | null
   email: string
-  phone: string
+  phone?: string
   dob?: string | null
   division?: Gender | null
   password: string
-  address: Address
+  address?: Address | null
 };
 
 export type RegistrationResponseDto = {
@@ -118,10 +118,16 @@ export type RouteResponseDto = {
 };
 
 export type SeriesDto = {
+  id: number | null
   name: string
+  email: string
+  username: string
   description?: string
   startDate: string
   endDate: string
+  deadline: string
+  seriesStatus: CompetitionStatus
+  createdAt: string
 }
 
 export type SeriesRegistrationDto = {

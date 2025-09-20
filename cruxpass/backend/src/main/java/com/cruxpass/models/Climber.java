@@ -1,7 +1,6 @@
 package com.cruxpass.models;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -37,7 +36,6 @@ public class Climber {
     @NotBlank
     private String phone;
     @NonNull
-    @Temporal(TemporalType.DATE)
     private LocalDate dob;
     @NotBlank
     private String username;
@@ -51,9 +49,8 @@ public class Climber {
     private Gender division;
 
     @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     @CreatedDate
-    private Date createdAt;
+    private LocalDate createdAt;
 
     @JsonIgnore
     private String series;

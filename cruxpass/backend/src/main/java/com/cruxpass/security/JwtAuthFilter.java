@@ -8,7 +8,6 @@ import com.cruxpass.repositories.GymRepository;
 import com.cruxpass.repositories.SeriesRepository;
 import com.cruxpass.repositories.ClimberRepository;
 
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
@@ -50,6 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         @NonNull HttpServletResponse response,
         @NonNull FilterChain chain
     ) throws ServletException, IOException {
+    System.out.println("JwtAuthFilter intercepting: " + request.getRequestURI());
         
         final String authHeader = request.getHeader("Authorization");
 

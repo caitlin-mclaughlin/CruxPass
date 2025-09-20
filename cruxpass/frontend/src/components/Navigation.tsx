@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useGymSession } from '@/context/GymSessionContext'
 import { useClimberSession } from '@/context/ClimberSessionContext'
 import { AccountType } from '@/constants/enum'
+import { useSeriesSession } from '@/context/SeriesSessionContext'
 
 export default function Navigation({ 
     onSearchClick,
@@ -16,12 +17,16 @@ export default function Navigation({
   const location = useLocation()
   const { gym } = useGymSession()
   const { climber } = useClimberSession()
+  const { series } = useSeriesSession()
   const { logout, accountType } = useAuth()
   const [open, setOpen] = useState(false)
 
   useEffect (() => {
-    if ((accountType === AccountType.GYM && !gym) ||
-        (accountType === AccountType.CLIMBER && !climber)) {
+    if ((accountType === AccountType.GYM && gym) ||
+        (accountType === AccountType.CLIMBER && climber) ||
+        (accountType === AccountType.SERIES && series)) {
+      showProfileOption = true;
+    } else {
       showProfileOption = false;
     }
   }, [gym, climber])
@@ -56,9 +61,9 @@ export default function Navigation({
           <Link to="/leaderboards" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
             <ChartLine size={18} className="mr-2" /> Leaderboards
           </Link>
-          <Link to="/profile" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
-            <User size={18} className="mr-2" /> Profile
-          </Link>
+            <Link to="/profile" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
+              <User size={18} className="mr-2" /> Profile
+            </Link>
           <button
             onClick={onSearchClick}
             className="flex items-center px-4 py-2 hover:bg-select cursor-pointer"

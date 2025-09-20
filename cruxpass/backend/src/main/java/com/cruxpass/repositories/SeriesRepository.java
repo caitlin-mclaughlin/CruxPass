@@ -6,16 +6,18 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.cruxpass.models.Series;
 
 @Repository
 public interface SeriesRepository extends JpaRepository<Series, Long> {
-
     
     // Find active series by current date
-    List<Series> findByStartDateBeforeAndEndDateAfter(LocalDate today);
+    @Query("SELECT s FROM Series s WHERE s.startDate < :today AND s.endDate > :today")
+    List<Series> findActiveSeries(@Param("today") LocalDate today);
 
     // Find series with registration still open
     List<Series> findByDeadlineAfter(LocalDateTime now);

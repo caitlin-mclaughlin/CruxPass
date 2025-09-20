@@ -93,11 +93,17 @@ export interface Route {
   pointValue: number
 }
 
-export interface Series {
+export interface SeriesData {
+  id: number | null
   name: string
+  email: string
+  username: string
   description?: string
   startDate: string
   endDate: string
+  deadline: string
+  seriesStatus: CompetitionStatus
+  createdAt: string
 }
 
 export interface SeriesRegistration {

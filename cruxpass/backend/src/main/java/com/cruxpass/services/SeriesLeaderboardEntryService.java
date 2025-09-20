@@ -6,10 +6,14 @@ import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Gender;
 import com.cruxpass.repositories.SeriesLeaderboardEntryRepository;
 import com.cruxpass.repositories.SeriesRegistrationRepository;
+import com.cruxpass.repositories.SeriesRepository;
 import com.cruxpass.utils.SeriesLeaderboardComparator;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,21 +22,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SeriesLeaderboardEntryService {
 
-    private final SeriesLeaderboardEntryRepository leaderboardRepository;
-    private final SeriesRegistrationRepository registrationRepository;
+    private final SeriesLeaderboardEntryRepository leaderboardRepo;
+    private final SeriesRegistrationRepository registrationRepo;
     private final SubmissionService submissionService;
 
-    private final SeriesService seriesService;
+    private final SeriesRepository seriesRepo;
 
     /**
      * Rebuild the leaderboard for a series (after a competition ends or scores are finalized)
      */
     @Transactional
     public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, CompetitorGroup group, Gender division) {
-        Series series = seriesService.getById(seriesId);
+        Series series = seriesRepo.findById(seriesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Series not found"));
 
         // Fetch all series registrations for this group/division
-        List<SeriesRegistration> registrations = registrationRepository
+        List<SeriesRegistration> registrations = registrationRepo
                 .findBySeriesIdAndCompetitorGroupAndDivision(seriesId, group, division);
 
         // Map: climberId -> leaderboard entry
@@ -100,7 +104,7 @@ public class SeriesLeaderboardEntryService {
         int rank = 1;
         for (SeriesLeaderboardEntry entry : sorted) {
             entry.setRank(rank++);
-            leaderboardRepository.save(entry);
+            leaderboardRepo.save(entry);
         }
 
         return sorted;
@@ -110,13 +114,13 @@ public class SeriesLeaderboardEntryService {
      * Fetch the leaderboard for a series, group, and division
      */
     public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, CompetitorGroup group, Gender division) {
-        return leaderboardRepository.findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(seriesId, group, division);
+        return leaderboardRepo.findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(seriesId, group, division);
     }
 
     /**
      * Optional: fetch entire series leaderboard across all groups/divisions
      */
     public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId) {
-        return leaderboardRepository.findBySeriesIdOrderByRankAsc(seriesId);
+        return leaderboardRepo.findBySeriesIdOrderByRankAsc(seriesId);
     }
 }

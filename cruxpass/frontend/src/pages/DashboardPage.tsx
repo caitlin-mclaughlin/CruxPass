@@ -17,6 +17,8 @@ import { CompetitionSummary } from '@/models/domain'
 import { displayDateTime } from '@/utils/datetime'
 import { ClimberCompetitionProvider } from '@/context/ClimberCompetitionContext'
 import { Button } from '@/components/ui/Button'
+import { useSeriesSession } from '@/context/SeriesSessionContext'
+import SeriesOnboardingModal from '@/components/modals/SeriesOnboardingModal'
 
 export default function DashboardPage() {
   const { 
@@ -27,6 +29,7 @@ export default function DashboardPage() {
 
   const { gym, createCompetition, refreshGym } = useGymSession()
   const { climber } = useClimberSession()
+  const { series } = useSeriesSession()
   const navigate = useNavigate()
 
   const [expandedIds, setExpandedIds] = useState<number[]>([])
@@ -34,6 +37,13 @@ export default function DashboardPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [showScoresModal, setShowScoresModal] = useState(false)
   const [registerComp, setRegisterComp] = useState<CompetitionSummary | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  useEffect(() => {
+    if (series && !series.startDate) {
+      setShowOnboarding(true)
+    }
+  }, [series])
 
   // Refresh competitions whenever Dashboard mounts
   useEffect(() => {
@@ -241,6 +251,14 @@ export default function DashboardPage() {
             competitionId={liveRegisteredComp.id}
           />
         </ClimberCompetitionProvider>
+      )}
+
+      {showOnboarding && (
+        <SeriesOnboardingModal
+          series={series}
+          open={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+        />
       )}
     </div>
   )

@@ -2,8 +2,6 @@ package com.cruxpass.mappers;
 
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
 import com.cruxpass.dtos.SimpleRegistrationDto;
 import com.cruxpass.dtos.requests.CompRegistrationRequestDto;
 import com.cruxpass.dtos.responses.RegistrationResponseDto;
@@ -11,6 +9,8 @@ import com.cruxpass.dtos.responses.SimpleRegistrationResponseDto;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Registration;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class RegistrationMapper {

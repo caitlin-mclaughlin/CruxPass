@@ -12,42 +12,42 @@ import java.util.List;
 @Service
 public class RegistrationService {
 
-    private final RegistrationRepository repository;
+    private final RegistrationRepository registrationRepo;
 
-    public RegistrationService(RegistrationRepository repository) {
-        this.repository = repository;
+    public RegistrationService(RegistrationRepository registrationRepo) {
+        this.registrationRepo = registrationRepo;
     }
 
     public List<Registration> getAll() {
-        return repository.findAll();
+        return registrationRepo.findAll();
     }
 
     public List<Registration> getByCompetition(Competition competition) {
-        return repository.findByCompetition(competition);
+        return registrationRepo.findByCompetition(competition);
     }
 
     public Registration getById(Long id) {
-        return repository.findById(id).orElse(null);
+        return registrationRepo.findById(id).orElse(null);
     }
 
     public Registration getByClimberAndCompetition(Climber climber, Competition competition) {
-        return repository.findByClimberAndCompetition(climber, competition).orElse(null);
+        return registrationRepo.findByClimberAndCompetition(climber, competition).orElse(null);
     }
 
     public Registration getByClimberIdAndCompetitionId(Long climberId, Long competitionId) {
-        return repository.findByClimberIdAndCompetitionId(climberId, competitionId).orElse(null);
+        return registrationRepo.findByClimberIdAndCompetitionId(climberId, competitionId).orElse(null);
     }
 
     public boolean existsByClimberAndCompetition(Climber climber, Competition competition) {
-        return repository.existsByClimberAndCompetition(climber, competition);
+        return registrationRepo.existsByClimberAndCompetition(climber, competition);
     }
 
     public long countByCompetition(Competition competition) {
-        return repository.countByCompetition(competition);
+        return registrationRepo.countByCompetition(competition);
     }
 
     @Transactional
     public Registration save(Registration reg) {
-        return repository.save(reg);
+        return registrationRepo.save(reg);
     }
 }

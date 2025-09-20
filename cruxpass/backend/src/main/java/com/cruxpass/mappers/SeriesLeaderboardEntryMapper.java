@@ -7,6 +7,9 @@ import com.cruxpass.models.Climber;
 import com.cruxpass.models.Series;
 import com.cruxpass.models.SeriesLeaderboardEntry;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class SeriesLeaderboardEntryMapper {
 
     public SeriesLeaderboardEntryDto toDto(SeriesLeaderboardEntry entry) {

@@ -39,8 +39,8 @@ public class AuthController {
 
     @Autowired
     private final SeriesMapper seriesMap;
-    
-    @PutMapping("/register/{type}")
+
+    @PostMapping("/register/{type}")
     public ResponseEntity<AuthResponse> register(
             @PathVariable AccountType type,
             @Valid @RequestBody RegisterRequest dto
@@ -80,14 +80,14 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
-    @PutMapping("/")
+    @PostMapping("/")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest dto) {
-        String id = dto.emailOrUsername;
+        String id = dto.emailOrUsername();
 
         // Try to find climber by email or username
         Climber climber = climberService.getByEmailOrUsername(id);
         if (climber != null) {
-            if (!climberService.passwordMatches(climber, dto.password)) {
+            if (!climberService.passwordMatches(climber, dto.password())) {
                 throw new IllegalArgumentException("Invalid password");
             }
             String token = jwtUtil.generateToken(climber.getEmail(), AccountType.CLIMBER, climber.getId());
@@ -97,7 +97,7 @@ public class AuthController {
         // Try to find gym
         Gym gym = gymService.getByEmailOrUsername(id);
         if (gym != null) {
-            if (!gymService.passwordMatches(gym, dto.password)) {
+            if (!gymService.passwordMatches(gym, dto.password())) {
                 throw new IllegalArgumentException("Invalid password");
             }
             String token = jwtUtil.generateToken(gym.getEmail(), AccountType.GYM, gym.getId());
@@ -107,7 +107,7 @@ public class AuthController {
         // Try to find series
         Series series = seriesService.getByUsername(id);
         if (series != null) {
-            if (!seriesService.passwordMatches(series, dto.password)) {
+            if (!seriesService.passwordMatches(series, dto.password())) {
                 throw new IllegalArgumentException("Invalid password");
             }
             String token = jwtUtil.generateToken(series.getEmail(), AccountType.SERIES, series.getId());

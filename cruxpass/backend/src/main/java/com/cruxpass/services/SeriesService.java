@@ -7,14 +7,11 @@ import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Gender;
 import com.cruxpass.mappers.SeriesMapper;
 import com.cruxpass.mappers.SeriesLeaderboardEntryMapper;
-import com.cruxpass.models.Competition;
-import com.cruxpass.models.Gym;
 import com.cruxpass.models.Series;
 import com.cruxpass.models.SeriesLeaderboardEntry;
 import com.cruxpass.repositories.SeriesRepository;
 import com.cruxpass.utils.SeriesLeaderboardComparator;
 import com.cruxpass.utils.SeriesLeaderboardUtils;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class SeriesService {
 
     private final SeriesRepository seriesRepo;
@@ -36,6 +32,22 @@ public class SeriesService {
     private final SeriesLeaderboardEntryMapper leaderboardEntryMap;
 
     private final PasswordEncoder passwordEncoder;
+
+    public SeriesService(
+            SeriesRepository seriesRepo,
+            SeriesLeaderboardEntryService leaderboardService,
+            CompetitionService competitionService,
+            SeriesMapper seriesMap,
+            SeriesLeaderboardEntryMapper leaderboardEntryMap,
+            PasswordEncoder passwordEncoder
+    ) {
+        this.seriesRepo = seriesRepo;
+        this.leaderboardService = leaderboardService;
+        this.competitionService = competitionService;
+        this.seriesMap = seriesMap;
+        this.leaderboardEntryMap = leaderboardEntryMap;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public Series getById(Long id) {
         return seriesRepo.findById(id).orElse(null);
@@ -60,11 +72,7 @@ public class SeriesService {
     @Transactional
     public SeriesDto createSeries(SeriesDto dto) {
         // Fetch competitions by IDs from the dto
-        List<Competition> competitions = dto.competitionIds().stream()
-            .map(id -> competitionService.getById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Competition not found: " + id)))
-            .toList();
-        Series series = seriesMap.toEntity(dto, competitions);
+        Series series = seriesMap.toEntity(dto);
         return seriesMap.toDto(seriesRepo.save(series));
     }
 

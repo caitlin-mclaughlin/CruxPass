@@ -5,9 +5,9 @@ import {
   ListboxOptions,
   ListboxOption,
 } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDown } from 'lucide-react'
 
-const accountTypes: AccountType[] = [AccountType.CLIMBER, AccountType.GYM]
+const accountTypes: AccountType[] = [AccountType.CLIMBER, AccountType.GYM, AccountType.SERIES]
 
 export function AccountTypeSelect({
   value,
@@ -21,18 +21,20 @@ export function AccountTypeSelect({
       {({ open }) => (
         <div className="relative w-full shadow-md">
           <ListboxButton
-            className="relative w-full cursor-default rounded-md bg-shadow border border-green px-3 py-1 pr-10 text-left text-green text-green focus:outline-none"
+            className="relative w-full cursor-pointer rounded-md bg-shadow border border-green px-3 py-1 pr-10 text-left text-green focus:outline-none"
           >
             {AccountTypeDisplay[value]}
-            <ChevronDownIcon
-              className="pointer-events-none absolute inset-y-1.5 right-2 h-5 w-5 text-green"
-              aria-hidden="true"
-            />
           </ListboxButton>
+
+          <ChevronDown
+            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-green hover:text-prompt"
+            size={18}
+            aria-hidden="true"
+          />
 
           {open && (
             <ListboxOptions
-              className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10"
+              className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10 focus:outline-none"
             >
               {accountTypes.map((type) => (
                 <ListboxOption key={type} value={type}>

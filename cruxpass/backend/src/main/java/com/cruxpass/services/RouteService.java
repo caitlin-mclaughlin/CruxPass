@@ -1,9 +1,7 @@
 package com.cruxpass.services;
 
-import com.cruxpass.dtos.RouteDto;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Competition;
-import com.cruxpass.models.Gym;
 import com.cruxpass.models.Route;
 import com.cruxpass.repositories.RouteRepository;
 
@@ -13,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,28 +19,28 @@ import java.util.stream.Collectors;
 @Service
 public class RouteService {
     
-    private final RouteRepository repository;
+    private final RouteRepository routeRepo;
 
-    public RouteService(RouteRepository repository) {
-        this.repository = repository;
+    public RouteService(RouteRepository routeRepo) {
+        this.routeRepo = routeRepo;
     }
 
     public List<Route> getAll() {
-        return repository.findAll();
+        return routeRepo.findAll();
     }
 
     @Cacheable(value = "routes", key = "#competitionId")
     public List<Route> getByCompetitionId(Long competitionId) {
-        return repository.findByCompetitionId(competitionId).orElse(null);
+        return routeRepo.findByCompetitionId(competitionId).orElse(null);
     }
 
     public Route getById(Long id) {
-        return repository.findById(id).orElse(null);
+        return routeRepo.findById(id).orElse(null);
     }
 
     @Transactional
     public Route save(Route route) {
-        return repository.save(route);
+        return routeRepo.save(route);
     }
 
     @Transactional
@@ -60,7 +57,7 @@ public class RouteService {
 
         if (existing == null || existing.isEmpty()) {
             // Save all new routes
-            return repository.saveAll(routes);
+            return routeRepo.saveAll(routes);
         }
 
         // Map existing routes by number
@@ -86,9 +83,9 @@ public class RouteService {
         List<Route> toDelete = existing.stream()
             .filter(r -> !incomingNumbers.contains(r.getNumber()))
             .toList();
-        repository.deleteAll(toDelete);
+        routeRepo.deleteAll(toDelete);
 
-        return repository.saveAll(updatedRoutes);
+        return routeRepo.saveAll(updatedRoutes);
     }
 
 }

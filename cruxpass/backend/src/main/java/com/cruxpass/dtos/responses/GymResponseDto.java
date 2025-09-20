@@ -1,6 +1,6 @@
 package com.cruxpass.dtos.responses;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 import com.cruxpass.dtos.AddressDto;
 
@@ -11,5 +11,5 @@ public record GymResponseDto(
     String phone,
     String username,
     AddressDto address,
-    Date createdAt
+    LocalDate createdAt
 ) {}

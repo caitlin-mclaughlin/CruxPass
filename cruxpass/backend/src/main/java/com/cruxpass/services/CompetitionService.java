@@ -10,26 +10,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CompetitionService {
 
-    private final CompetitionRepository competitionRepository;
+    private final CompetitionRepository competitionRepo;
 
-    public CompetitionService(CompetitionRepository competitionRepository) {
-        this.competitionRepository = competitionRepository;
+    public CompetitionService(CompetitionRepository competitionRepo) {
+        this.competitionRepo = competitionRepo;
     }
 
     public List<Competition> getAll() {
-        return competitionRepository.findAll();
+        return competitionRepo.findAll();
     }
 
     public Optional<Competition> getById(Long id) {
-        return competitionRepository.findById(id);
+        return competitionRepo.findById(id);
     }
 
     public Competition getByIdWithRegistrations(Long id) {
-        return competitionRepository.findByIdWithRegistrations(id).orElse(null);
+        return competitionRepo.findByIdWithRegistrations(id).orElse(null);
     }
 
     @Transactional
     public Competition save(Competition competition) {
-        return competitionRepository.save(competition);
+        return competitionRepo.save(competition);
     }
 }

@@ -10,7 +10,6 @@ import FloatingSearch from '@/components/FloatingSearch'
 import LeaderboardPage from '@/pages/LeaderboardPage'
 import LoginPage from '@/pages/LoginPage'
 import Navigation from '@/components/Navigation'
-import ProfilePage from '@/pages/ProfilePage'
 import CompetitionPage from '@/pages/CompetitionPage'
 import TopNav from '@/components/TopNav'
 
@@ -19,7 +18,11 @@ import { ClimberSessionProvider } from './context/ClimberSessionContext';
 import GymCompetitionRouteWrapper from '@/components/GymCompetitionRouteWrapper'
 import { GlobalCompetitionsProvider } from './context/GlobalCompetitionsContext';
 import LeaderboardRouteWrapper from './components/LeaderboardRouteWrapper';
-
+import { SeriesSessionProvider } from './context/SeriesSessionContext';
+import ClimberProfilePage from '@/pages/profiles/ClimberProfilePage'
+import GymProfilePage from '@/pages/profiles/GymProfilePage'
+import SeriesProfilePage from '@/pages/profiles/SeriesProfilePage'
+import { AccountType } from '@/constants/enum'
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { token } = useAuth()
@@ -72,6 +75,24 @@ function ProtectedLayout({ children }: { children: React.ReactNode }) {
   )
 }
 
+// Wrapper to pick correct profile page
+function ProfileRoute() {
+  const { accountType, guest } = useAuth()
+
+  if (guest) return <Navigate to="/" />
+  
+  switch (accountType) {
+    case AccountType.CLIMBER:
+      return <ClimberProfilePage />
+    case AccountType.GYM:
+      return <GymProfilePage />
+    case AccountType.SERIES:
+      return <SeriesProfilePage />
+    default:
+      return <Navigate to="/dashboard" />
+  }
+}
+
 export default function App() {
   useAttachToken()
 
@@ -80,37 +101,39 @@ export default function App() {
       <AuthProvider>
         <GymSessionProvider>
           <ClimberSessionProvider>
-            <GlobalCompetitionsProvider>
-              <AppLayout>
-                <Routes>
-                  <Route path="/" element={<LoginPage />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route
-                    path="/competitions/:competitionId/leaderboard"
-                    element={
-                      <LeaderboardRouteWrapper>
-                        <LeaderboardPage />
-                      </LeaderboardRouteWrapper>
-                    }
-                  />
-                  <Route 
-                    path="/competitions/:competitionId" 
-                    element={
-                      <GymCompetitionRouteWrapper>
-                        <CompetitionPage />
-                      </GymCompetitionRouteWrapper>
-                    } />
-                  <Route
-                    path="/profile"
-                    element={
-                      <PrivateRoute>
-                        <ProfilePage />
-                      </PrivateRoute>
-                    }
-                  />
-                </Routes>
-              </AppLayout>
-            </GlobalCompetitionsProvider>
+            <SeriesSessionProvider>
+              <GlobalCompetitionsProvider>
+                <AppLayout>
+                  <Routes>
+                    <Route path="/" element={<LoginPage />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route
+                      path="/competitions/:competitionId/leaderboard"
+                      element={
+                        <LeaderboardRouteWrapper>
+                          <LeaderboardPage />
+                        </LeaderboardRouteWrapper>
+                      }
+                    />
+                    <Route 
+                      path="/competitions/:competitionId" 
+                      element={
+                        <GymCompetitionRouteWrapper>
+                          <CompetitionPage />
+                        </GymCompetitionRouteWrapper>
+                      } />
+                    <Route
+                      path="/profile"
+                      element={
+                        <PrivateRoute>
+                          <ProfileRoute />
+                        </PrivateRoute>
+                      }
+                    />
+                  </Routes>
+                </AppLayout>
+              </GlobalCompetitionsProvider>
+            </SeriesSessionProvider>
           </ClimberSessionProvider>
         </GymSessionProvider>
       </AuthProvider>

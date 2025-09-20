@@ -1,7 +1,5 @@
 package com.cruxpass.mappers;
 
-import org.springframework.stereotype.Component;
-
 import com.cruxpass.dtos.SimpleRegistrationDto;
 import com.cruxpass.dtos.requests.UpdateCompRequestDto;
 import com.cruxpass.dtos.responses.CompetitionResponseDto;
@@ -13,6 +11,8 @@ import com.cruxpass.models.Gym;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Set;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class CompetitionMapper {

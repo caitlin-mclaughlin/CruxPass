@@ -1,0 +1,40 @@
+# application.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://pgbouncer:6432/cruxpass?preferQueryMode=simple
+    username: postgres
+    password: password
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 5000
+      pool-name: CruxHikariPool
+      data-source-properties:
+        sendExtraFloatDigits: false
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+
+  logging:
+    level:
+      root: DEBUG
+      org.hibernate.SQL: DEBUG
+      org.hibernate.type.descriptor.sql: TRACE
+
+
+jwt:
+  secret-file: ../../jwt_secret

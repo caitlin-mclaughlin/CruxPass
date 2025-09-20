@@ -1,11 +1,11 @@
 package com.cruxpass.mappers;
 
-import org.springframework.stereotype.Component;
-
 import com.cruxpass.dtos.AddressDto;
 import com.cruxpass.dtos.requests.UpdateGymRequestDto;
 import com.cruxpass.dtos.responses.GymResponseDto;
 import com.cruxpass.models.Gym;
+
+import org.springframework.stereotype.Component;
 
 @Component
 public class GymMapper {

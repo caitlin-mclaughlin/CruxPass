@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -42,9 +42,8 @@ public class Gym {
     private Address address;
 
     @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
     @CreatedDate
-    private Date createdAt;
+    private LocalDate createdAt;
 
     @JsonIgnore
     @OneToMany(mappedBy = "gym")

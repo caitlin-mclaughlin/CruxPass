@@ -5,6 +5,9 @@ import com.cruxpass.models.Climber;
 import com.cruxpass.models.Series;
 import com.cruxpass.models.SeriesRegistration;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class SeriesRegistrationMapper {
 
     public SeriesRegistrationDto toDto(SeriesRegistration reg) {

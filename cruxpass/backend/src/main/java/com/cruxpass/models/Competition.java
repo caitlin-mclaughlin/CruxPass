@@ -65,10 +65,15 @@ public class Competition {
     @Enumerated(EnumType.STRING)
     private CompetitionStatus compStatus;
 
-    @ManyToOne
     @JoinColumn(name = "gym_id", nullable = false)
     @JsonIgnore
+    @ManyToOne
     private Gym gym;
+
+    @JoinColumn(name = "series_id", nullable = true)
+    @JsonIgnore
+    @ManyToOne
+    private Series series;
 
     @JsonIgnore
     @OneToMany(mappedBy = "competition")
@@ -77,7 +82,6 @@ public class Competition {
     @JsonIgnore
     @OneToMany(mappedBy = "competition")
     private List<Registration> registrations;
-
     
     public CompetitionStatus getCompStatus() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("America/Denver"));
