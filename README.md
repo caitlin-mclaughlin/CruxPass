@@ -5,8 +5,8 @@ Climbing competition app
 - [x] Gym signup + comp creation
 - [x] User signup + registration
 - [x] Series signup + registration
- - [ ] Link competitions to series
- - [ ] Link climbers to series
+  - [ ] Link competitions to series
+  - [ ] Link climbers to series
 - [ ] Parent account with management of multiple climbers (for under 13)
 - [ ] Judge account for different comp styles
 - [x] Score submission form
