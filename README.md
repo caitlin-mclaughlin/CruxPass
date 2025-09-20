@@ -4,7 +4,10 @@ Climbing competition app
 ## MVP
 - [x] Gym signup + comp creation
 - [x] User signup + registration
-- [ ] Parent account with management of multipl climbers (for under 13)
+- [x] Series signup + registration
+ - [ ] Link competitions to series
+ - [ ] Link climbers to series
+- [ ] Parent account with management of multiple climbers (for under 13)
 - [ ] Judge account for different comp styles
 - [x] Score submission form
 - [ ] Scoring & leaderboard computation
