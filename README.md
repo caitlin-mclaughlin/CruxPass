@@ -2,9 +2,11 @@
 Climbing competition app
 
 ## MVP
-- [ ] Gym signup + comp creation
-- [ ] User signup + registration
-- [ ] Score submission form
+- [x] Gym signup + comp creation
+- [x] User signup + registration
+- [ ] Parent account with management of multipl climbers (for under 13)
+- [ ] Judge account for different comp styles
+- [x] Score submission form
 - [ ] Scoring & leaderboard computation
 - [ ] Basic mobile app for submission
 - [ ] Public leaderboard on web
@@ -12,8 +14,8 @@ Climbing competition app
 ## Core Features
 Gyms (Admin Role)
 - Create/manage gym account
-- Create competitions (dates, categories, routes with point values)
-- View/manage competitor registrations
+- Create competitions (name, date, duration, registration deadline, format, divisions. groups, routes with point values)
+- View/manage comp details, competitor registrations, and routes
 - View submissions and results
 
 Users (Competitors)
@@ -36,10 +38,15 @@ Backend:
 ```
 backend/
 ├── src/main/java/com/cruxpass/
+│   ├── config/
 │   ├── controllers/
 │   ├── dtos/
+│   ├── enums/
+│   ├── exceptions/
+│   ├── mappers/
 │   ├── models/
 │   ├── repositories/
+│   ├── security/
 │   ├── services/
 │   └── CruxPassApplication.java
 ├── src/main/resources/
@@ -52,11 +59,18 @@ frontend/
 ├── public/
 │   ├── pwa icons & manifest
 ├── src/
-│   ├── assets/
-│   ├── components/       # shared UI components (e.g., Button, Navbar)
-│   ├── pages/            # screens/views (Home, Login, CompDetails)
-│   ├── api/              # frontend API calls (fetch/axios)
+│   ├── components/ 
+│       ├── modals/
+│       ├── ui/
+│   ├── constants/
+│   ├── context/
 │   ├── hooks/
+│   ├── lib/
+│   ├── models/
+│   ├── pages
+│   ├── services/
+│   ├── styles/
+│   ├── utils/
 │   ├── App.tsx
 │   └── main.tsx
 ├── vite.config.ts        # Vite + PWA plugin
@@ -64,22 +78,22 @@ frontend/
 ```
 ### Backend Models
 ```
-User
+climber
 - id, name, email, password, etc.
 - profile, badges, competitionsParticipatedIn
 
 Gym
-- id, name, location, description, owner
+- id, name, location, etc.
 
 Competition
-- id, gym_id, name, date, routes, categories
+- id, gym_id, name, date, routes, groups,divisions, scoring formats
 - registrants, results, scoringConfig
 
 Route
 - id, competition_id, number, point_value
 
 Submission
-- id, user_id, competition_id
+- id, user_id, competition_id, submittedRoutes
 - List of submittedRouteScores (route_id, attempts, score)
 
 LeaderboardEntry
