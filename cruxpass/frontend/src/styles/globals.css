@@ -100,7 +100,7 @@
     background-color: var(--color-green) !important;
     color: var(--color-background) !important;
     border-color: var(--color-select) !important;
-    @apply rounded-md font-semibold;
+    @apply rounded-md font-semibold focus:outline-none;
   }
 
   .react-datepicker__navigation-icon::before {
@@ -275,7 +275,8 @@
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+                0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
     transition: background-color 9999s ease-out, color 9999s ease-out;
     transition-delay: 9999s;
   }

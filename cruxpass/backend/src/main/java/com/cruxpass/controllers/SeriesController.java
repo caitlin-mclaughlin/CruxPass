@@ -2,12 +2,9 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.SeriesDto;
 import com.cruxpass.dtos.SeriesLeaderboardEntryDto;
-import com.cruxpass.dtos.requests.UpdateGymRequestDto;
-import com.cruxpass.dtos.responses.GymResponseDto;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.mappers.SeriesMapper;
-import com.cruxpass.models.Gym;
 import com.cruxpass.models.Series;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.SeriesService;
@@ -36,7 +33,7 @@ public class SeriesController {
         this.seriesService = seriesService;
         this.currentUserService = currentUserService;
     }
-
+    
     // Secure endpoint for logged-in climber
     @GetMapping("/me")
     public ResponseEntity<SeriesDto> getCurrentSeries(
@@ -69,7 +66,7 @@ public class SeriesController {
     public List<SeriesLeaderboardEntryDto> getSeriesLeaderboard(
             @PathVariable Long seriesId,
             @RequestParam CompetitorGroup group,
-            @RequestParam(required = false) Gender division
+            @RequestParam(required = false) Division division
     ) {
         return seriesService.getLeaderboard(seriesId, group, division);
     }

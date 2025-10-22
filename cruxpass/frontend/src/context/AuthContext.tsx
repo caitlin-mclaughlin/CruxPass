@@ -1,10 +1,19 @@
 // context/AuthContext.tsx
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import api from "@/services/apiService";
-import { AuthContextType } from "@/models/domain";
 import { loginEntity, registerEntity } from "@/services/authService";
 import { AccountType } from "@/constants/enum";
 import { AuthRequestDto, RegisterRequestDto } from "@/models/dtos";
+
+export interface AuthContextType {
+  token: string | null
+  accountType: AccountType | null,
+  login: (credentials: AuthRequestDto) => void
+  register: (type: AccountType, credentials: RegisterRequestDto) => void
+  logout: () => void
+  skipLogin: () => void
+  guest: boolean
+}
 
 const AuthContext = createContext<AuthContextType>({
   token: null,

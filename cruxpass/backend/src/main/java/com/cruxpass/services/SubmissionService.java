@@ -5,7 +5,7 @@ import com.cruxpass.dtos.SubmittedRouteDto;
 import com.cruxpass.dtos.requests.SubmissionRequestDto;
 import com.cruxpass.dtos.responses.SubmissionResponseDto;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.RankingInfo;
 import com.cruxpass.models.Route;
@@ -235,7 +235,7 @@ public class SubmissionService {
     public List<RankedSubmissionDto> getRankingsByGroupAndDivision(
         Long competitionId,
         CompetitorGroup group,
-        Gender division
+        Division division
     ) {
         List<Submission> submissions = submissionRepository
             .findByCompetitionIdAndGroupAndDivision(competitionId, group, division)

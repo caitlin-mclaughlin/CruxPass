@@ -7,6 +7,9 @@ import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,18 @@ public class CompetitionController {
                                  CurrentUserService currentUserService) {
         this.competitionService = competitionService;
         this.currentUserService = currentUserService;
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<CompetitionResponseDto>> getAllCompetitionsForGym(
+            @PathVariable Long gymId) {
+        
+        List<Competition> comps = competitionService.getByGymId(gymId);
+        if (comps == null) return null;
+
+        return ResponseEntity.ok(comps.stream()
+            .map(comp -> compMap.toResponseDto(comp))
+            .toList());
     }
 
     @GetMapping("/{id}")
@@ -59,6 +74,7 @@ public class CompetitionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GYM')")
     public ResponseEntity<?> updateCompetition(
         @RequestHeader("Authorization") String authHeader,
         @PathVariable Long id,

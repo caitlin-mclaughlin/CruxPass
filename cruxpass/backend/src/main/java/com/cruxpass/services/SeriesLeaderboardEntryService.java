@@ -3,7 +3,7 @@ package com.cruxpass.services;
 import com.cruxpass.models.*;
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.repositories.SeriesLeaderboardEntryRepository;
 import com.cruxpass.repositories.SeriesRegistrationRepository;
 import com.cruxpass.repositories.SeriesRepository;
@@ -32,12 +32,12 @@ public class SeriesLeaderboardEntryService {
      * Rebuild the leaderboard for a series (after a competition ends or scores are finalized)
      */
     @Transactional
-    public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, CompetitorGroup group, Gender division) {
+    public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, CompetitorGroup group, Division division) {
         Series series = seriesRepo.findById(seriesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Series not found"));
 
         // Fetch all series registrations for this group/division
         List<SeriesRegistration> registrations = registrationRepo
-                .findBySeriesIdAndCompetitorGroupAndDivision(seriesId, group, division);
+                .findBySeriesIdAndDivision(seriesId, division);
 
         // Map: climberId -> leaderboard entry
         Map<Long, SeriesLeaderboardEntry> leaderboardMap = new HashMap<>();
@@ -47,7 +47,7 @@ public class SeriesLeaderboardEntryService {
             SeriesLeaderboardEntry entry = new SeriesLeaderboardEntry();
             entry.setSeries(series);
             entry.setClimber(reg.getClimber());
-            entry.setCompetitorGroup(group);
+            //entry.setCompetitorGroup(group);
             entry.setDivision(division);
             entry.setTotalSeriesPoints(0);
             entry.setRawClimbingPoints(0);
@@ -113,7 +113,7 @@ public class SeriesLeaderboardEntryService {
     /**
      * Fetch the leaderboard for a series, group, and division
      */
-    public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, CompetitorGroup group, Gender division) {
+    public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, CompetitorGroup group, Division division) {
         return leaderboardRepo.findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(seriesId, group, division);
     }
 

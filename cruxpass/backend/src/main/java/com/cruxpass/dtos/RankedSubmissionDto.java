@@ -1,7 +1,7 @@
 package com.cruxpass.dtos;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 public record RankedSubmissionDto(
     int place,
@@ -10,5 +10,5 @@ public record RankedSubmissionDto(
     int totalPoints, // sum of top 5
     int totalAttempts, // sum of top 5
     CompetitorGroup competitorGroup,
-    Gender division
+    Division division
 ) {}

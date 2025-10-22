@@ -6,7 +6,7 @@ import api from '@/services/apiService'
 import "react-datepicker/dist/react-datepicker.css";
 
 import DashboardPage from '@/pages/DashboardPage'
-import FloatingSearch from '@/components/FloatingSearch'
+import FloatingSearch from '@/components/ui/FloatingSearch'
 import LeaderboardPage from '@/pages/LeaderboardPage'
 import LoginPage from '@/pages/LoginPage'
 import Navigation from '@/components/Navigation'
@@ -23,6 +23,8 @@ import ClimberProfilePage from '@/pages/profiles/ClimberProfilePage'
 import GymProfilePage from '@/pages/profiles/GymProfilePage'
 import SeriesProfilePage from '@/pages/profiles/SeriesProfilePage'
 import { AccountType } from '@/constants/enum'
+import { GlobalSeriesProvider } from './context/GlobalSeriesContext';
+import { ClimberLookupProvider } from './context/ClimberLookupContext';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const { token } = useAuth()
@@ -103,35 +105,39 @@ export default function App() {
           <ClimberSessionProvider>
             <SeriesSessionProvider>
               <GlobalCompetitionsProvider>
-                <AppLayout>
-                  <Routes>
-                    <Route path="/" element={<LoginPage />} />
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route
-                      path="/competitions/:competitionId/leaderboard"
-                      element={
-                        <LeaderboardRouteWrapper>
-                          <LeaderboardPage />
-                        </LeaderboardRouteWrapper>
-                      }
-                    />
-                    <Route 
-                      path="/competitions/:competitionId" 
-                      element={
-                        <GymCompetitionRouteWrapper>
-                          <CompetitionPage />
-                        </GymCompetitionRouteWrapper>
-                      } />
-                    <Route
-                      path="/profile"
-                      element={
-                        <PrivateRoute>
-                          <ProfileRoute />
-                        </PrivateRoute>
-                      }
-                    />
-                  </Routes>
-                </AppLayout>
+                <GlobalSeriesProvider>
+                  <ClimberLookupProvider>
+                    <AppLayout>
+                      <Routes>
+                        <Route path="/" element={<LoginPage />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route
+                          path="/competitions/:competitionId/leaderboard"
+                          element={
+                            <LeaderboardRouteWrapper>
+                              <LeaderboardPage />
+                            </LeaderboardRouteWrapper>
+                          }
+                        />
+                        <Route 
+                          path="/competitions/:competitionId" 
+                          element={
+                            <GymCompetitionRouteWrapper>
+                              <CompetitionPage />
+                            </GymCompetitionRouteWrapper>
+                          } />
+                        <Route
+                          path="/profile"
+                          element={
+                            <PrivateRoute>
+                              <ProfileRoute />
+                            </PrivateRoute>
+                          }
+                        />
+                      </Routes>
+                    </AppLayout>
+                  </ClimberLookupProvider>
+                </GlobalSeriesProvider>
               </GlobalCompetitionsProvider>
             </SeriesSessionProvider>
           </ClimberSessionProvider>

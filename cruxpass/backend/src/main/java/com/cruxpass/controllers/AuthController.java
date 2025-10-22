@@ -48,7 +48,7 @@ public class AuthController {
         Long id;
         switch (type) {
             case CLIMBER -> {
-                Climber climber = climberService.createUser(dto);
+                Climber climber = climberService.createAdult(dto);
                 id = climber.getId();
                 break;
             }
@@ -135,9 +135,11 @@ public class AuthController {
                         climber.getPhone(),
                         climber.getUsername(),
                         climber.getDob(),
-                        climber.getDivision(),
+                        climber.getGender(),
                         new AddressDto(climber.getAddress()),
-                        climber.getCreatedAt()
+                        climber.getCreatedAt(),
+                        climber.getEmergencyName(),
+                        climber.getEmergencyPhone()
                     )
                 ));
             }

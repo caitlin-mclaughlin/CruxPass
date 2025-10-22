@@ -4,7 +4,7 @@ import com.cruxpass.dtos.SimpleRegistrationDto;
 import com.cruxpass.dtos.requests.UpdateCompRequestDto;
 import com.cruxpass.dtos.responses.CompetitionResponseDto;
 import com.cruxpass.enums.CompetitionStatus;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 
@@ -38,7 +38,7 @@ public class CompetitionMapper {
         comp.setCompetitorGroups(dto.competitorGroups());
 
         // divisionsEnabled logic
-        Set<Gender> divisions = dto.divisions();
+        Set<Division> divisions = dto.divisions();
         boolean divisionsEnabled = divisions != null && !divisions.isEmpty();
         comp.setDivisions(divisionsEnabled ? divisions : null);
 
@@ -56,7 +56,7 @@ public class CompetitionMapper {
         comp.setTypes(dto.types());
         comp.setCompetitorGroups(dto.competitorGroups());
 
-        Set<Gender> divisions = dto.divisions();
+        Set<Division> divisions = dto.divisions();
         boolean divisionsEnabled = divisions != null && !divisions.isEmpty();
         comp.setDivisions(divisionsEnabled ? divisions : null);
 

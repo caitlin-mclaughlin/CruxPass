@@ -1,4 +1,4 @@
-import { COMPETITOR_GROUPS, CompetitionEnumMap, CompetitorGroup, Gender, GenderEnumMap, GroupDivisionKey } from '@/constants/enum'
+import { COMPETITOR_GROUPS, CompetitionEnumMap, CompetitorGroup, Division, DivisionEnumMap, GroupDivisionKey } from '@/constants/enum'
 import { Address } from '@/models/domain';
 
 export function formatPhoneNumber(value: string): string {
@@ -70,8 +70,8 @@ export function formatGroupsInOrder(groups: string[]): string {
   return ordered.map(competitorGroup => CompetitionEnumMap[competitorGroup]).join(', ')
 }
 
-export function formatGroupDivision(group: CompetitorGroup, division: Gender): string {
-  return `${GenderEnumMap[division]}'s ${CompetitionEnumMap[group]}`
+export function formatGroupDivision(group: CompetitorGroup, division: Division): string {
+  return `${DivisionEnumMap[division]}'s ${CompetitionEnumMap[group]}`
 }
 
 export function parseAddress(address: string): Address {

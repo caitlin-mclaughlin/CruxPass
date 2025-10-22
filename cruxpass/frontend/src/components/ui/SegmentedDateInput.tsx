@@ -13,7 +13,8 @@ interface SegmentedDateInputProps {
   onChange: (date: Date | null) => void;
   minDate?: Date;
   maxDate?: Date;
-  mode?: "birthday" | "generic"; // NEW
+  mode?: "birthday" | "generic";
+  invalid?: boolean;
 }
 
 export default function SegmentedDateInput({
@@ -22,9 +23,10 @@ export default function SegmentedDateInput({
   minDate: propMin,
   maxDate: propMax,
   mode = "generic",
+  invalid = false, 
 }: SegmentedDateInputProps) {
   const initial = normalizeBackendDateOrDateTime(
-    value instanceof Date ? value.toISOString() : value
+    value instanceof Date ? value.toISOString() : value ? value : null
   );
   const [date, setDate] = useState<Date | null>(initial);
   const [showPicker, setShowPicker] = useState(false);
@@ -88,7 +90,7 @@ export default function SegmentedDateInput({
   // update mask value when parent changes
   useEffect(() => {
     const d = normalizeBackendDateOrDateTime(
-      value instanceof Date ? value.toISOString() : value
+      value instanceof Date ? value.toISOString() : value ? value : null
     );
     setDate(d);
     
@@ -123,17 +125,26 @@ export default function SegmentedDateInput({
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <div className="flex items-center border border-green bg-transparent rounded-md pr-3">
+      <div
+        className={`flex items-center rounded-md shadow-md pr-3 border bg-transparent
+          ${invalid ? "border-accent text-accent" : "border-green"}
+        `}
+      >
         <Input
           ref={inputRef}
           placeholder="MM/DD/YYYY"
-          className="bg-transparent border-none focus:outline-none shadow-none w-full"
+          className={`bg-transparent border-none focus:outline-none shadow-none w-full 
+            placeholder:text-prompt
+            ${invalid ? "placeholder:text-accent text-accent" : ""}
+          `}
         />
         <button
           type="button"
           onClick={() => setShowPicker((prev) => !prev)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 \
-            hover:text-select focus-visible:outline-none focus-visible:text-select"
+          className={`absolute right-2 top-1/2 -translate-y-1/2 
+            focus-visible:outline-none
+            ${invalid ? "text-accent hover:text-accentHighlight" : "text-green hover:text-select"}
+          `}
           aria-label="Toggle calendar"
         >
           <Calendar size={18} />

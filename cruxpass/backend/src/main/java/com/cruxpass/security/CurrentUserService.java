@@ -32,7 +32,7 @@ public class CurrentUserService {
     }
 
     public Climber getClimberFromToken(String authHeader) {
-        return climberRepo.findByEmail(extractEmail(authHeader)).orElse(null);
+        return climberRepo.findByEmailIgnoreCaseAndActiveTrue(extractEmail(authHeader)).orElse(null);
     }
 
     public Gym getGymFromToken(String authHeader) {
@@ -87,6 +87,5 @@ public class CurrentUserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized series");
         }
     }
-
 }
 

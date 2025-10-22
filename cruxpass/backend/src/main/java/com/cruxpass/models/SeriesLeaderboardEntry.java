@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.lang.NonNull;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
@@ -42,7 +42,7 @@ public class SeriesLeaderboardEntry {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    private Gender division;
+    private Division division;
 
     @JoinColumn(name = "climber_id", nullable = false)
     @ManyToOne

@@ -30,6 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(HttpMethod.GET, "/api/competitions/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/leaderboards/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/publicSeries/**").permitAll()
                 .requestMatchers(
                     "/api/auth/**",
                     "/api/search/**"

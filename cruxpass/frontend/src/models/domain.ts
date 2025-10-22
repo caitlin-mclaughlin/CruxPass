@@ -1,4 +1,4 @@
-import { AccountType, CompetitionFormat, CompetitionStatus, CompetitionType, CompetitorGroup, Gender } from "@/constants/enum";
+import { AccountType, CompetitionFormat, CompetitionStatus, CompetitionType, CompetitorGroup, Division, Gender } from "@/constants/enum";
 import { AuthRequestDto, RegisterRequestDto } from "./dtos";
 
 export interface Address {
@@ -15,31 +15,38 @@ export interface ClimberData {
   email: string
   phone: string
   username: string
-  division: Gender
+  gender: Gender
   dob: string
   address: Address
   createdAt: string
+  emergencyName: string
+  emergencyPhone: string
 }
 
+export type DependentClimber = Pick<
+  SimpleClimber,
+  "id" | "name" | "dob" | "gender" | "emergencyName" | "emergencyPhone"
+>
+
 export interface CompetitionSummary {
-  id: number;
-  gymId: number;
-  name: string;
-  date: string;
-  duration: number;
-  deadline: string;
-  capacity: number;
-  types: CompetitionType[];
-  compFormat: CompetitionFormat;
-  competitorGroups: CompetitorGroup[];
-  divisions: Gender[];
-  divisionsEnabled?: boolean;
-  compStatus: CompetitionStatus;
-  location: Address;
-  hostGymName: string;
-  registered?: boolean;
+  id: number
+  gymId: number
+  name: string
+  date: string
+  duration: number
+  deadline: string
+  capacity: number
+  types: CompetitionType[]
+  compFormat: CompetitionFormat
+  competitorGroups: CompetitorGroup[]
+  divisions: Division[]
+  divisionsEnabled?: boolean
+  compStatus: CompetitionStatus
+  location: Address
+  hostGymName: string
+  registered?: boolean
   registration: {
-    division: Gender
+    division: Division
     competitorGroup: CompetitorGroup
   }
 }
@@ -48,7 +55,7 @@ export interface CompetitionData {
   id: number
   name: string
   competitorGroups: CompetitorGroup[]
-  divisions: Gender[]
+  divisions: Division[]
 }
 
 export interface GymData {
@@ -61,20 +68,33 @@ export interface GymData {
   createdAt: string
 }
 
+export interface PublicSeries {
+  id: number
+  name: string
+  email: string
+  description?: string
+  startDate: string
+  endDate: string
+  deadline: string
+  seriesStatus: CompetitionStatus
+  registered?: boolean
+  seriesRegistration: SeriesRegistration
+}
+
 export type RankedSubmission = {
   place: number
   climberName: string
   totalPoints: number
   totalAttempts: number
   competitorGroup: CompetitorGroup
-  division: Gender
-  movement?: "up" | "down" | "same";
-};
+  division: Division
+  movement?: "up" | "down" | "same"
+}
 
 export type Registration = {
   climberName: string
   climberDob: string
-  division: Gender
+  division: Division
   competitorGroup: CompetitorGroup
 }
 
@@ -83,7 +103,7 @@ export type GymRegistration = {
   climberDob: string
   climberEmail: string
   competitorGroup: CompetitorGroup
-  division: Gender
+  division: Division
   paid: boolean
 }
 
@@ -94,7 +114,7 @@ export interface Route {
 }
 
 export interface SeriesData {
-  id: number | null
+  id: number
   name: string
   email: string
   username: string
@@ -109,23 +129,25 @@ export interface SeriesData {
 export interface SeriesRegistration {
     seriesId: number
     climberId: number
-    group: CompetitorGroup
-    division: Gender
+    climberName: string
+    birthYear: number
+    division: Division
+}
+
+export interface SimpleClimber {
+  id: number
+  name: string
+  email: string
+  phone: string
+  dob: string
+  gender: Gender
+  address: Address
+  emergencyName: string
+  emergencyPhone: string
 }
 
 export interface SubmittedRoute {
   routeId: number | null
   attempts: number
   send: boolean
-}
-
-/** Context Session Models **/
-export interface AuthContextType {
-  token: string | null
-  accountType: AccountType | null,
-  login: (credentials: AuthRequestDto) => void
-  register: (type: AccountType, credentials: RegisterRequestDto) => void
-  logout: () => void
-  skipLogin: () => void
-  guest: boolean
 }

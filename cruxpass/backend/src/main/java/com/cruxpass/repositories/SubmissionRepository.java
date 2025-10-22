@@ -1,7 +1,7 @@
 package com.cruxpass.repositories;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Submission;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     Optional<List<Submission>> findByCompetitionIdAndGroupAndDivision(
             @Param("competitionId") Long competitionId,
             @Param("group") CompetitorGroup group,
-            @Param("division") Gender division);
+            @Param("division") Division division);
         
     @Query("""
         SELECT s FROM Submission s

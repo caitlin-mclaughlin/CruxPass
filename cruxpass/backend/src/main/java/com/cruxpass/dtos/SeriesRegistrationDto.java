@@ -1,11 +1,11 @@
 package com.cruxpass.dtos;
 
-import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 public record SeriesRegistrationDto(
     Long seriesId,
     Long climberId,
-    CompetitorGroup competitorGroup,
-    Gender division
+    String climberName,
+    int birthYear,
+    Division division
 ) {} 

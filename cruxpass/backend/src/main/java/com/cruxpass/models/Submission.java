@@ -10,7 +10,7 @@ import java.util.List;
 import org.springframework.lang.NonNull;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
@@ -42,7 +42,7 @@ public class Submission {
     private CompetitorGroup competitorGroup;
 
     @Enumerated(EnumType.STRING)
-    private Gender division;
+    private Division division;
 
     @JsonIgnore
     @OneToMany(

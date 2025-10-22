@@ -6,7 +6,7 @@ import com.cruxpass.dtos.responses.CompetitionResponseDto;
 import com.cruxpass.dtos.responses.RouteResponseDto;
 import com.cruxpass.dtos.responses.SimpleRegistrationResponseDto;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.mappers.CompetitionMapper;
 import com.cruxpass.mappers.RegistrationMapper;
 import com.cruxpass.mappers.RouteMapper;
@@ -69,6 +69,7 @@ public class PublicCompetitionController {
             : null;
 
         List<Competition> competitions = competitionService.getAll();
+        if (competitions == null) return ResponseEntity.notFound().build();
 
         return ResponseEntity.ok(
             competitions.stream()
@@ -141,7 +142,7 @@ public class PublicCompetitionController {
     public ResponseEntity<List<RankedSubmissionDto>> getLeaderboard(
         @PathVariable Long competitionId,
         @RequestParam CompetitorGroup group,
-        @RequestParam(required = false) Gender division
+        @RequestParam(required = false) Division division
     ) {
         List<RankedSubmissionDto> rankings = submissionService.getRankingsByGroupAndDivision(competitionId, group, division);
         return rankings == null || rankings.isEmpty()

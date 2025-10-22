@@ -6,8 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Series;
 import com.cruxpass.models.SeriesRegistration;
@@ -16,18 +15,17 @@ import com.cruxpass.models.SeriesRegistration;
 public interface SeriesRegistrationRepository extends JpaRepository<SeriesRegistration, Long> {
 
     // Find all registrations for a given series
-    List<SeriesRegistration> findAllBySeries(Series series);
+    List<SeriesRegistration> findBySeries(Series series);
 
     // Find all registrations for a climber
-    List<SeriesRegistration> findAllByClimber(Climber climber);
+    List<SeriesRegistration> findByClimber(Climber climber);
 
     // Check if climber already registered
-    Optional<SeriesRegistration> findBySeriesAndClimber(Series series, Climber climber);
+    Optional<SeriesRegistration> findByClimberAndSeries(Climber climber, Series series);
 
     // Support filtering by group/division
-    List<SeriesRegistration> findBySeriesIdAndCompetitorGroupAndDivision(
+    List<SeriesRegistration> findBySeriesIdAndDivision(
         Long seriesId,
-        CompetitorGroup group,
-        Gender division
+        Division division
     );
 }

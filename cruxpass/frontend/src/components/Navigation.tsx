@@ -38,39 +38,39 @@ export default function Navigation({
 
   return (
     <>
-      {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between bg-green px-4 py-3 shadow sticky top-0 z-50 text-background">
-        <button onClick={() => setOpen(!open)} className="base-select text-background">
-          <Menu size={24} />
-        </button>
-        <h1 className="text-lg font-semibold">CruxPass</h1>
-        <button onClick={onSearchClick}>
-          <Search size={24} />
-        </button>
-      </div>
-
       {/* Sidebar */}
       <aside
-        className={`flex h-screen md:relative top-0 left-0 z-40 h-full w-52 bg-green shadow-md transform transition-transform duration-200 text-background
-        ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:flex md:flex-col`}
+        className={`
+          fixed inset-y-0 left-0 z-40 w-52 bg-green shadow-md transform transition-transform duration-200 text-background
+          ${open ? 'translate-x-0' : '-translate-x-full'}
+          md:relative md:translate-x-0 md:flex md:flex-col
+        `}
       >
-        <div className="flex flex-col h-full py-6 space-y-2 bg-green">
-          <Link to="/dashboard" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
-            <House size={18} className="mr-2" /> Dashboard
-          </Link>
-          <Link to="/leaderboards" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
-            <ChartLine size={18} className="mr-2" /> Leaderboards
-          </Link>
-            <Link to="/profile" className={"flex items-center w-full text-background px-4 py-2 hover:bg-select cursor-pointer"}>
+        {/* Make the inner container stretch to full height and push signout to bottom */}
+        <div className="flex flex-col h-full py-6 px-0">
+          <nav className="flex flex-col gap-2">
+            <Link to="/dashboard" className="flex items-center text-background px-4 py-2 hover:bg-select cursor-pointer">
+              <House size={18} className="mr-2" /> Dashboard
+            </Link>
+{/*
+            <Link to="/leaderboards" className="flex items-center text-background px-4 py-2 hover:bg-select cursor-pointer">
+              <ChartLine size={18} className="mr-2" /> Leaderboards
+            </Link>
+            */}
+
+            <Link to="/profile" className="flex items-center text-background px-4 py-2 hover:bg-select cursor-pointer">
               <User size={18} className="mr-2" /> Profile
             </Link>
-          <button
-            onClick={onSearchClick}
-            className="flex items-center px-4 py-2 hover:bg-select cursor-pointer"
-          >
-            <Search size={18} className="mr-2" /> Search
-          </button>
 
+            <button
+              onClick={onSearchClick}
+              className="flex items-center text-background px-4 py-2 hover:bg-select"
+            >
+              <Search size={18} className="mr-2" /> Search
+            </button>
+          </nav>
+
+          {/* Spacer + footer */}
           <div className="mt-auto">
             {showProfileOption ? (
               <button
@@ -91,10 +91,10 @@ export default function Navigation({
         </div>
       </aside>
 
-      {/* Mobile Backdrop */}
+      {/* Mobile backdrop — only visible when menu open */}
       {open && (
         <div
-          className="fixed inset-0 bg-backgroundz-30 md:hidden text-green"
+          className="fixed inset-0 bg-black/40 md:hidden z-30"
           onClick={() => setOpen(false)}
         />
       )}

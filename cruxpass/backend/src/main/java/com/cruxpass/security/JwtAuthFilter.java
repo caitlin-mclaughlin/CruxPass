@@ -69,7 +69,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 switch (role) {
                     case CLIMBER -> {
-                        Climber climber = climberRepo.findByEmail(email).orElse(null);
+                        Climber climber = climberRepo.findByEmailIgnoreCaseAndActiveTrue(email).orElse(null);
                         valid = climber != null && jwtUtil.validateToken(token);
                     }
                     case GYM -> {

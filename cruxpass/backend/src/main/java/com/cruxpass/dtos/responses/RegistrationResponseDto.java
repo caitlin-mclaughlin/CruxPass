@@ -3,7 +3,7 @@ package com.cruxpass.dtos.responses;
 import java.time.LocalDate;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 public record RegistrationResponseDto(
     Long id,
@@ -13,6 +13,6 @@ public record RegistrationResponseDto(
     LocalDate climberDob,
     String climberEmail,
     CompetitorGroup competitorGroup,
-    Gender division,
+    Division division,
     boolean paid
 ) {}

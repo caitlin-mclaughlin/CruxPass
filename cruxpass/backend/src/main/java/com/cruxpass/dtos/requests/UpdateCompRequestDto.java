@@ -7,7 +7,7 @@ import com.cruxpass.enums.CompetitionFormat;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public record UpdateCompRequestDto(
@@ -21,6 +21,6 @@ public record UpdateCompRequestDto(
     Set<CompetitionType> types,
     CompetitionFormat compFormat,
     Set<CompetitorGroup> competitorGroups,
-    Set<Gender> divisions,
+    Set<Division> divisions,
     CompetitionStatus compStatus
 ) {} 

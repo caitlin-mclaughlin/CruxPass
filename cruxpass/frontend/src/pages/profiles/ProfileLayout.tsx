@@ -1,7 +1,7 @@
 // @/pages/profiles/ProfileLayout
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
-import { UserPen } from "lucide-react";
+import { Ban, Save, UserPen } from "lucide-react";
 
 type ProfileLayoutProps = {
   title?: string;
@@ -14,8 +14,6 @@ type ProfileLayoutProps = {
 };
 
 export default function ProfileLayout({
-  title,
-  name,
   editing,
   setEditing,
   handleSubmit,
@@ -28,10 +26,6 @@ export default function ProfileLayout({
 
   return (
     <div>
-      {name && (
-        <h2 className="text-xl font-semibold mb-2">{name}</h2>
-      )}
-
       <div className="grid grid-cols-4 gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
         {children}
       </div>
@@ -39,18 +33,19 @@ export default function ProfileLayout({
       <div className="mt-3 space-x-4">
         {editing ? (
           <>
-            <button
+            <Button
               onClick={handleSubmit}
-              className="bg-green text-background px-4 py-1 rounded-md font-semibold"
             >
-              Save
-            </button>
-            <button
+              <Save size={18} />
+              <span className="relative top-[1px]">Save</span>
+            </Button>
+            <Button
               onClick={() => setEditing(false)}
-              className="bg-accent text-background px-4 py-1 rounded-md font-semibold"
+              className="bg-accent hover:bg-accentHighlight"
             >
-              Cancel
-            </button>
+              <Ban size={18} />
+              <span className="relative top-[1px]">Cancel</span>
+            </Button>
           </>
         ) : (
           <Button onClick={() => setEditing(true)}>

@@ -1,9 +1,9 @@
 package com.cruxpass.dtos;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 public record SimpleRegistrationDto(
-    Gender division,
+    Division division,
     CompetitorGroup competitorGroup
 ) {}

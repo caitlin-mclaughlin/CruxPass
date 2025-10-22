@@ -1,6 +1,8 @@
 package com.cruxpass.dtos.requests;
 
+import jakarta.validation.constraints.NotBlank;
+
 public record AuthRequest(
-    String emailOrUsername,
-    String password
+    @NotBlank String emailOrUsername,
+    @NotBlank String password
 ) {}

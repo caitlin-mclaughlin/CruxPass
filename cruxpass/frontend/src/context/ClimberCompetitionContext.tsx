@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { CompetitionSummary, Registration, Route, SubmittedRoute } from '@/models/domain'
 import { getCompetition, getMySubmissionsForComp, getMyRegistrationForComp, getRoutesForComp, submitScoresForComp, updateMyRegistrationForComp } from '@/services/climberCompetitionService';
 import { CompRegistrationRequestDto, SubmissionRequestDto } from '@/models/dtos';
+import { CompetitorGroup, Division } from '@/constants/enum';
 
 interface ClimberCompetitionContextType {
   competition: CompetitionSummary | null;
@@ -158,9 +159,9 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
       const res = await updateMyRegistrationForComp(gymId, targetId, data);
       const regData = {
         climberName: res.climberName,
-        email: res.email,
+        climberDob: res.climberDob,
         division: res.division,
-        competitorGroup: res.competitorGroup
+        competitorGroup: res.competitorGroup as CompetitorGroup,
       } as Registration
       setRegistration(regData);
     } catch (err) {

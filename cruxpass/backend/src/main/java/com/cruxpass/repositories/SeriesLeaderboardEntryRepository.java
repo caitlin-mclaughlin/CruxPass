@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Series;
 import com.cruxpass.models.SeriesLeaderboardEntry;
@@ -18,13 +18,13 @@ public interface SeriesLeaderboardEntryRepository extends JpaRepository<SeriesLe
     List<SeriesLeaderboardEntry> findAllBySeriesAndCompetitorGroupAndDivision(
         Series series,
         CompetitorGroup group,
-        Gender division
+        Division division
     );
 
     // Lookup climber's leaderboard entry
     Optional<SeriesLeaderboardEntry> findBySeriesAndClimber(Series series, Climber climber);
 
-    List<SeriesLeaderboardEntry> findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(Long seriesId, CompetitorGroup group, Gender division);
+    List<SeriesLeaderboardEntry> findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(Long seriesId, CompetitorGroup group, Division division);
     List<SeriesLeaderboardEntry> findBySeriesIdOrderByRankAsc(Long seriesId);
 }
 

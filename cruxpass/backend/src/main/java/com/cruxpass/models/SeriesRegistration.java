@@ -2,8 +2,7 @@ package com.cruxpass.models;
 
 import org.springframework.lang.NonNull;
 
-import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -37,9 +36,5 @@ public class SeriesRegistration {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    private CompetitorGroup competitorGroup;
-
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    private Gender division;
+    private Division division;
 }

@@ -1,5 +1,5 @@
 // LeaderboardTable.tsx
-import { CompetitorGroup, Gender } from "@/constants/enum";
+import { CompetitorGroup, Division } from "@/constants/enum";
 import { RankedSubmissionDto } from "@/models/dtos";
 import { formatGroupDivision } from "@/utils/formatters";
 import { ArrowUp } from "lucide-react";
@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 type LeaderboardTableProps = {
   submissions?: (RankedSubmissionDto & { movement?: "up" | "same" })[] | null; // only up or same
   group: CompetitorGroup;
-  division: Gender;
+  division: Division;
 }
 
 export function LeaderboardTable({ submissions, group, division }: LeaderboardTableProps) {

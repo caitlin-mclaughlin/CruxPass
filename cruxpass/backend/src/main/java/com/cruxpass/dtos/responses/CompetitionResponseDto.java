@@ -10,7 +10,7 @@ import com.cruxpass.enums.CompetitionFormat;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Competition;
 
 public record CompetitionResponseDto(
@@ -24,7 +24,7 @@ public record CompetitionResponseDto(
     Set<CompetitionType> types,
     CompetitionFormat compFormat,
     Set<CompetitorGroup> competitorGroups,
-    Set<Gender> divisions,
+    Set<Division> divisions,
     boolean divisionsEnabled,
     CompetitionStatus compStatus,
     AddressDto location,

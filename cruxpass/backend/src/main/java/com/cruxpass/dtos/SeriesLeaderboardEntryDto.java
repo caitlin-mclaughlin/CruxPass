@@ -3,13 +3,13 @@ package com.cruxpass.dtos;
 import java.util.List;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.CompetitionResult;
 
 public record SeriesLeaderboardEntryDto(
     Long climberId,
     CompetitorGroup group,
-    Gender division,
+    Division division,
     String climberName,
     int totalSeriesPoints,
     int rawClimbingPoints,

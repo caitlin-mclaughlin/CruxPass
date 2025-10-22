@@ -2,8 +2,8 @@ import { ClimberData } from "@/models/domain";
 import { Input } from "@/components/ui/Input";
 import SegmentedDateInput from "@/components/ui/SegmentedDateInput";
 import CustomRadioGroup from "@/components/ui/CustomRadioGroup";
-import { formatDate, formatAddress, formatPhoneNumber } from "@/utils/formatters";
-import { makeDateChangeHandler, normalizeBackendDateOrDateTime } from "@/utils/datetime";
+import { formatAddress, formatPhoneNumber } from "@/utils/formatters";
+import { formatDateFromString, makeDateChangeHandler } from "@/utils/datetime";
 import { GENDER_OPTIONS, GenderEnumMap } from "@/constants/enum";
 import { RenderInput } from "@/utils/uiRendering";
 
@@ -56,13 +56,15 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
         <div className="font-medium text-green">Date of Birth:</div>
         <div className="text-green">
           {editing ? (
-            <SegmentedDateInput
-              mode="birthday"
-              value={normalizeBackendDateOrDateTime(formData.dob)}
-              onChange={makeDateChangeHandler<ClimberData>("dob", setFormData)}
-            />
+            <div className="bg-background rounded-md">
+              <SegmentedDateInput
+                mode="birthday"
+                value={formData.dob}
+                onChange={makeDateChangeHandler<ClimberData>("dob", setFormData, "date")}
+              />
+            </div>
           ) : (
-            formData.dob && formatDate(new Date(formData.dob + "T00:00:00"))
+            formData.dob && formatDateFromString(formData.dob)
           )}
         </div>
       </div>
@@ -78,16 +80,16 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
                 value: g, 
                 label: GenderEnumMap[g as keyof typeof GenderEnumMap] 
               }))}
-              selected={formData.division}
+              selected={formData.gender}
               onChange={(g: string) => {
                 setFormData((prev: any) => ({ 
                   ...prev, 
                   division: g
                 }))
               }}
-                  />
+            />
           ) : (
-            GenderEnumMap[formData.division as keyof typeof GenderEnumMap]
+            GenderEnumMap[formData.gender as keyof typeof GenderEnumMap]
           )}
         </div>
       </div>
@@ -103,30 +105,35 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
                 value={formData.address?.streetAddress || ""}
                 placeholder="Street Address"
                 onChange={handleChange}
+                className="bg-background"
               />
               <Input
                 name="address.apartmentNumber"
                 value={formData.address?.apartmentNumber || ""}
                 placeholder="Apartment Number"
                 onChange={handleChange}
+                className="bg-background"
               />
               <Input
                 name="address.city"
                 value={formData.address?.city || ""}
                 placeholder="City"
                 onChange={handleChange}
+                className="bg-background"
               />
               <Input
                 name="address.state"
                 value={formData.address?.state || ""}
                 placeholder="State"
                 onChange={handleChange}
+                className="bg-background"
               />
               <Input
                 name="address.zipCode"
                 value={formData.address?.zipCode || ""}
                 placeholder="Zip Code"
                 onChange={handleChange}
+                className="bg-background"
               />
             </div>
           ) : (
@@ -134,6 +141,34 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
             formatAddress(formData.address)
               .split("\n")
               .map((line, idx) => <div key={idx}>{line}</div>)
+          )}
+        </div>
+      </div>
+      <div className="relative flex-col">
+        <div className="font-medium text-green">Emergency Contact:</div>
+        <div className="text-green">
+          {editing ? (
+            <div className="grid grid-cols-1 gap-2">
+              <Input
+                name="emergencyName"
+                value={formData.emergencyName || ""}
+                placeholder="Emergency Contact Name"
+                onChange={handleChange}
+                className="bg-background"
+              />
+              <Input
+                name="emergencyPhone"
+                value={formatPhoneNumber(formData.phone ?? "")}
+                placeholder="Emergency Contact Phone"
+                onChange={handleChange}
+                className="bg-background"
+              />
+              </div>
+          ) : (
+            <div className="flex flex-col">
+              <span>{formData.emergencyName}</span>
+              <span>{formatPhoneNumber(formData.emergencyPhone ?? "")}</span>
+            </div>
           )}
         </div>
       </div>

@@ -3,18 +3,20 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Route } from '@/models/domain'
 import { RouteDto } from '@/models/dtos'
 import { Input } from '../ui/Input'
+import { Ban, Save } from 'lucide-react'
 
 interface Props {
   open: boolean
   onClose: () => void
   onSubmit: (routes: RouteDto[]) => void
-  initialRoutes?: Route[] | null
+  initialRoutes?: Route[]
 }
 
 export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes }: Props) {
@@ -25,7 +27,7 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
   useEffect(() => {
     if (!open) return; // only initialize when opening
 
-    if (initialRoutes) {
+    if (initialRoutes && initialRoutes.length > 0) {
       const sorted = [...initialRoutes].sort((a, b) => a.number - b.number)
       setNumRoutes(sorted.length)
       setPointValues(sorted.map(r => r.pointValue))
@@ -93,124 +95,128 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
           <DialogDescription>Fill out the route information for your competition.</DialogDescription> 
         </DialogHeader>
 
-        <div>
-          <div className="relative w-full">
-            <Input
-              type="number"
-              step={10}
-              min={1}
-              value={numRoutes && numRoutes > 0 ? numRoutes as number : ''}
-              onChange={(e) => {
-                const val = e.target.value
-                if (val === '' || val == '0') {
-                  handleNumRoutesChange(null)
-                } else {
-                  handleNumRoutesChange(parseInt(val, 10))
-                }
+        <div className="relative w-full mb-2">
+          <Input
+            type="number"
+            step={10}
+            min={1}
+            value={numRoutes && numRoutes > 0 ? numRoutes as number : ''}
+            onChange={(e) => {
+              const val = e.target.value
+              if (val === '' || val == '0') {
+                handleNumRoutesChange(null)
+              } else {
+                handleNumRoutesChange(parseInt(val, 10))
+              }
 
-              }}
-              className="py-5"
-            />
+            }}
+            className="py-5"
+          />
 
-            <div className="absolute right-1 top-1/2 -translate-y-5 flex flex-col justify-center">
-              <button
-                type="button"
-                className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-none"
-                onClick={() =>
-                  handleNumRoutesChange(numRoutes === null ? 1 : numRoutes + 1)
-                }
-              >
-                ▲
-              </button>
-              <button
-                type="button"
-                className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-b focus-visible:outline-none"
-                onClick={() =>
-                  handleNumRoutesChange(numRoutes === null || numRoutes == 1 ? null : numRoutes - 1)
-                }
-              >
-                ▼
-              </button>
-            </div>
+          <div className="absolute right-1 top-1/2 -translate-y-5 flex flex-col justify-center">
+            <button
+              type="button"
+              className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-none"
+              onClick={() =>
+                handleNumRoutesChange(numRoutes === null ? 1 : numRoutes + 1)
+              }
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-b focus-visible:outline-none"
+              onClick={() =>
+                handleNumRoutesChange(numRoutes === null || numRoutes == 1 ? null : numRoutes - 1)
+              }
+            >
+              ▼
+            </button>
           </div>
         </div>
 
         {(typeof numRoutes === 'number' && numRoutes > 0) && (
-          <div>
-            <div className="max-h-80 overflow-y-auto border shadow-md rounded-md scrollbar-thin-green">
+          <div className="max-h-80 overflow-y-auto border shadow-md rounded-md scrollbar-thin-green mb-2">
             <table className="w-full text-left bg-shadow border-collapse">
-                <thead>
-                  <tr className="bg-green text-shadow">
-                    <th className="p-2 border-r text-center">Route #</th>
-                    <th className="p-2 text-center">Point Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: numRoutes }, (_, i) => (
-                    <tr key={i} className="border-t">
-                      <td className="px-2 py-2 border-r text-center">{i + 1}</td>
-                      <td className="px-3 py-2">
-                        <div className="relative w-full">
-                          <Input
-                            type="number"
-                            step={10}
-                            min={0}
-                            value={
-                              pointValues[i] === null || isNaN(pointValues[i] as number)
-                                ? ''
-                                : pointValues[i] as number
+              <thead>
+                <tr className="bg-green text-shadow">
+                  <th className="p-2 border-r text-center">Route #</th>
+                  <th className="p-2 text-center">Point Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: numRoutes }, (_, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="px-2 py-2 border-r text-center">{i + 1}</td>
+                    <td className="px-3 py-2">
+                      <div className="relative w-full">
+                        <Input
+                          type="number"
+                          step={10}
+                          min={0}
+                          value={
+                            pointValues[i] === null || isNaN(pointValues[i] as number)
+                              ? ''
+                              : pointValues[i] as number
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '') {
+                              handlePointValueChange(i, NaN)
+                            } else {
+                              handlePointValueChange(i, parseInt(val, 10))
                             }
-                            onChange={(e) => {
-                              const val = e.target.value
-                              if (val === '') {
-                                handlePointValueChange(i, NaN)
-                              } else {
-                                handlePointValueChange(i, parseInt(val, 10))
-                              }
-                            }}
-                            className={`bg-background py-5 pr-10 ${
-                              errors[i] ? 'border-accent focus:border-accent' : ''
-                            }`}
-                          />
+                          }}
+                          className={`bg-background py-5 pr-10 ${
+                            errors[i] ? 'border-accent focus:border-accent' : ''
+                          }`}
+                        />
 
-                          <div className="absolute right-1 top-1/2 -translate-y-5 flex flex-col justify-center">
-                            <button
-                              type="button"
-                              className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-select focus:text-select"
-                              onClick={() =>
-                                handlePointValueChange(i, (pointValues[i] ?? 0) + 10)
-                              }
-                            >
-                              ▲
-                            </button>
-                            <button
-                              type="button"
-                              className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-b focus:outline-select focus:text-select"
-                              onClick={() =>
-                                handlePointValueChange(i, Math.max(0, (pointValues[i] ?? 0) - 10))
-                              }
-                            >
-                              ▼
-                            </button>
-                          </div>
+                        <div className="absolute right-1 top-1/2 -translate-y-5 flex flex-col justify-center">
+                          <button
+                            type="button"
+                            className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-t focus-visible:outline-select focus:text-select"
+                            onClick={() =>
+                              handlePointValueChange(i, (pointValues[i] ?? 0) + 10)
+                            }
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            className="text-green hover:text-select w-6 h-5 text-xs cursor-pointer rounded-b focus:outline-select focus:text-select"
+                            onClick={() =>
+                              handlePointValueChange(i, Math.max(0, (pointValues[i] ?? 0) - 10))
+                            }
+                          >
+                            ▼
+                          </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {errors.some(Boolean) && (
-              <p className="text-accent mt-4">
-                Please fill in all point values before saving.
-              </p>
-            )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {errors.some(Boolean) && (
+          <div className="text-accent">
+            Please fill in all point values before saving.
           </div>
         )}
 
-        <Button onClick={handleSubmit} className="w-full">
-          Create Routes
-        </Button>
+        <DialogFooter>
+          <Button onClick={onClose} className="bg-accent text-background hover:bg-accentHighlight">
+            <Ban size={18} />
+            <span>Cancel</span>
+          </Button>
+          <Button onClick={handleSubmit}>
+            <Save size={18} />
+            <span>Save Routes</span>
+          </Button>
+        </DialogFooter>
 
       </DialogContent>
     </Dialog>

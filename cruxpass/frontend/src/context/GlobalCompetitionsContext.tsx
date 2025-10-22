@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { CompetitionSummary, Registration, Route } from '@/models/domain';
 import { getAllCompetitions, getRegistrationsForCompetition, getRoutesForCompetition } from '@/services/globalCompetitionService';
-import { PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
+import { CompetitionSummaryDto, PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
 
 interface GlobalCompetitionsContextValue {
   competitions: CompetitionSummary[];
@@ -32,7 +32,26 @@ export function GlobalCompetitionsProvider({ children }: { children: ReactNode }
     setLoading(true);
     setError(null);
     try {
-      const { data } = await getAllCompetitions();
+      const res = await getAllCompetitions();
+      const data: CompetitionSummary[] = res.map((c: CompetitionSummaryDto) => ({
+        id: c.id,
+        gymId: c.gymId,
+        name: c.name,
+        date: c.date,
+        duration: c.duration,
+        deadline: c.deadline,
+        capacity: c.capacity,
+        types: c.types,
+        compFormat: c.compFormat,
+        competitorGroups: c.competitorGroups,
+        divisions: c.divisions,
+        divisionsEnabled: c.divisionsEnabled,
+        compStatus: c.compStatus,
+        location: c.location,
+        hostGymName: c.hostGymName,
+        registered: c.registered,
+        registration: c.registration
+      }));
       setCompetitions(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));

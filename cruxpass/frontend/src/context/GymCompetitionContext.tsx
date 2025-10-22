@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { CompetitionSummary, GymRegistration, Registration, Route, SubmittedRoute } from '@/models/domain'
 import { getCompetition, getRegistrationsForComp, getRoutesForComp, getSubmissionsForComp, updateCompetitionInfo, updateRegistrationsForComp, updateRoutesForComp } from '@/services/gymCompetitionService';
-import { CompetitionFormPayload, CompRegistrationRequestDto, RegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto } from '@/models/dtos';
+import { CompetitionFormPayload, CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto } from '@/models/dtos';
 
 interface GymCompetitionContextType {
   competition: CompetitionSummary | null;
@@ -60,7 +60,7 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
         refreshCompetition(gymId, targetId),
         refreshRegistrations(gymId, targetId),
         refreshRoutes(gymId, targetId),
-        refreshSubmissions(gymId, targetId),
+        //refreshSubmissions(gymId, targetId),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));
@@ -93,7 +93,7 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
     setError(null);
     try {
       const res = await getRegistrationsForComp(gymId, targetId);
-      const data: GymRegistration[] = res.map((r: RegistrationResponseDto) => ({
+      const data: GymRegistration[] = res.map((r: CompRegistrationResponseDto) => ({
         climberName: r.climberName,
         climberDob: r.climberDob,
         climberEmail: r.climberEmail,

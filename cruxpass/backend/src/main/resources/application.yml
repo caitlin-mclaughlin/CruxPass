@@ -21,20 +21,23 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
-        use_sql_comments: true
+        "[format_sql]": true
+        "[use_sql_comments]": false
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   jackson:
     serialization:
-      INDENT_OUTPUT: true
-
+      "[INDENT_OUTPUT]": true
+      
   logging:
     level:
       root: DEBUG
-      org.hibernate.SQL: DEBUG
-      org.hibernate.type.descriptor.sql: TRACE
-
-
+      "[org.hibernate.SQL]": INFO
+      "[org.hibernate.type.descriptor.sql]": TRACE
 jwt:
   secret-file: ../../jwt_secret
+
+
+#    "[org.springframework.web]": DEBUG
+#    "[org.springframework.web.servlet.DispatcherServlet]": DEBUG
+#    "[org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping]": DEBUG

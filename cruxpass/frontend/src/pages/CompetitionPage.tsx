@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useGymCompetition } from '@/context/GymCompetitionContext'
+import { useNavigate, useParams } from 'react-router-dom'
+import { GymCompetitionProvider, useGymCompetition } from '@/context/GymCompetitionContext'
 import { useGymSession } from '@/context/GymSessionContext'
 import CreateCompetitionModal from '@/components/modals/CreateCompetitionModal'
 import AddRoutesModal from '@/components/modals/AddRoutesModal'
-import { CalendarCheck, PencilLine } from 'lucide-react'
+import { CalendarCheck, PencilLine, UserPlus } from 'lucide-react'
 import { formatAddress, formatGroupsInOrder } from '@/utils/formatters'
-import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, Gender, GenderEnumMap } from '@/constants/enum'
-import { GymRegistration } from '@/models/domain'
+import { CompetitionEnumMap, CompetitionFormat, CompetitionType, CompetitorGroup, Division, DivisionEnumMap } from '@/constants/enum'
+import { CompetitionSummary, GymRegistration } from '@/models/domain'
 import { CompetitionFormPayload, RouteDto } from '@/models/dtos'
 import { displayDateTime } from '@/utils/datetime'
 import { Button } from '@/components/ui/Button'
+import RegisterModal from '@/components/modals/RegisterModal'
 
 export default function CompetitionPage() {
   const { competitionId } = useParams<{ competitionId: string }>()
@@ -29,12 +30,14 @@ export default function CompetitionPage() {
     updateRoutes
   } = useGymCompetition()
   const { gym } = useGymSession()
+  const navigate = useNavigate()
 
   const [loadingRegs, setLoadingRegs] = useState(true)
   const [loadingRoutes, setLoadingRoutes] = useState(false)
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [showRouteModal, setShowRouteModal] = useState(false)
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
 
   // Load registrations on mount or when competition/gym changes
   useEffect(() => {
@@ -62,7 +65,7 @@ export default function CompetitionPage() {
     const grouped: Record<string, GymRegistration[]> = {}
     if (!registrations) return
     for (const reg of registrations) {
-      const key = `${GenderEnumMap[reg.division as keyof typeof GenderEnumMap]}'s ${CompetitionEnumMap[reg.competitorGroup as keyof typeof CompetitionEnumMap]}`
+      const key = `${DivisionEnumMap[reg.division as keyof typeof DivisionEnumMap]}'s ${CompetitionEnumMap[reg.competitorGroup as keyof typeof CompetitionEnumMap]}`
       if (!grouped[key]) grouped[key] = []
       grouped[key].push(reg)
     }
@@ -94,6 +97,17 @@ export default function CompetitionPage() {
       alert("Could not update routes.")
     }
   }
+  
+    const openRegisterModal = () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/', { state: { redirectTo: `/dashboard` } })
+        return
+      }
+      if (gym) {
+        setShowRegisterModal(true)
+      }
+    }
 
   if (loading) return <div className="h-screen p-8 text-green bg-background">Loading...</div>
   if (!competition) return <div className="h-screen p-8 text-green bg-background">Competition not found</div>
@@ -103,8 +117,7 @@ export default function CompetitionPage() {
       <h1 className="text-2xl font-bold mb-2">{competition.name}</h1>
 
       {/* Competition Details Box */}
-      <h2 className="text-xl mb-1 font-semibold">Details</h2>
-      <div className="mb-3 border rounded-md px-3 py-2 bg-shadow shadow-md max-w-3xl">
+      <div className="mb-3 border rounded-md px-3 py-2 bg-shadow shadow-md">
         <div><strong>Date & Time:</strong> {displayDateTime(competition.date)}</div>
         <div><strong>Registration Deadline:</strong> {displayDateTime(competition.deadline)}</div>
         <div><strong>Host Gym:</strong> {competition.hostGymName}</div>
@@ -114,80 +127,106 @@ export default function CompetitionPage() {
         <div><strong>Groups:</strong> {formatGroupsInOrder(competition.competitorGroups)}</div>
         <div><strong>Divisions: </strong> 
           {competition.divisions?.length 
-          ? competition.divisions.map(t => GenderEnumMap[t as keyof typeof GenderEnumMap]).join(', ') 
+          ? competition.divisions.map(t => DivisionEnumMap[t as keyof typeof DivisionEnumMap]).join(', ') 
           : "None"}
           </div>
       </div>
 
       {gym && gym.id === competition.gymId && (
-        <div className="flex justify-between max-w-3xl">
-          <Button
-              onClick={() => {
-              setShowEditModal(true)
-            }}
-          >
-            <CalendarCheck size={18} /> 
-            <span className="relative top-[1px]">Edit Competition</span>
-          </Button>
-
-          <Button
-              className="mb-3"
-              onClick={() => {
-                fetchRoutes()
-                setShowRouteModal(true)
+        <>
+          <div className="flex justify-between">
+            <Button
+                onClick={() => {
+                setShowEditModal(true)
               }}
-          >
-            <PencilLine size={18} /> 
-            <span className="relative top-[1px]">Edit Routes</span>
-          </Button>
-        </div>
-      )}
+            >
+              <CalendarCheck size={18} /> 
+              <span className="relative top-[1px]">Edit Competition</span>
+            </Button>
 
-      {/* Registration Box */}
-      <h2 className="text-xl mb-1 font-semibold">Registrations</h2>
-      <div className="border rounded-md px-3 py-2 bg-shadow shadow-md max-w-3xl">
-        {Object.entries(groupedRegs).map(([groupLabel, climbers]) => (
-          <div key={groupLabel} className="mb-2">
-            <h3 className="font-semibold underline mb-1">{groupLabel}</h3>
-            <ul className="ml-6 list-disc">
-              {climbers.map((c, idx) => (
-                <li key={idx}>
-                  {c.climberName} – <span>{c.climberEmail}</span>
-                </li>
-              ))}
-            </ul>
+            <Button
+                onClick={() => {
+                  fetchRoutes()
+                  setShowRouteModal(true)
+                }}
+            >
+              <PencilLine size={18} /> 
+              <span className="relative top-[1px]">Edit Routes</span>
+            </Button>
           </div>
-        ))}
-      </div>
 
-      {competition && (
-        <CreateCompetitionModal
-          open={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          onSubmit={(updatedData) => handleEditCompetition(updatedData)}
-          gymName={competition.hostGymName}
-          gymAddress={formatAddress(competition.location)}
-          initialData={{
-            name: competition.name,
-            date: competition.date,
-            duration: competition.duration,
-            deadline: competition.deadline,
-            capacity: competition.capacity,
-            compFormat: competition.compFormat as CompetitionFormat,
-            types: competition.types as CompetitionType[],
-            competitorGroups: competition.competitorGroups as CompetitorGroup[],
-            divisions: competition.divisions as Gender[],
-            divisionsEnabled: !competition.divisions?.length, 
-          }}
-        />
+          {/* Registration Box */}
+          <h2 className="text-xl mt-5 mb-1 font-bold">Registrations</h2>
+          <div className="border rounded-md px-3 py-2 bg-shadow shadow-md">
+            {groupedRegs && Object.keys(groupedRegs).length > 0 ? (
+              <>
+                {Object.entries(groupedRegs).map(([groupLabel, climbers]) => (
+                  <div key={groupLabel} className="mb-2">
+                    <h3 className="font-semibold underline mb-1">{groupLabel}</h3>
+                    <ul className="ml-6 list-disc">
+                      {climbers.map((c, idx) => (
+                        <li key={idx}>
+                          {c.climberName} – <span>{c.climberEmail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </>
+            ) : (
+                <span>When a climber registers, their info will show up here!</span>
+            )}
+          </div>
+          <Button 
+            className="mt-3"
+            onClick={openRegisterModal}
+          >
+              <UserPlus size={18} />
+              <span className="relative top-[1px]">Register a Climber</span>
+          </Button>
+
+          {/* Modals*/}
+          {competition && (
+            <CreateCompetitionModal
+              open={showEditModal}
+              onClose={() => setShowEditModal(false)}
+              onSubmit={(updatedData) => handleEditCompetition(updatedData)}
+              gymName={competition.hostGymName}
+              gymAddress={formatAddress(competition.location)}
+              initialData={{
+                name: competition.name,
+                date: competition.date,
+                duration: competition.duration,
+                deadline: competition.deadline,
+                capacity: competition.capacity,
+                compFormat: competition.compFormat as CompetitionFormat,
+                types: competition.types as CompetitionType[],
+                competitorGroups: competition.competitorGroups as CompetitorGroup[],
+                divisions: competition.divisions as Division[],
+                divisionsEnabled: !competition.divisions?.length, 
+              }}
+            />
+          )}
+          
+          <AddRoutesModal
+            open={showRouteModal}
+            onClose={() => setShowRouteModal(false)}
+            onSubmit={(routes) => handleEditRoutes(routes)}
+            initialRoutes={routes ?? []}
+          />
+
+          <RegisterModal
+            open={showRegisterModal}
+            mode={'gym'}
+            onClose={() => setShowRegisterModal(false)}
+            competition={competition}
+            onSuccess={async () => {
+              await refreshCompetition(gym.id, competition.id)
+              setShowRegisterModal(false)
+            }}
+          />
+        </>
       )}
-      
-      <AddRoutesModal
-        open={showRouteModal}
-        onClose={() => setShowRouteModal(false)}
-        onSubmit={(routes) => handleEditRoutes(routes)}
-        initialRoutes={routes}
-      />
 
     </div>
   )

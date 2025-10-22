@@ -1,7 +1,7 @@
 package com.cruxpass.models;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,7 +27,7 @@ public class Registration {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    Gender division;
+    Division division;
 
     @JoinColumn(name = "climber_id", nullable = false)
     @ManyToOne

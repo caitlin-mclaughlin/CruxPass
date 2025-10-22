@@ -18,7 +18,7 @@ import com.cruxpass.enums.CompetitionFormat;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
@@ -57,9 +57,9 @@ public class Competition {
     private Set<CompetitorGroup> competitorGroups;
 
     @Nullable
-    @ElementCollection(targetClass = Gender.class, fetch = FetchType.EAGER)
+    @ElementCollection(targetClass = Division.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    private Set<Gender> divisions;
+    private Set<Division> divisions;
 
     @NonNull
     @Enumerated(EnumType.STRING)

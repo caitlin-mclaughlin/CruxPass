@@ -3,7 +3,9 @@ package com.cruxpass.mappers;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import com.cruxpass.dtos.PublicSeriesDto;
 import com.cruxpass.dtos.SeriesDto;
+import com.cruxpass.dtos.SeriesRegistrationDto;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Series;
 
@@ -25,6 +27,21 @@ public class SeriesMapper {
             series.getDeadline(),
             calculateStatus(series),
             series.getCreatedAt()
+        );
+    }
+
+    public PublicSeriesDto toPublicDto(Series series, boolean registered, SeriesRegistrationDto seriesRegistrationDto) {
+        return new PublicSeriesDto(
+            series.getId(),
+            series.getName(),
+            series.getEmail(),
+            series.getDescription(),
+            series.getStartDate(),
+            series.getEndDate(),
+            series.getDeadline(),
+            calculateStatus(series),
+            registered,
+            seriesRegistrationDto
         );
     }
 

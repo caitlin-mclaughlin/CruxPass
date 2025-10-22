@@ -1,4 +1,4 @@
-import { CompetitionFormPayload, CompRegistrationRequestDto, RegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto, SubmissionResponseDto, SubmittedRouteDto } from '@/models/dtos';
+import { CompetitionFormPayload, CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto, SubmissionResponseDto, SubmittedRouteDto } from '@/models/dtos';
 import api from './apiService';
 import { Registration, Route, SubmittedRoute } from '@/models/domain';
 
@@ -12,7 +12,7 @@ export async function getCompetition(gymId: number, competitionId: number) {
   return res;
 }
 
-export async function getRegistrationsForComp(gymId: number, competitionId: number): Promise<RegistrationResponseDto[]> {
+export async function getRegistrationsForComp(gymId: number, competitionId: number): Promise<CompRegistrationResponseDto[]> {
   const res = await api.get(`/gyms/${gymId}/competitions/${competitionId}/registrations`);
   return res.data;
 } 

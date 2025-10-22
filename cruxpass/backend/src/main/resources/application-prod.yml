@@ -1,31 +1,41 @@
 # application-prod.yml
-spring:
-  datasource:
-    url: jdbc:postgresql://pgbouncer:6432/cruxpass?preferQueryMode=simple
-    username: postgres
-    password: password
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      idle-timeout: 30000
-      max-lifetime: 1800000
-      connection-timeout: 5000
-      pool-name: CruxHikariPool
-      data-source-properties:
-        sendExtraFloatDigits: false
+#spring:
+#  datasource:
+#    url: jdbc:postgresql://pgbouncer:6432/cruxpass?preferQueryMode=simple
+#    username: postgres
+#    password: password
+#    hikari:
+#      maximum-pool-size: 10
+#      minimum-idle: 2
+#      idle-timeout: 30000
+#      max-lifetime: 1800000
+#      connection-timeout: 5000
+#      pool-name: CruxHikariPool
+#      data-source-properties:
+#        sendExtraFloatDigits: false
 
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+#  mvc:
+#    log-request-details: true
 
-jwt:
-  secret: ${JWT_SECRET}
+#  jpa:
+#    open-in-view: false
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        use_sql_comments: true
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
 
-server:
-  address: 0.0.0.0
+#jwt:
+#  secret: ${JWT_SECRET}
+
+#server:
+#  address: 0.0.0.0
+
+#logging:
+#  level:
+#    org.springframework.web: DEBUG
+#    org.springframework.web.servlet.DispatcherServlet: DEBUG
+#    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: DEBUG

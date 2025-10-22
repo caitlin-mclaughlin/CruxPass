@@ -3,7 +3,7 @@ package com.cruxpass.models;
 import java.util.List;
 
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 public record RankingInfo(
     int place,
@@ -14,5 +14,5 @@ public record RankingInfo(
     List<Integer> topPoints,
     List<Integer> topAttempts,
     CompetitorGroup competitorGroup,
-    Gender division
+    Division division
 ) {}

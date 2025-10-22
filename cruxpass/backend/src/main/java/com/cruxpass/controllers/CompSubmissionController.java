@@ -1,7 +1,6 @@
 package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.RankedSubmissionDto;
-import com.cruxpass.dtos.RegionalScoreDto;
 import com.cruxpass.dtos.SubmittedRouteDto;
 import com.cruxpass.dtos.requests.SubmissionRequestDto;
 import com.cruxpass.dtos.responses.SubmissionResponseDto;
@@ -49,6 +48,19 @@ public class CompSubmissionController {
         this.currentUserService = currentUserService;
         this.leaderboardService = leaderboardService;
     }
+    /*
+    @GetMapping()
+    public ResponseEntity<List<CompetitionResponseDto>> getAllSubmissionsForComp(
+            @PathVariable Long gymId,
+            @PathVariable Long competitionId) {
+        
+        List<Competition> comps = submissionService.get(gymId);
+        if (comps == null) return null;
+
+        return ResponseEntity.ok(comps.stream()
+            .map(comp -> compMap.toResponseDto(comp))
+            .toList());
+    }*/
 
     @PutMapping("/me")
     public ResponseEntity<?> submitOrUpdateScore(

@@ -3,7 +3,7 @@ package com.cruxpass.services;
 import com.cruxpass.dtos.GroupLeaderboardUpdateDto;
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.models.Registration;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class LeaderboardBroadcastService {
         if (registration == null) throw new IllegalStateException("Climber not registered");
 
         CompetitorGroup group = registration.getCompetitorGroup();
-        Gender division = registration.getDivision();
+        Division division = registration.getDivision();
 
         // Calculate leaderboard only for that group/division
         List<RankedSubmissionDto> rankings = getRankings(competitionId, group, division);
@@ -46,8 +46,8 @@ public class LeaderboardBroadcastService {
         );
     }
 
-    // Existing ranking logic, but scoped to compId + group + gender
-    public List<RankedSubmissionDto> getRankings(Long compId, CompetitorGroup group, Gender division) {
+    // Existing ranking logic, but scoped to compId + group + division
+    public List<RankedSubmissionDto> getRankings(Long compId, CompetitorGroup group, Division division) {
         // fetch submissions + calculate places as you already do
         return submissionService.getRankingsByGroupAndDivision(compId, group, division);
     }

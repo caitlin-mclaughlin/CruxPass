@@ -1,7 +1,7 @@
 import { SeriesData } from "@/models/domain";
 import { RenderInput } from "@/utils/uiRendering";
 import SegmentedDateInput from "../ui/SegmentedDateInput";
-import { normalizeBackendDateOrDateTime, makeDateChangeHandler } from "@/utils/datetime";
+import { normalizeBackendDateOrDateTime, makeDateChangeHandler, displayDateTime } from "@/utils/datetime";
 
 interface Props {
   formData: SeriesData;
@@ -81,7 +81,7 @@ export default function SeriesProfileForm({ formData, setFormData, editing }: Pr
               />
             </div>
           ) : (
-            new Date(formData.deadline + "T00:00:00").toLocaleDateString()
+            displayDateTime(formData.deadline)
           )}
         </div>
       </div>

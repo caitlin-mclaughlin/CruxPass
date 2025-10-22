@@ -28,7 +28,7 @@ public class RegisterRequest {
     public LocalDate dob;
 
     // Null if registering a gym or series
-    public Gender division;
+    public Gender gender;
 
     @NotBlank
     @Size(min = 6, message = "Password must be at least 6 characters")
@@ -36,4 +36,10 @@ public class RegisterRequest {
 
     // Null if registering a series
     public AddressDto address;
+
+    // Blank if not registering a climber
+    public String emergencyName;
+
+    // Blank if not registering a climber
+    public String emergencyPhone;
 }

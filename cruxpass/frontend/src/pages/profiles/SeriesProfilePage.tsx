@@ -35,7 +35,7 @@ export default function SeriesProfilePage() {
   }
 
   return (
-    <div>
+    <div className="h-screen p-8 bg-background text-green">
       <ProfileLayout
         title="Series Profile"
         name={formData?.name}
@@ -69,6 +69,30 @@ export default function SeriesProfilePage() {
           />
         </>
       )}
+
+      {/* Registrations */}
+      <div className="relative flex-col mt-6">
+        <h2 className="text-xl font-semibold text-green mb-1">Registrations</h2>
+        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          Climbers registered for {formData?.name} will show up here!
+        </div>
+      </div>
+
+      {/* Competitions */}
+      <div className="relative flex-col mt-6">
+        <h2 className="text-xl font-semibold text-green mb-1">Affiliated Competitions</h2>
+        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          Competitions associated with {formData?.name} will show up here!
+        </div>
+      </div>
+
+      {/* Gyms */}
+      <div className="relative flex-col mt-6">
+        <h2 className="text-xl font-semibold text-green mb-1">Affiliated Gyms</h2>
+        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          Gyms associated with {formData?.name} will show up here!
+        </div>
+      </div>
     </div>
   );
 }

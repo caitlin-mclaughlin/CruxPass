@@ -1,14 +1,15 @@
-import { PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
+import { CompetitionSummaryDto, PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
 import api from './apiService';
+import { CompetitionSummary } from '@/models/domain';
 
 export async function fetchLeaderboard(competitionId: number) {
   const res = api.get(`/competitions/${competitionId}/rankings`);
   return res;
 }
 
-export async function getAllCompetitions() {
-  const res = api.get('/competitions');
-  return res;
+export async function getAllCompetitions(): Promise<CompetitionSummaryDto[]> {
+  const res = await api.get('/competitions');
+  return res.data;
 }
 
 export async function getRegistrationsForCompetition(competitionId: number): Promise<PublicRegistrationDto[]> {

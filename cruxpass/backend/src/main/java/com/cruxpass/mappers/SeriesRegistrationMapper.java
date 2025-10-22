@@ -14,7 +14,8 @@ public class SeriesRegistrationMapper {
         return new SeriesRegistrationDto(
             reg.getSeries().getId(),
             reg.getClimber().getId(),
-            reg.getCompetitorGroup(),
+            reg.getClimber().getName(),
+            reg.getClimber().getDob().getYear(),
             reg.getDivision()
         );
     }
@@ -23,7 +24,6 @@ public class SeriesRegistrationMapper {
         SeriesRegistration seriesReg = new SeriesRegistration();
         seriesReg.setSeries(series);
         seriesReg.setClimber(climber);
-        seriesReg.setCompetitorGroup(dto.competitorGroup());
         seriesReg.setDivision(dto.division());
         return seriesReg;
     }

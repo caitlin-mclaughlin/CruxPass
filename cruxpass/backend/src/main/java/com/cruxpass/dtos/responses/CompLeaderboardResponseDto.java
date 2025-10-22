@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.cruxpass.dtos.SimpleRegistrationDto;
 import com.cruxpass.enums.CompetitionStatus;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 
 public record CompLeaderboardResponseDto(
     Long compId,
@@ -13,7 +13,7 @@ public record CompLeaderboardResponseDto(
     String name,
     Set<String> types,
     Set<String> competitorGroups,
-    Set<Gender> divisions,
+    Set<Division> divisions,
     CompetitionStatus compStatus,
     List<SimpleRegistrationDto> registrations,
     boolean currentUserRegistered

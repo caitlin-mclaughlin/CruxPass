@@ -4,14 +4,15 @@ import { useClimberSession } from '@/context/ClimberSessionContext'
 import { useGymSession } from '@/context/GymSessionContext'
 import { Input } from '@/components/ui/Input'
 import { useNavigate } from 'react-router-dom'
-import { AccountTypeSelect } from '@/components/AccountTypeSelect'
+import { EnumSelect } from '@/components/ui/EnumSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
-import { AccountType, accountTypeOptions, Gender, GENDER_OPTIONS, GenderEnumMap } from '@/constants/enum'
+import { AccountType, AccountTypeDisplay, Gender, GENDER_OPTIONS, GenderEnumMap } from '@/constants/enum'
 import SegmentedDateInput from '@/components/ui/SegmentedDateInput'
 import { useSeriesSession } from '@/context/SeriesSessionContext'
 import logo from '@/assets/logo_transparent.png'
 import { PasswordInput } from '@/utils/uiRendering'
+import { Button } from '@/components/ui/Button'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -23,7 +24,7 @@ export default function Login() {
     username: "",
     phone: "",
     dob: null as Date | null,
-    division: null as Gender | null,
+    gender: null as Gender | null,
     password: "",
     confirmPassword: "",
     emailOrUsername: "",
@@ -33,7 +34,9 @@ export default function Login() {
       city: "",
       state: "",
       zipCode: ""
-    }
+    },
+    emergencyName: "",
+    emergencyPhone: ""
   })
   const [errorMessage, setErrorMessage] = useState<string>("")
   const { login, register, skipLogin, token } = useAuth()
@@ -69,8 +72,8 @@ export default function Login() {
         ...prev,
         address: { ...prev.address, [key]: value }
       }));
-    } else if (name === "phone") {
-      setFormData(prev => ({ ...prev, phone: formatPhoneNumber(value) }));
+    } else if (name === "phone" || name === "emergencyPhone") {
+      setFormData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -93,7 +96,7 @@ export default function Login() {
     if (!isCreating) return ["emailOrUsername", "password"];
     if (formData.accountType === AccountType.CLIMBER) {
       return [
-        "name", "email", "phone", "password", "confirmPassword", "dob", "division",
+        "name", "email", "phone", "password", "confirmPassword", "dob", "gender",
         "address.streetAddress", "address.city", "address.state", "address.zipCode"
       ];
     } else if (formData.accountType === AccountType.GYM) {
@@ -162,9 +165,11 @@ export default function Login() {
             username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
             phone: stripNonDigits(formData.phone),
             dob: formData.dob?.toISOString().split('T')[0],
-            division: formData.division,
+            gender: formData.gender,
             password: formData.password,
-            address: formData.address
+            address: formData.address,
+            emergencyName: formData.emergencyName,
+            emergencyPhone: stripNonDigits(formData.emergencyPhone)
           });
         } else if (formData.accountType === AccountType.GYM) {
           // GYM registration
@@ -225,16 +230,18 @@ export default function Login() {
           {isCreating ? (
             <>
               {/* Climber / Gym / Series Organizer drop down menu */}
-              <AccountTypeSelect
+              <EnumSelect
+                labelMap={AccountTypeDisplay}
+                options={Object.values(AccountType)}
                 value={formData.accountType}
                 onChange={(val: AccountType) => {
                   setFormData(prev => ({
                     ...prev,
                     accountType: val,
                     ...(val === AccountType.GYM
-                      ? { dob: null, division: null }
+                      ? { dob: null, gender: null }
                       : val === AccountType.SERIES
-                      ? { dob: null, division: null, phone: "", address: {
+                      ? { dob: null, gender: null, phone: "", address: {
                           streetAddress: "",
                           apartmentNumber: "",
                           city: "",
@@ -273,37 +280,45 @@ export default function Login() {
                 placeholder="Confirm Password"
               />
 
-              {/* Climber Specific Fields: DOB and Division */}
+              {/* Climber Specific Fields: DOB and Gender */}
               {formData.accountType === AccountType.CLIMBER && (
                 <div className="flex flex-col">
                   <label htmlFor="dob" className="mb-1 font-medium text-green" >
                     Date of Birth:
                   </label>
-                  <div className="w-full bg-shadow rounded-md shadow-md">
+                  <div className="w-full bg-shadow rounded-md">
                     <SegmentedDateInput
                       mode="birthday"
                       value={formData.dob}
                       onChange={handleDobChange}
                     />
                   </div>
-                  <label htmlFor="division" className="mt-3 mb-1 font-medium text-green" >
-                    Gender (For Competition Divisions):
+                  <label htmlFor="gender" className="mt-3 mb-1 font-medium text-green" >
+                    Gender (For Competition Genders):
                   </label>
                   <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
                     <CustomRadioGroup
-                      name="division"
+                      name="gender"
                       options={GENDER_OPTIONS.map(g => ({ 
                         value: g, 
                         label: GenderEnumMap[g as keyof typeof GenderEnumMap]
                       }))}
-                      selected={formData.division}
+                      selected={formData.gender}
                       onChange={(g: string) => {
                         setFormData((prev: any) => ({ 
                           ...prev, 
-                          division: g
+                          gender: g
                         }))
                       }}
                     />
+                  </div>
+                  {/* Emergency Contact Name and Phone */}
+                  <div className="space-y-3 mt-3 mb-1 ">
+                    <label className="font-medium text-green" >
+                      Emergency Contact:
+                    </label>
+                    <Input name="emergencyName" value={formData.emergencyName} onChange={handleChange} placeholder="Full Name (Emergency Contact)" required />
+                    <Input name="emergencyPhone" value={formData.emergencyPhone} onChange={handleChange} placeholder="Phone Number (Emergency Contact)" required />
                   </div>
                 </div>
               )}
@@ -332,12 +347,9 @@ export default function Login() {
             <div className="bg-background text-accent">{errorMessage}</div>
           )}
 
-          <button
-            type="submit"
-            className="bg-green text-background font-bold p-2 mb-1 w-full rounded-md hover:bg-select transition-colors"
-          >
+          <Button type="submit" className="mb-1 w-full">
             {isCreating ? "Create Account" : "Login"}
-          </button>
+          </Button>
 
           <button
             type="button"

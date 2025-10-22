@@ -4,7 +4,7 @@ import com.cruxpass.dtos.SeriesDto;
 import com.cruxpass.dtos.SeriesLeaderboardEntryDto;
 import com.cruxpass.dtos.requests.RegisterRequest;
 import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Gender;
+import com.cruxpass.enums.Division;
 import com.cruxpass.mappers.SeriesMapper;
 import com.cruxpass.mappers.SeriesLeaderboardEntryMapper;
 import com.cruxpass.models.Series;
@@ -57,6 +57,10 @@ public class SeriesService {
         return seriesRepo.findByUsername(username).orElse(null);
     }
 
+    public List<Series> getAll() {
+        return seriesRepo.findAll();
+    }
+
     @Transactional
     public Series save(Series series) {
         return seriesRepo.save(series);
@@ -101,7 +105,7 @@ public class SeriesService {
     @Transactional(readOnly = true)
     public List<SeriesLeaderboardEntryDto> getLeaderboard(Long seriesId,
                                                           CompetitorGroup group,
-                                                          Gender division) {
+                                                          Division division) {
         List<SeriesLeaderboardEntry> entries =
                 leaderboardService.rebuildLeaderboard(seriesId, group, division);
 
@@ -121,7 +125,7 @@ public class SeriesService {
      * Uses rebuildLeaderboard to process all registered climbers and apply series scoring rules.
      */
     @Transactional
-    public void updateLeaderboardAfterCompetition(Long seriesId, CompetitorGroup group, Gender division) {
+    public void updateLeaderboardAfterCompetition(Long seriesId, CompetitorGroup group, Division division) {
         leaderboardService.rebuildLeaderboard(seriesId, group, division);
     }
 

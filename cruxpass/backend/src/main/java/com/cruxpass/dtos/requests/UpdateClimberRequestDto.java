@@ -11,6 +11,8 @@ public record UpdateClimberRequestDto(
     String phone,
     String username,
     LocalDate dob,
-    Gender division,
-    AddressDto address
+    Gender gender,
+    AddressDto address,
+    String emergencyName,
+    String emergencyPhone
 ) {}

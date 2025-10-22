@@ -1,10 +1,8 @@
 // enum.ts
 
-import { RankedSubmissionDto } from "@/models/dtos";
-
 /** COMPETITION ENUMS **/
 export const COMPETITION_TYPES = ['BOULDERING', 'SPORT_CLIMBING', 'SPEED_CLIMBING'] as const;
-export const COMPETITION_FORMATS = ['RED_POINT', 'MODIFIED_RED_POINT', 'ON_SIGHT', 'FLASH'] as const;
+export const COMPETITION_FORMATS = ['MODIFIED_RED_POINT', 'JUDGED', 'OTHER'] as const;
 export const COMPETITOR_GROUPS = [
   'REC', 'INTERMEDIATE', 'ADVANCED', 'OPEN', 'YOUTH_D',
   'YOUTH_C', 'YOUTH_B', 'YOUTH_A', 'JUNIOR'
@@ -15,10 +13,9 @@ export const CompetitionEnumMap = {
   BOULDERING: 'Bouldering',
   SPORT_CLIMBING: 'Sport Climbing',
   SPEED_CLIMBING: 'Speed Climbing',
-  RED_POINT: 'Red Point',
   MODIFIED_RED_POINT: 'Modified Red Point',
-  ON_SIGHT: 'On Sight',
-  FLASH: 'Flash',
+  JUDGED: 'Judged',
+  OTHER: 'Other',
   REC: 'Rec',
   INTERMEDIATE: 'Intermediate',
   ADVANCED: 'Advanced',
@@ -41,17 +38,26 @@ export const CompetitionLabelMap = Object.fromEntries(
 );
 
 /** GENDER ENUMS **/
-export const GENDER_OPTIONS = ['MALE', 'FEMALE', 'NONBINARY'] as const;
+export const DIVISION_OPTIONS = ['MALE', 'FEMALE', 'NONBINARY'] as const;
+export const GENDER_OPTIONS = ['MALE', 'FEMALE', 'NONBINARY', 'PASS'] as const;
+export type Division = typeof DIVISION_OPTIONS[number];
 export type Gender = typeof GENDER_OPTIONS[number];
 
-export const GenderEnumMap = {
+export const DivisionEnumMap = {
   MALE: 'Men',
   FEMALE: 'Women',
+  NONBINARY: 'Non-Binary'
+} as const;
+
+export const GenderEnumMap = {
+  MALE: 'Male',
+  FEMALE: 'Female',
   NONBINARY: 'Non-Binary',
+  PASS: 'Prefer not to answer'
 } as const;
 
 /** COMPETITOR GROUP - DIVISION KEY **/
-export type GroupDivisionKey = `${CompetitorGroup}-${Gender}`
+export type GroupDivisionKey = `${CompetitorGroup}-${Division}`
 
 /** ACCOUNT TYPES **/
 export enum AccountType {
@@ -69,5 +75,23 @@ export const AccountTypeDisplay: Record<AccountType, string> = {
 export const accountTypeOptions = Object.values(AccountType).map((role) => ({
   value: role,
   label: AccountTypeDisplay[role],
+}));
+
+/** SEARCH TYPES **/
+export enum SearchType {
+  EMAIL = "Email",
+  PHONE = "Phone",
+  NAME = "Name"
+}
+
+export const SearchTypeDisplay: Record<SearchType, string> = {
+  [SearchType.EMAIL]: "Email",
+  [SearchType.PHONE]: "Phone",
+  [SearchType.NAME]: "Name"
+}
+
+export const searchTypeOptions = Object.values(SearchType).map((role) => ({
+  value: role,
+  label: SearchTypeDisplay[role],
 }));
 

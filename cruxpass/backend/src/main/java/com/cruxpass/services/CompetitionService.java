@@ -16,6 +16,10 @@ public class CompetitionService {
         this.competitionRepo = competitionRepo;
     }
 
+    public List<Competition> getByGymId(Long gymId) {
+        return competitionRepo.findByGymId(gymId);
+    }
+    
     public List<Competition> getAll() {
         return competitionRepo.findAll();
     }

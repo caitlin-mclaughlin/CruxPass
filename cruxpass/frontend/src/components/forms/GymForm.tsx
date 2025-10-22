@@ -55,47 +55,54 @@ export default function GymProfileForm({ formData, setFormData, editing }: Props
       })}
 
       {/* Address */}
-      <div className="font-medium text-green">Address:</div>
-      <div className="text-green">
-        {editing ? (
-          <div className="grid grid-cols-1 gap-2">
-            <Input
-              name="address.streetAddress"
-              value={formData.address?.streetAddress || ""}
-              placeholder="Street Address"
-              onChange={handleChange}
-            />
-            <Input
-              name="address.apartmentNumber"
-              value={formData.address?.apartmentNumber || ""}
-              placeholder="Apartment Number"
-              onChange={handleChange}
-            />
-            <Input
-              name="address.city"
-              value={formData.address?.city || ""}
-              placeholder="City"
-              onChange={handleChange}
-            />
-            <Input
-              name="address.state"
-              value={formData.address?.state || ""}
-              placeholder="State"
-              onChange={handleChange}
-            />
-            <Input
-              name="address.zipCode"
-              value={formData.address?.zipCode || ""}
-              placeholder="Zip Code"
-              onChange={handleChange}
-            />
-          </div>
-        ) : (
-          formData.address &&
-          formatAddress(formData.address)
-            .split("\n")
-            .map((line, idx) => <div key={idx}>{line}</div>)
-        )}
+      <div className="relative flex-col">
+        <div className="font-medium text-green">Address:</div>
+        <div className="text-green">
+          {editing ? (
+            <div className="grid grid-cols-1 gap-2">
+              <Input
+                name="address.streetAddress"
+                value={formData.address?.streetAddress || ""}
+                placeholder="Street Address"
+                onChange={handleChange}
+                className="bg-background"
+              />
+              <Input
+                name="address.apartmentNumber"
+                value={formData.address?.apartmentNumber || ""}
+                placeholder="Apartment Number"
+                onChange={handleChange}
+                className="bg-background"
+              />
+              <Input
+                name="address.city"
+                value={formData.address?.city || ""}
+                placeholder="City"
+                onChange={handleChange}
+                className="bg-background"
+              />
+              <Input
+                name="address.state"
+                value={formData.address?.state || ""}
+                placeholder="State"
+                onChange={handleChange}
+                className="bg-background"
+              />
+              <Input
+                name="address.zipCode"
+                value={formData.address?.zipCode || ""}
+                placeholder="Zip Code"
+                onChange={handleChange}
+                className="bg-background"
+              />
+            </div>
+          ) : (
+            formData.address &&
+            formatAddress(formData.address)
+              .split("\n")
+              .map((line, idx) => <div key={idx}>{line}</div>)
+          )}
+        </div>
       </div>
     </>
   );

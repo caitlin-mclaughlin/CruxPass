@@ -1,16 +1,17 @@
 // context/GymSessionContext.tsx
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { CompetitionData, GymData, Registration } from "@/models/domain";
+import { CompetitionData, CompetitionSummary, GymData, Registration } from "@/models/domain";
 import { AccountType } from "@/constants/enum";
-import { createCompetitionForGym, getGymProfile, updateGym } from "@/services/gymService";
+import { createCompetitionForGym, getAllCompetitionsForGym, getGymProfile, updateGym } from "@/services/gymService";
 import { CompetitionFormPayload } from "@/models/dtos";
-import { formatAddress } from "@/utils/formatters";
 
 interface GymSessionContextType {
   gym: GymData | null;
   error: Error | null;
+  competitions: CompetitionSummary[];
   refreshGym: () => Promise<void>;
+  refreshCompetitions: () => Promise<void>;
   updateGymProfile: (updatedData: Partial<GymData>) => Promise<void>;
   createCompetition: (updatedData: CompetitionFormPayload) => Promise<void>;
 }
@@ -18,7 +19,9 @@ interface GymSessionContextType {
 const GymSessionContext = createContext<GymSessionContextType>({
   gym: null,
   error: null,
+  competitions: [],
   refreshGym: async () => {},
+  refreshCompetitions: async () => {},
   updateGymProfile: async () => {},
   createCompetition: async () => {}
 });
@@ -26,11 +29,13 @@ const GymSessionContext = createContext<GymSessionContextType>({
 export function GymSessionProvider({ children }: { children: ReactNode }) {
   const { accountType, logout, token } = useAuth();
   const [gym, setGym] = useState<GymData | null>(null);
+  const [competitions, setCompetitions] = useState<CompetitionSummary[]>([]);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (accountType !== AccountType.GYM || !token) return;
     refreshGym();
+    refreshCompetitions();
   }, [accountType, token]);
   
   async function refreshGym() {
@@ -38,20 +43,25 @@ export function GymSessionProvider({ children }: { children: ReactNode }) {
     if (accountType === AccountType.GYM && token) {
       try {
         const res = await getGymProfile();
-        const data = {
-          id: res.id, 
-          name: res.name, 
-          email: res.email,
-          phone: res.phone,
-          username: res.username,
-          address: res.address,
-          createdAt: res.createdAt
-        }
-        setGym(data as GymData);
+        setGym(res as GymData);
       } catch (err) {
         logout()
         setError(err instanceof Error ? err : new Error('Unknown error'));
         console.warn('Could not fetch gym info:', err);
+      }
+    }
+  }
+
+  async function refreshCompetitions() {
+    setError(null);
+    if (accountType === AccountType.GYM && token && gym && gym.id) {
+      try {
+        const res = await getAllCompetitionsForGym(gym.id);
+        setCompetitions(res as CompetitionSummary[]);
+      } catch (err) {
+        logout()
+        setError(err instanceof Error ? err : new Error('Unknown error'));
+        console.warn('Could not fetch competition info for gym:', err);
       }
     }
   }
@@ -85,7 +95,9 @@ export function GymSessionProvider({ children }: { children: ReactNode }) {
     <GymSessionContext.Provider value={{ 
       gym,
       error,
+      competitions,
       refreshGym,
+      refreshCompetitions,
       updateGymProfile,
       createCompetition
     }}>
