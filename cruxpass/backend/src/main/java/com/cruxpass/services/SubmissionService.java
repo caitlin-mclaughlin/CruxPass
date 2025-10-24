@@ -20,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,15 +31,16 @@ public class SubmissionService {
     
     private final SubmissionRepository submissionRepository;
     private final RouteService routeService;
+    private final LeaderboardBroadcastService leaderboardBroadcastService;
 
     public SubmissionService(
         SubmissionRepository submissionRepository,
         RouteService routeService,
-        CompetitionService compService,
-        ClimberService climberService
+        LeaderboardBroadcastService leaderboardBroadcastService
     ) {
         this.submissionRepository = submissionRepository;
         this.routeService = routeService;
+        this.leaderboardBroadcastService = leaderboardBroadcastService;
     }
 
     public List<Submission> getAll() {
@@ -49,8 +52,7 @@ public class SubmissionService {
     }
 
     public Submission getByCompetitionIdAndClimberId(Long compId, Long climberId) {
-        Submission subs = submissionRepository.findByCompetitionIdAndClimberIdWithRoutes(compId, climberId).orElse(null);
-        return subs;
+        return submissionRepository.findByCompetitionIdAndClimberIdWithRoutes(compId, climberId).orElse(null);
     }
 
     @Transactional
@@ -73,7 +75,7 @@ public class SubmissionService {
 
         Map<Long, SubmittedRoute> routeMap = submission.getRoutes().stream()
             .collect(Collectors.toMap(sr -> sr.getRoute().getId(), sr -> sr));
-
+        
         for (SubmittedRouteDto routeDto : dto.routes()) {
             Route route = routeService.getById(routeDto.routeId());
             if (route == null) throw new RuntimeException("Route not found: ID " + routeDto.routeId());
@@ -92,8 +94,33 @@ public class SubmissionService {
             }
         }
 
+        // --- compute totals (count only SENT routes) ---
+        int totalPoints = submission.getRoutes().stream()
+            .filter(SubmittedRoute::isSend)
+            .mapToInt(sr -> sr.getRoute().getPointValue())
+            .sum();
+
+        int totalAttempts = submission.getRoutes().stream()
+            .filter(SubmittedRoute::isSend)
+            .mapToInt(SubmittedRoute::getAttempts)
+            .sum();
+
+        submission.setTotalPoints(totalPoints);
+        submission.setTotalAttempts(totalAttempts);
+
         Submission saved = submissionRepository.saveAndFlush(submission);
 
+        // pick one route ID for event context (the last route in dto)
+        Long lastRouteId = dto.routes().isEmpty() ? null : dto.routes().getLast().routeId();
+
+        if (lastRouteId != null) {
+            leaderboardBroadcastService.handleNewSubmission(
+                comp.getId(),
+                climber.getId(),
+                lastRouteId
+            );
+        }
+        
         List<SubmittedRouteDto> routeDtos = saved.getRoutes().stream()
             .map(sr -> new SubmittedRouteDto(sr.getRoute().getId(), sr.getAttempts(), sr.isSend()))
             .toList();

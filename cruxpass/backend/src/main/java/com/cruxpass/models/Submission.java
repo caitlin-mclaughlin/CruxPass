@@ -41,6 +41,9 @@ public class Submission {
     @Enumerated(EnumType.STRING)
     private CompetitorGroup competitorGroup;
 
+    private int totalPoints;
+    private int totalAttempts;
+
     @Enumerated(EnumType.STRING)
     private Division division;
 

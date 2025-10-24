@@ -98,4 +98,51 @@ public class CompetitionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/start")
+    @PreAuthorize("hasRole('GYM')")
+    public ResponseEntity<?> startCompetition(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            Gym gym = currentUserService.getGymFromToken(authHeader);
+            if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+            Competition comp = competitionService.getById(id).orElse(null);
+            if (comp == null || !comp.getGym().getId().equals(gym.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            Competition updated = competitionService.startCompetition(id);
+            return ResponseEntity.ok(compMap.toResponseDto(updated));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/stop")
+    @PreAuthorize("hasRole('GYM')")
+    public ResponseEntity<?> stopCompetition(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            Gym gym = currentUserService.getGymFromToken(authHeader);
+            if (gym == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+            Competition comp = competitionService.getById(id).orElse(null);
+            if (comp == null || !comp.getGym().getId().equals(gym.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            Competition updated = competitionService.stopCompetition(id);
+            return ResponseEntity.ok(compMap.toResponseDto(updated));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
 }

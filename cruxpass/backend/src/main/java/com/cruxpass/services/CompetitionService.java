@@ -1,4 +1,5 @@
 package com.cruxpass.services;
+import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Competition;
 import com.cruxpass.repositories.CompetitionRepository;
 import java.util.List;
@@ -35,5 +36,19 @@ public class CompetitionService {
     @Transactional
     public Competition save(Competition competition) {
         return competitionRepo.save(competition);
+    }
+
+    public Competition startCompetition(Long id) {
+        Competition comp = competitionRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Competition not found"));
+        comp.setCompStatus(CompetitionStatus.LIVE);
+        return competitionRepo.save(comp);
+    }
+
+    public Competition stopCompetition(Long id) {
+        Competition comp = competitionRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Competition not found"));
+        comp.setCompStatus(CompetitionStatus.FINISHED);
+        return competitionRepo.save(comp);
     }
 }

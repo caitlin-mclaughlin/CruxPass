@@ -1,11 +1,12 @@
-import { createContext, useState, useContext, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { Client } from "@stomp/stompjs";
-import { CompetitionSummary, RankedSubmission, Registration } from "@/models/domain";
+import { CompetitionSummary, LiveScoreEvent, RankedSubmission, Registration } from "@/models/domain";
 import { getCompetition, getScoresForComp } from "@/services/leaderboardService";
 import { CompetitorGroup, Gender, GroupDivisionKey } from "@/constants/enum";
 import { PublicRegistrationDto, RankedSubmissionDto } from "@/models/dtos";
-import { getRegistrationsForComp } from "@/services/gymCompetitionService";
 import { getRegistrationsForCompetition } from "@/services/globalCompetitionService";
+import { useLiveScores } from "@/context/LiveScoresContext";
+import { useDebouncedCallback } from "use-debounce";
 
 type ScoresByGroupDivision = Partial<Record<GroupDivisionKey, RankedSubmissionDto[]>>;
 
@@ -37,6 +38,31 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
   const [scores, setScores] = useState<ScoresByGroupDivision>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { liveEvents } = useLiveScores();
+  
+  const debouncedUpdate = useDebouncedCallback((latest: LiveScoreEvent) => {
+    const key = `${latest.competitorGroup}-${latest.division}` as GroupDivisionKey;
+    setScores(prev => {
+      const groupScores = prev[key] ?? [];
+      const updated = groupScores.map(entry =>
+        entry.climberName === latest.climberName
+          ? {
+              ...entry,
+              totalPoints: latest.totalPointsAfterUpdate,
+              totalAttempts: latest.totalAttemptsAfterUpdate,
+            }
+          : entry
+      );
+      return { ...prev, [key]: updated };
+    });
+  }, 200);
+
+  useEffect(() => {
+    if (!competition || !liveEvents.length) return;
+    const latest = liveEvents[liveEvents.length - 1];
+    if (latest.competitionId !== competition.id) return;
+    debouncedUpdate(latest);
+  }, [liveEvents]);
 
   // ---------------------- Refresh helpers ----------------------
   const refreshCompetition = useCallback(async (competitionId: number) => {
@@ -190,20 +216,20 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
     refreshCompetition(id);
     refreshRegistrations(id);
   }, [id]);
+  
+  const contextValue = useMemo(() => ({
+    competition,
+    registrations,
+    scores,
+    loading,
+    error,
+    refreshCompetition,
+    refreshRegistrations,
+    updateGroupLeaderboard,
+  }), [competition, registrations, scores, loading, error, refreshCompetition, refreshRegistrations, updateGroupLeaderboard]);
 
   return (
-    <LeaderboardContext.Provider
-      value={{
-        competition,
-        registrations,
-        scores,
-        loading,
-        error,
-        refreshCompetition,
-        refreshRegistrations,
-        updateGroupLeaderboard,
-      }}
-    >
+    <LeaderboardContext.Provider value={contextValue}>
       {children}
     </LeaderboardContext.Provider>
   );

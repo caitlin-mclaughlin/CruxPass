@@ -6,7 +6,7 @@ import { ArrowUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 type LeaderboardTableProps = {
-  submissions?: (RankedSubmissionDto & { movement?: "up" | "same" })[] | null; // only up or same
+  submissions?: (RankedSubmissionDto & { movement?: "up" | "down" | "same" })[] | null;
   group: CompetitorGroup;
   division: Division;
 }
@@ -46,9 +46,11 @@ export function LeaderboardTable({ submissions, group, division }: LeaderboardTa
                 {/* Arrow positioned to the left of the number */}
                 {sub.movement === "up" && (
                   <motion.span
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: -4 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    key={`arrow-${sub.climberName}`}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: -6 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 18 }}
                   >
                     <ArrowUp
                       className="absolute left-5 top-1/2 -translate-y-1/2 text-green"

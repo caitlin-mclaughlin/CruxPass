@@ -41,3 +41,12 @@ export async function updateRoutesForComp(gymId: number, competitionId: number, 
   const res = await api.put(`gyms/${gymId}/competitions/${competitionId}/routes`, data);
   return res.data;
 }
+
+export async function startCompetition(gymId: number, compId: number) {
+  return api.post(`/gyms/${gymId}/competitions/${compId}/start`);
+}
+
+export async function stopCompetition(gymId: number, compId: number) {
+  return api.post(`/gyms/${gymId}/competitions/${compId}/stop`);
+}
+

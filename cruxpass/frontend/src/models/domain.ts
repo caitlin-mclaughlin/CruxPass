@@ -68,82 +68,97 @@ export interface GymData {
   createdAt: string
 }
 
+export interface LiveScoreEvent {
+  competitionId: number;
+  climberId: number;
+  climberName: string;
+  competitorGroup: CompetitorGroup;
+  division: Division;
+  routeId: number;
+  routeNumber: number;
+  routePoints: number;
+  attempts: number;
+  totalPointsAfterUpdate: number;
+  totalAttemptsAfterUpdate: number;
+  timestamp: string;
+}
+
 export interface PublicSeries {
-  id: number
-  name: string
-  email: string
-  description?: string
-  startDate: string
-  endDate: string
-  deadline: string
-  seriesStatus: CompetitionStatus
-  registered?: boolean
-  seriesRegistration: SeriesRegistration
+  id: number;
+  name: string;
+  email: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  deadline: string;
+  seriesStatus: CompetitionStatus;
+  registered?: boolean;
+  seriesRegistration: SeriesRegistration;
 }
 
 export type RankedSubmission = {
-  place: number
-  climberName: string
-  totalPoints: number
-  totalAttempts: number
-  competitorGroup: CompetitorGroup
-  division: Division
-  movement?: "up" | "down" | "same"
+  place: number;
+  climberName: string;
+  totalPoints: number;
+  totalAttempts: number;
+  competitorGroup: CompetitorGroup;
+  division: Division;
+  movement?: "up" | "down" | "same";
 }
 
 export type Registration = {
-  climberName: string
-  climberDob: string
-  division: Division
-  competitorGroup: CompetitorGroup
+  climberName: string;
+  climberDob: string;
+  division: Division;
+  competitorGroup: CompetitorGroup;
 }
 
 export type GymRegistration = {
-  climberName: string
-  climberDob: string
-  climberEmail: string
-  competitorGroup: CompetitorGroup
-  division: Division
-  paid: boolean
+  climberName: string;
+  climberDob: string;
+  climberEmail: string;
+  competitorGroup: CompetitorGroup;
+  division: Division;
+  paid: boolean;
 }
 
 export interface Route {
-  id: number | null
-  number: number
-  pointValue: number
+  id: number | null;
+  number: number;
+  pointValue: number;
 }
 
 export interface SeriesData {
-  id: number
-  name: string
-  email: string
-  username: string
-  description?: string
-  startDate: string
-  endDate: string
-  deadline: string
-  seriesStatus: CompetitionStatus
-  createdAt: string
+  id: number;
+  name: string;
+  email: string;
+  username: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  deadline: string;
+  seriesStatus: CompetitionStatus;
+  createdAt: string;
 }
 
 export interface SeriesRegistration {
-    seriesId: number
-    climberId: number
-    climberName: string
-    birthYear: number
-    division: Division
+    seriesId: number;
+    climberId: number;
+    climberName: string;
+    birthYear: number;
+    division: Division;
 }
 
 export interface SimpleClimber {
-  id: number
-  name: string
-  email: string
-  phone: string
-  dob: string
-  gender: Gender
-  address: Address
-  emergencyName: string
-  emergencyPhone: string
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  gender: Gender;
+  address: Address;
+  emergencyName: string;
+  emergencyPhone: string;
 }
 
 export interface SubmittedRoute {

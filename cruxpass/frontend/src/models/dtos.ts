@@ -107,6 +107,22 @@ export type GymResponseDto = {
   createdAt: string
 }
 
+export type LiveSubmissionEventDto = {
+  competitionId: number;
+  climberId: number;
+  climberName: string;
+  competitorGroup: CompetitorGroup;
+  division: Division;
+  routeId: number;
+  routeNumber: number;
+  routePoints: number;
+  attempts: number;
+  send: boolean;
+  totalPointsAfterUpdate: number;
+  totalAttemptsAfterUpdate: number;
+  timestamp: string;
+};
+
 export type PublicRegistrationDto = {
   id: number;
   compId: number

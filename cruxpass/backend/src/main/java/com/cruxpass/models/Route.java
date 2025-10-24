@@ -1,5 +1,7 @@
 package com.cruxpass.models;
 
+import com.cruxpass.enums.BoulderGrade;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,9 @@ public class Route {
     private int number;
     @Positive
     private int pointValue;
+    
+    @Enumerated(EnumType.STRING)
+    private BoulderGrade grade;
 
     @JoinColumn(name = "competition_id", nullable = false)
     @ManyToOne
