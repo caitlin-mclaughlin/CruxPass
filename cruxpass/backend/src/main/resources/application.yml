@@ -16,13 +16,15 @@ spring:
 
   jpa:
     open-in-view: false
-    properties:
-      hibernate:
-        temp:
-          use_jdbc_metadata_defaults: false
     hibernate:
       ddl-auto: update
       dialect: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
+        temp:
+          use_jdbc_metadata_defaults: false
 
   jackson:
     serialization:
