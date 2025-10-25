@@ -36,7 +36,7 @@ spring:
       "[org.hibernate.SQL]": INFO
       "[org.hibernate.type.descriptor.sql]": TRACE
 jwt:
-  secret-file: /run/secrets/jwt_secret
+  secret-file: ${JWT_SECRET}
 
 
 #    "[org.springframework.web]": DEBUG
