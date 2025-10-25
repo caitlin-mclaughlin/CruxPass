@@ -1,13 +1,22 @@
 # backend/Dockerfile
+
+### BUILD ###
+FROM gradle:8.10.0-jdk17 AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN gradle clean build -x test --no-daemon
+
+### RUNTIME ###
 FROM eclipse-temurin:17-jdk-alpine
 
 WORKDIR /app
 
-ENV JAVA_TOOL_OPTIONS="-Dorg.postgresql.disableExtraFloatDigits=true"
-
-COPY build/libs/backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy built jar from the previous stage
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
-# Add JVM arg to prevent sending extra_float_digits (needed for PgBouncer)
+# Run in prod mode
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
