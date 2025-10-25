@@ -28,4 +28,4 @@ dist-ssr
 ./backend/build
 
 ./backend/.env
-.jwt_secret
+.jwt_secret./backend/.jwt_secret

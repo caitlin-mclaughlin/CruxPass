@@ -6,6 +6,7 @@ import com.cruxpass.dtos.requests.SubmissionRequestDto;
 import com.cruxpass.dtos.responses.SubmissionResponseDto;
 import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.events.SubmissionUpdatedEvent;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.RankingInfo;
 import com.cruxpass.models.Route;
@@ -14,16 +15,15 @@ import com.cruxpass.models.SubmittedRoute;
 import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.SubmissionRepository;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,17 +31,18 @@ public class SubmissionService {
     
     private final SubmissionRepository submissionRepository;
     private final RouteService routeService;
-    private final LeaderboardBroadcastService leaderboardBroadcastService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SubmissionService(
         SubmissionRepository submissionRepository,
         RouteService routeService,
-        LeaderboardBroadcastService leaderboardBroadcastService
+        ApplicationEventPublisher eventPublisher
     ) {
         this.submissionRepository = submissionRepository;
         this.routeService = routeService;
-        this.leaderboardBroadcastService = leaderboardBroadcastService;
+        this.eventPublisher = eventPublisher;
     }
+
 
     public List<Submission> getAll() {
         return submissionRepository.findAll();
@@ -111,13 +112,11 @@ public class SubmissionService {
         Submission saved = submissionRepository.saveAndFlush(submission);
 
         // pick one route ID for event context (the last route in dto)
-        Long lastRouteId = dto.routes().isEmpty() ? null : dto.routes().getLast().routeId();
+        Long lastRouteId = dto.routes().isEmpty() ? null : dto.routes().get(dto.routes().size() - 1).routeId();
 
         if (lastRouteId != null) {
-            leaderboardBroadcastService.handleNewSubmission(
-                comp.getId(),
-                climber.getId(),
-                lastRouteId
+            eventPublisher.publishEvent(
+                new SubmissionUpdatedEvent(this, comp.getId(), climber.getId(), lastRouteId)
             );
         }
         

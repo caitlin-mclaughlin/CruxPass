@@ -32,6 +32,12 @@ public class CompetitionController {
         this.currentUserService = currentUserService;
     }
 
+    @DeleteMapping("/{competitionId}")
+    public ResponseEntity<Void> deleteCompetition(@PathVariable Long competitionId) {
+        competitionService.deleteCompetition(competitionId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping()
     public ResponseEntity<List<CompetitionResponseDto>> getAllCompetitionsForGym(
             @PathVariable Long gymId) {

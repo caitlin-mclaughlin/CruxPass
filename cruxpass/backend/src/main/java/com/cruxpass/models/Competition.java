@@ -67,7 +67,7 @@ public class Competition {
 
     @JoinColumn(name = "gym_id", nullable = false)
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Gym gym;
 
     @JoinColumn(name = "series_id", nullable = true)
@@ -76,11 +76,11 @@ public class Competition {
     private Series series;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "competition")
+    @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Route> routes;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "competition")
+    @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Registration> registrations;
     
     public CompetitionStatus getCompStatus() {

@@ -181,8 +181,18 @@ export default function DashboardPage() {
           {climber && liveRegisteredComp && (
             <div className="bg-green text-background p-4 mb-4 rounded-md shadow-md flex justify-between items-center">
               <div>You are currently competing in <strong>{liveRegisteredComp.name}</strong>!</div>
-              <Button onClick={async () => openScoresModal()}>Enter Scores</Button>
-              <Button onClick={() => navigate(`/competitions/${liveRegisteredComp.id}/leaderboard`)}>View Live Leaderboard</Button>
+              <Button 
+                onClick={async () => openScoresModal()}
+                className="bg-shadow text-green hover:bg-background"
+              >
+                Enter Scores
+              </Button>
+              <Button
+                onClick={() => navigate(`/competitions/${liveRegisteredComp.id}/leaderboard`)}
+                className="bg-shadow text-green hover:bg-background"
+              >
+                View Live Leaderboard
+              </Button>
             </div>
           )}
 

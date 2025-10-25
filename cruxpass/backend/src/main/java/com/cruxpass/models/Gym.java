@@ -46,6 +46,6 @@ public class Gym {
     private LocalDate createdAt;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "gym")
+    @OneToMany(mappedBy = "gym", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Competition> competitions;
 }

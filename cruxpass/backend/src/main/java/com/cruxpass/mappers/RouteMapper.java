@@ -19,7 +19,8 @@ public class RouteMapper {
         return new RouteResponseDto(
             route.getId(),
             route.getNumber(),
-            route.getPointValue()
+            route.getPointValue(),
+            route.getGrade()
         );
     }
 
@@ -28,6 +29,7 @@ public class RouteMapper {
         Route route = new Route();
         route.setNumber(dto.number());
         route.setPointValue(dto.pointValue());
+        route.setGrade(dto.grade());
         route.setGym(gym);
         route.setCompetition(competition);
         return route;

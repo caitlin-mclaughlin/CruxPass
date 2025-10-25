@@ -29,6 +29,10 @@ public class CompetitionService {
         return competitionRepo.findById(id);
     }
 
+    public Optional<Competition> getByIdAndGymId(Long id, Long gymId) {
+        return competitionRepo.findByIdAndGymId(id, gymId);
+    }
+
     public Competition getByIdWithRegistrations(Long id) {
         return competitionRepo.findByIdWithRegistrations(id).orElse(null);
     }
@@ -50,5 +54,19 @@ public class CompetitionService {
                 .orElseThrow(() -> new IllegalArgumentException("Competition not found"));
         comp.setCompStatus(CompetitionStatus.FINISHED);
         return competitionRepo.save(comp);
+    }
+
+    @Transactional
+    public void deleteCompetition(Long competitionId) {
+        Competition competition = competitionRepo.findById(competitionId)
+            .orElseThrow(() -> new IllegalAccessError("Competition not found with ID " + competitionId));
+
+        // Optional: ownership check
+        /*Gym currentGym = gymService.getCurrentGym();
+        if (!competition.getGym().getId().equals(currentGym.getId())) {
+            throw new AccessDeniedException("You can only delete your own competitions.");
+        }*/
+
+        competitionRepo.delete(competition); // cascades to registrations, submissions, routes
     }
 }

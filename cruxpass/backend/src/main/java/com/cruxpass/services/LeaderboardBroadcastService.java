@@ -5,6 +5,7 @@ import com.cruxpass.dtos.LiveSubmissionEventDto;
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.enums.CompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.events.SubmissionUpdatedEvent;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Registration;
 import com.cruxpass.models.Submission;
@@ -12,7 +13,9 @@ import com.cruxpass.models.SubmittedRoute;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -26,6 +29,16 @@ public class LeaderboardBroadcastService {
     private final SubmissionService submissionService;
     private final RegistrationService registrationService;
     private final ClimberService climberService;
+
+    @Async
+    @EventListener
+    public void onSubmissionUpdated(SubmissionUpdatedEvent event) {
+        handleNewSubmission(
+            event.getCompetitionId(),
+            event.getClimberId(),
+            event.getRouteId()
+        );
+    }
 
     public void handleNewSubmission(Long competitionId, Long climberId) {
         // For backward compatibility: just broadcast leaderboard

@@ -62,7 +62,7 @@ public class CompSubmissionController {
             .toList());
     }*/
 
-    @PutMapping("/me")
+    @PutMapping
     public ResponseEntity<?> submitOrUpdateScore(
         @RequestBody SubmissionRequestDto dto,
         @PathVariable Long gymId,
@@ -72,9 +72,8 @@ public class CompSubmissionController {
         Climber climber = currentUserService.getClimberFromToken(authHeader);
         if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
 
-        Competition comp = competitionService.getById(competitionId).orElse(null);
+        Competition comp = competitionService.getByIdAndGymId(competitionId, gymId).orElse(null);
         if (comp == null) return ResponseEntity.notFound().build();
-        if (comp.getGym().getId() != gymId) return ResponseEntity.badRequest().build();
 
         if (comp.getCompStatus() != CompetitionStatus.LIVE) {
             return ResponseEntity.badRequest().body("Competition is not live.");

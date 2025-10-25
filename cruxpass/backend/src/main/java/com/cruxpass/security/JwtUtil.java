@@ -1,5 +1,8 @@
 package com.cruxpass.security;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.Key;
 import java.util.Date;
 
@@ -20,8 +23,19 @@ public class JwtUtil {
     private final Key key;
     private final long jwtExpirationMs = 86400000; // 1 day
 
-    public JwtUtil(@Value("${jwt.secret}") String secret) {
-        this.key = Keys.hmacShaKeyFor(secret.trim().getBytes());
+    public JwtUtil(
+        @Value("${jwt.secret:}") String secret,
+        @Value("${JWT_SECRET_FILE:}") String secretFilePath
+    ) {
+        String keyString = secret;
+        if (keyString == null || keyString.isEmpty()) {
+            try {
+                keyString = Files.readString(Path.of(secretFilePath)).trim();
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to read JWT secret file", e);
+            }
+        }
+        this.key = Keys.hmacShaKeyFor(keyString.getBytes());
     }
 
     public String generateToken(String subject, AccountType role, Long id) {

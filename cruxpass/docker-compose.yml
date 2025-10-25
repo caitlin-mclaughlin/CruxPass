@@ -44,19 +44,21 @@ services:
     ports:
       - "8080:8080"
     environment:
-#      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://pgbouncer:6432/cruxpass?preferQueryMode=simple
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_MAIN_LOG_STARTUP_INFO: "false"
-      JAVA_TOOL_OPTIONS: "-Doracle.jdbc.sendExtraFloatDigits=false -Dorg.postgresql.disableColumnSanitiser=true"
-      JWT_SECRET: K1zXFjXWSgooykgSF795sDI1wF/+lXhQcuwfnHwUAvk=  # <-- new env var
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+    secrets:
+      - jwt_secret
     depends_on:
       - pgbouncer
-# -Dlogging.level.org.springframework.web=DEBUG -Dlogging.level.org.springframework.security=DEBUG 
 volumes:
   postgres-data:
 
+secrets:
+  jwt_secret:
+    file: ./backend/.jwt_secret
 
 #    deploy:
 #      replicas: 3
