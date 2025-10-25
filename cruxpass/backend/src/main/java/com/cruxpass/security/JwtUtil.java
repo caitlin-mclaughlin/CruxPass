@@ -1,6 +1,7 @@
 package com.cruxpass.security;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Key;
@@ -24,18 +25,21 @@ public class JwtUtil {
     private final long jwtExpirationMs = 86400000; // 1 day
 
     public JwtUtil(
-        @Value("${jwt.secret:}") String secret,
-        @Value("${JWT_SECRET_FILE:}") String secretFilePath
+        @Value("${jwt.secret:}") String secret,                  // from application.yml (optional)
+        @Value("${JWT_SECRET:}") String envSecret               // from Render env variable
     ) {
         String keyString = secret;
-        if (keyString == null || keyString.isEmpty()) {
-            try {
-                keyString = Files.readString(Path.of(secretFilePath)).trim();
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to read JWT secret file", e);
-            }
+
+        // Prefer Render env variable if provided
+        if (envSecret != null && !envSecret.isBlank()) {
+            keyString = envSecret.trim();
         }
-        this.key = Keys.hmacShaKeyFor(keyString.getBytes());
+
+        if (keyString == null || keyString.isEmpty()) {
+            throw new IllegalStateException("JWT secret must be provided via 'jwt.secret' or 'JWT_SECRET'");
+        }
+
+        this.key = Keys.hmacShaKeyFor(keyString.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(String subject, AccountType role, Long id) {
