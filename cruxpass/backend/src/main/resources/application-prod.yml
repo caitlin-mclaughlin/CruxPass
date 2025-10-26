@@ -16,4 +16,4 @@ spring:
       ddl-auto: update
       dialect: org.hibernate.dialect.PostgreSQLDialect
 jwt:
-  secret-file: /run/secrets/jwt_secret
+  secret-file: ${JWT_SECRET_FILE}
