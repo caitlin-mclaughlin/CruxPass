@@ -18,13 +18,12 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: update
-      dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
     properties:
       hibernate:
-        boot:
-          allow_jdbc_metadata_access: false
-        temp:
-          use_jdbc_metadata_defaults: false
+        "[format_sql]": true
+        "[use_sql_comments]": false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   jackson:
     serialization:
@@ -36,9 +35,4 @@ spring:
       "[org.hibernate.SQL]": INFO
       "[org.hibernate.type.descriptor.sql]": TRACE
 jwt:
-  secret: ${JWT_SECRET}
-
-
-#    "[org.springframework.web]": DEBUG
-#    "[org.springframework.web.servlet.DispatcherServlet]": DEBUG
-#    "[org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping]": DEBUG
+  secret-file: /run/secrets/jwt_secret

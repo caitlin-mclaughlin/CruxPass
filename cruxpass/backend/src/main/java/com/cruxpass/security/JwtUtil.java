@@ -1,7 +1,6 @@
 package com.cruxpass.security;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Key;
@@ -17,6 +16,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtUtil {
@@ -25,21 +25,25 @@ public class JwtUtil {
     private final long jwtExpirationMs = 86400000; // 1 day
 
     public JwtUtil(
-        @Value("${jwt.secret:}") String secret,                  // from application.yml (optional)
-        @Value("${JWT_SECRET:}") String envSecret               // from Render env variable
+        @Value("${jwt.secret:}") String secret,
+        @Value("${jwt.secret-file:}") String secretFilePath
     ) {
         String keyString = secret;
-
-        // Prefer Render env variable if provided
-        if (envSecret != null && !envSecret.isBlank()) {
-            keyString = envSecret.trim();
-        }
-
         if (keyString == null || keyString.isEmpty()) {
-            throw new IllegalStateException("JWT secret must be provided via 'jwt.secret' or 'JWT_SECRET'");
+            try {
+                keyString = Files.readString(Path.of(secretFilePath)).trim();
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to read JWT secret file: " + secretFilePath, e);
+            }
         }
+        this.key = Keys.hmacShaKeyFor(keyString.getBytes());
+    }
 
-        this.key = Keys.hmacShaKeyFor(keyString.getBytes(StandardCharsets.UTF_8));
+    @PostConstruct
+    public void validateSecret() {
+        if (key == null) {
+            throw new IllegalStateException("JWT secret key was not initialized — check JWT_SECRET env var");
+        }
     }
 
     public String generateToken(String subject, AccountType role, Long id) {
