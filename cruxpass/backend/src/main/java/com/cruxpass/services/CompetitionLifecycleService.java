@@ -2,7 +2,9 @@ package com.cruxpass.services;
 
 import com.cruxpass.dtos.CompetitionStatusUpdateDto;
 import com.cruxpass.enums.CompetitionStatus;
+import com.cruxpass.mappers.CompetitionMapper;
 import com.cruxpass.models.Competition;
+import com.cruxpass.models.Heat;
 import com.cruxpass.repositories.CompetitionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,18 +20,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompetitionLifecycleService {
 
+    private final CompetitionMapper compMapper;
     private final CompetitionRepository competitionRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Scheduled(fixedRate = 30000) // every 30 seconds
     @Transactional
     public void updateCompetitionStatuses() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("America/Denver"));
         List<Competition> competitions = competitionRepository.findAll();
 
         for (Competition comp : competitions) {
             CompetitionStatus previous = comp.getCompStatus();
-            CompetitionStatus current = calculateStatus(comp, now);
+            CompetitionStatus current = compMapper.calculateStatus(comp);
 
             if (current != previous) {
                 comp.setCompStatus(current);
@@ -45,11 +47,5 @@ public class CompetitionLifecycleService {
                         comp.getName() + " → " + current);
             }
         }
-    }
-
-    private CompetitionStatus calculateStatus(Competition comp, LocalDateTime now) {
-        if (now.isBefore(comp.getDate())) return CompetitionStatus.UPCOMING;
-        if (now.isAfter(comp.getDate().plusMinutes(comp.getDuration()))) return CompetitionStatus.FINISHED;
-        return CompetitionStatus.LIVE;
     }
 }

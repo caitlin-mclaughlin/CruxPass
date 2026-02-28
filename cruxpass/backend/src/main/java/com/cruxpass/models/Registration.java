@@ -1,6 +1,6 @@
 package com.cruxpass.models;
 
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 
 import jakarta.persistence.*;
@@ -23,7 +23,7 @@ public class Registration {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    private CompetitorGroup competitorGroup;
+    private DefaultCompetitorGroup competitorGroup;
 
     @NonNull
     @Enumerated(EnumType.STRING)

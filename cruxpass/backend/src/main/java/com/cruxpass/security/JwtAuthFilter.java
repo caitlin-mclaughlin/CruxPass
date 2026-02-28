@@ -1,9 +1,6 @@
 package com.cruxpass.security;
 
-import com.cruxpass.models.Gym;
-import com.cruxpass.models.Series;
 import com.cruxpass.enums.AccountType;
-import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.GymRepository;
 import com.cruxpass.repositories.SeriesRepository;
 import com.cruxpass.repositories.ClimberRepository;
@@ -52,35 +49,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     System.out.println("JwtAuthFilter intercepting: " + request.getRequestURI());
         
         final String authHeader = request.getHeader("Authorization");
+        String token = jwtUtil.extractToken(authHeader);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (token == null) {
             chain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring(7);
-
         try {
+            if (!jwtUtil.validateToken(token)) {
+                chain.doFilter(request, response);
+                return;
+            }
+
             String email = jwtUtil.extractEmail(token);
             AccountType role = jwtUtil.extractRole(token);
 
-            if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                boolean valid = false;
+            if (email != null && role != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                switch (role) {
-                    case CLIMBER -> {
-                        Climber climber = climberRepo.findByEmailIgnoreCaseAndActiveTrue(email).orElse(null);
-                        valid = climber != null && jwtUtil.validateToken(token);
-                    }
-                    case GYM -> {
-                        Gym gym = gymRepo.findByEmail(email).orElse(null);
-                        valid = gym != null && jwtUtil.validateToken(token);
-                    }
-                    case SERIES -> {
-                        Series series = seriesRepo.findByEmail(email).orElse(null);
-                        valid = series != null && jwtUtil.validateToken(token);
-                    }
-                }
+                boolean valid = switch (role) {
+                    case CLIMBER -> climberRepo.findByEmailIgnoreCaseAndActiveTrue(email).isPresent();
+                    case GYM -> gymRepo.findByEmailIgnoreCaseAndActiveTrue(email).isPresent();
+                    case SERIES -> seriesRepo.findByEmailIgnoreCaseAndActiveTrue(email).isPresent();
+                };
 
                 if (valid) {
                     var authority = new SimpleGrantedAuthority("ROLE_" + role.name());

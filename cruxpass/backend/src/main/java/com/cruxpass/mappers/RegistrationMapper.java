@@ -17,6 +17,7 @@ public class RegistrationMapper {
 
     // Convert from Registration entity to RegistrationResponseDto
     public RegistrationResponseDto toResponseDto(Registration reg) {
+        if (reg == null) return null;
         return new RegistrationResponseDto(
             reg.getId(),
             reg.getCompetition().getGym().getId(),
@@ -32,6 +33,7 @@ public class RegistrationMapper {
 
     // Convert from Registration entity to SimpleRegistrationDto
     public SimpleRegistrationDto toSimpleDto(Registration reg) {
+        if (reg == null) return null;
         return new SimpleRegistrationDto(
             reg.getDivision(),
             reg.getCompetitorGroup()
@@ -40,6 +42,7 @@ public class RegistrationMapper {
 
     /** Convert Registration entity to SimpleRegistrationResponseDto */
     public SimpleRegistrationResponseDto toSimpleResponseDto(Registration reg) {
+        if (reg == null) return null;
         return new SimpleRegistrationResponseDto(
             reg.getId(),
             reg.getCompetition().getId(),
@@ -52,10 +55,11 @@ public class RegistrationMapper {
     }
 
     // Convert from CompRegistrationRequestDto to Registration entity
-    public Registration toEntity(CompRegistrationRequestDto dto, Climber climber, Competition competition) {
+    public Registration toEntity(CompRegistrationRequestDto dto, Climber climber, Competition comp) {
+        if (dto == null || climber == null || comp == null) return null;
         Registration reg = new Registration();
         reg.setClimber(climber);
-        reg.setCompetition(competition);
+        reg.setCompetition(comp);
         reg.setCompetitorGroup(dto.competitorGroup());
         reg.setDivision(dto.division());
         reg.setPaid(dto.paid());

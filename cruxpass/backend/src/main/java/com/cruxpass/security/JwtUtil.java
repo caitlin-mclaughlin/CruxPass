@@ -46,6 +46,14 @@ public class JwtUtil {
         }
     }
 
+    public String extractToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("Auth header missing or invalid: " + authHeader);
+            return null;
+        }
+        return authHeader.substring(7);
+    }
+
     public String generateToken(String subject, AccountType role, Long id) {
         System.out.println("Creating JWT: email = " + subject + ", role = " + role + ", id = " + id);
 

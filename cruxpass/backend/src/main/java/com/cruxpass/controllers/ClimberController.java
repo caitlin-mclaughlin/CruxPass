@@ -1,7 +1,8 @@
 package com.cruxpass.controllers;
 
+import com.cruxpass.annotations.CurrentClimber;
+import com.cruxpass.dtos.UpdateClimberRequestDto;
 import com.cruxpass.dtos.requests.CreateDependentDto;
-import com.cruxpass.dtos.requests.UpdateClimberRequestDto;
 import com.cruxpass.dtos.responses.DependentDto;
 import com.cruxpass.dtos.responses.SimpleClimberDto;
 import com.cruxpass.dtos.responses.ClimberResponseDto;
@@ -64,26 +65,16 @@ public class ClimberController {
     // Secure endpoint for logged-in climber
     @GetMapping("/me")
     public ResponseEntity<ClimberResponseDto> getCurrentClimber(
-        @RequestHeader("Authorization") String authHeader
+        @CurrentClimber Climber climber
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         return ResponseEntity.ok(climberMap.toDto(climber));
     }
 
     @PutMapping("/me")
     public ResponseEntity<ClimberResponseDto> updateClimber(
-        @RequestHeader("Authorization") String authHeader,
+        @CurrentClimber Climber climber,
         @RequestBody UpdateClimberRequestDto updateRequest
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Or 401
-        }
-
         climberMap.updateEntityFromDto(updateRequest, climber);
 
         return ResponseEntity.ok(climberMap.toDto(climberService.save(climber)));
@@ -91,38 +82,25 @@ public class ClimberController {
 
     @DeleteMapping("/me")
     public ResponseEntity<Void> deactivateSelf(
-        @RequestHeader("Authorization") String authHeader
+        @CurrentClimber Climber climber
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
         climberService.deactivateClimber(climber.getId());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/me/dependents")
     public ResponseEntity<DependentDto> createDependent(
-        @RequestHeader("Authorization") String authHeader,
+        @CurrentClimber Climber guardian,
         @RequestBody CreateDependentDto dependentDto
     ) {
-        Climber guardian = currentUserService.getClimberFromToken(authHeader);
-        if (guardian == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         Climber dependent = climberService.createDependent(guardian.getId(), dependentDto);
         return ResponseEntity.ok(climberMap.toDependentDto(dependent));
     }
 
     @GetMapping("/me/dependents")
     public ResponseEntity<List<DependentDto>> getMyDependents(
-        @RequestHeader("Authorization") String authHeader
+        @CurrentClimber Climber guardian
     ) {
-        Climber guardian = currentUserService.getClimberFromToken(authHeader);
-        if (guardian == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         List<Climber> dependents = climberService.getDependentsOfGuardian(guardian.getId());
         return ResponseEntity.ok(dependents.stream()
             .map(climberMap::toDependentDto)
@@ -131,13 +109,10 @@ public class ClimberController {
 
     @PutMapping("/me/dependents/{dependentId}")
     public ResponseEntity<DependentDto> updateDependent(
-        @RequestHeader("Authorization") String authHeader,
         @PathVariable Long dependentId,
+        @CurrentClimber Climber guardian,
         @RequestBody UpdateClimberRequestDto updateRequest
     ) {
-        Climber guardian = currentUserService.getClimberFromToken(authHeader);
-        if (guardian == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
         Climber updated = climberService.updateDependent(guardian.getId(), dependentId, updateRequest);
         if (updated == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 
@@ -146,13 +121,9 @@ public class ClimberController {
 
     @DeleteMapping("/me/dependents/{dependentId}")
     public ResponseEntity<Void> deleteDependent(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long dependentId
+        @PathVariable Long dependentId,
+        @CurrentClimber Climber guardian
     ) {
-        Climber guardian = currentUserService.getClimberFromToken(authHeader);
-        if (guardian == null)
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
         boolean deleted = climberService.deleteDependent(guardian.getId(), dependentId);
         if (!deleted)
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -162,13 +133,10 @@ public class ClimberController {
 
     @PostMapping("/me/dependents/{dependentId}/guardians/{guardianId}")
     public ResponseEntity<DependentDto> addGuardian(
-        @RequestHeader("Authorization") String authHeader,
         @PathVariable Long dependentId,
-        @PathVariable Long guardianId
+        @PathVariable Long guardianId,
+        @CurrentClimber Climber requester
     ) {
-        Climber requester = currentUserService.getClimberFromToken(authHeader);
-        if (requester == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
         Climber dependent = climberService.addGuardianToDependent(requester.getId(), dependentId, guardianId);
         if (dependent == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
@@ -177,13 +145,10 @@ public class ClimberController {
 
     @DeleteMapping("/me/dependents/{dependentId}/guardians/{guardianId}")
     public ResponseEntity<DependentDto> removeGuardian(
-        @RequestHeader("Authorization") String authHeader,
         @PathVariable Long dependentId,
-        @PathVariable Long guardianId
+        @PathVariable Long guardianId,
+        @CurrentClimber Climber requester
     ) {
-        Climber requester = currentUserService.getClimberFromToken(authHeader);
-        if (requester == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
         Climber dependent = climberService.removeGuardianFromDependent(requester.getId(), dependentId, guardianId);
         if (dependent == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         return ResponseEntity.ok(climberMap.toDependentDto(dependent));

@@ -1,116 +1,67 @@
 package com.cruxpass.controllers;
 
+import com.cruxpass.annotations.CurrentClimber;
 import com.cruxpass.dtos.requests.CompRegistrationRequestDto;
 import com.cruxpass.dtos.responses.RegistrationResponseDto;
 import com.cruxpass.mappers.RegistrationMapper;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Registration;
-import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.RegistrationService;
+
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
-@RequestMapping("/api/gyms/{gymId}/competitions/{competitionId}/registrations")
+@RequiredArgsConstructor
+@RequestMapping("/api/competitions/{compId}/registrations")
 public class CompRegistrationController {
 
-    private final CurrentUserService currentUserService;
     private final RegistrationService registrationService;
     private final CompetitionService competitionService;
 
     @Autowired
     private RegistrationMapper regMap;
 
-    public CompRegistrationController(CurrentUserService currentUserService,
-            RegistrationService registrationService, CompetitionService competitionService) {
-        this.currentUserService = currentUserService;
-        this.registrationService = registrationService;
-        this. competitionService = competitionService;
-    }
-
-    @GetMapping
-    public ResponseEntity<List<RegistrationResponseDto>> getAll(
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
-    ) {
-        currentUserService.validateGymAccess(gymId, authHeader);
-        Competition comp = competitionService.getById(competitionId).orElse(null);
-        if (comp == null) return ResponseEntity.notFound().build();
-
-        List<Registration> regs = registrationService.getByCompetition(comp);
-        if (regs == null) return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok(regs.stream()
-            .map(reg -> regMap.toResponseDto(reg))
-            .toList()
-        );
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<RegistrationResponseDto> getById(
-        @PathVariable Long id,
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
-    ) {
-        currentUserService.validateGymAccess(gymId, authHeader);
-        Registration reg = registrationService.getById(id);
-        if (reg == null) return ResponseEntity.notFound().build();
-
-        return ResponseEntity.ok(regMap.toResponseDto(reg));
-    }
-
     @GetMapping("/me")
-    public ResponseEntity<?> getMyRegistration(
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
+    public ResponseEntity<RegistrationResponseDto> getMyRegistration(
+        @PathVariable Long compId,
+        @CurrentClimber Climber climber
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
-
-        Registration reg = registrationService.getByClimberIdAndCompetitionId(climber.getId(), competitionId);
+        Registration reg = registrationService.getByClimberIdAndCompetitionId(climber.getId(), compId);
         if (reg == null) return ResponseEntity.notFound().build();
 
         return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
 
-    @PutMapping("/me")
-    public ResponseEntity<?> registerForCompetition(
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
+    /*@PutMapping("/me")
+    public ResponseEntity<RegistrationResponseDto> registerForCompetition(
+        @PathVariable Long compId,
         @RequestBody CompRegistrationRequestDto dto,
-        @RequestHeader("Authorization") String authHeader
+        @CurrentClimber Climber climber
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
-
-        Competition competition = competitionService.getById(competitionId).orElse(null);
-        if (competition == null) return ResponseEntity.notFound().build();
-        if (competition.getGym().getId() != gymId) return ResponseEntity.badRequest().build();
+        Competition competition = competitionService.getById(compId);
 
         // Prevent duplicate registration
         if (registrationService.existsByClimberAndCompetition(climber, competition)) {
-            return ResponseEntity.badRequest().body("You are already registered for this competition.");
+            return ResponseEntity.badRequest().build();
         }
         
         // Check registration deadline
         if (competition.getDeadline() == null || competition.isPastDeadline()) {
-            return ResponseEntity.badRequest().body("Registration deadline has passed.");
+            return ResponseEntity.badRequest().build();
         }
 
         // Check capacity
         long currentCount = registrationService.countByCompetition(competition);
         if (competition.getCapacity() > 0 && currentCount >= competition.getCapacity()) {
-            return ResponseEntity.badRequest().body("Competition is at full capacity.");
+            return ResponseEntity.badRequest().build();
         }
 
         Registration reg = regMap.toEntity(dto, climber, competition);
@@ -118,4 +69,5 @@ public class CompRegistrationController {
 
         return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
+    */
 }

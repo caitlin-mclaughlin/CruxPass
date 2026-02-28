@@ -5,11 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.lang.NonNull;
 
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -39,7 +40,7 @@ public class Submission {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    private CompetitorGroup competitorGroup;
+    private DefaultCompetitorGroup competitorGroup;
 
     private int totalPoints;
     private int totalAttempts;
@@ -53,5 +54,5 @@ public class Submission {
         cascade = CascadeType.ALL,
         orphanRemoval = true
     )
-    private List<SubmittedRoute> routes;
+    private List<SubmittedRoute> routes = new ArrayList<>();
 }

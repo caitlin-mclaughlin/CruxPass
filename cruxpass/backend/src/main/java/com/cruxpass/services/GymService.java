@@ -13,24 +13,22 @@ import com.cruxpass.models.Address;
 import com.cruxpass.models.Gym;
 import com.cruxpass.repositories.GymRepository;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 @Service
 public class GymService {
-    private final GymRepository repository;
-    private final PasswordEncoder passwordEncoder;
 
-    public GymService(GymRepository repository, PasswordEncoder passwordEncoder) {
-        this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final GymRepository gymRepo;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Gym createGym(RegisterRequest dto) {
-        if (repository.findByEmail(dto.email).isPresent()) {
+        if (gymRepo.findByEmailIgnoreCaseAndActiveTrue(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-        } else if (repository.findByUsername(dto.username).isPresent()) {
+        } else if (gymRepo.findByUsernameAndActiveTrue(dto.username).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already in use");
         }
-        System.out.println("Registering gym with email: " + dto.email);
 
         Gym gym = new Gym();
         gym.setName(dto.name);
@@ -48,37 +46,60 @@ public class GymService {
         );
         gym.setAddress(addr);
 
-        return repository.save(gym);
+        return gymRepo.save(gym);
     }
 
     @Transactional
     public Gym save(Gym gym) {
-        return repository.save(gym);
+        return gymRepo.save(gym);
     }
 
     public List<Gym> getAll() {
-        return repository.findAll();
+        return gymRepo.findAll();
     }
 
     public Gym getById(Long id) {
-        return repository.findById(id).orElse(null);
+        return gymRepo.findById(id).orElse(null);
+    }
+
+    public Gym getByIdWithSeries(Long id) {
+        return gymRepo.findByIdWithSeries(id).orElse(null);
     }
 
     public Gym getByEmail(String email) {
-        System.out.println("Looking for gym with email: " + email);
         if (email == null) return null;
-        return repository.findByEmail(email.trim().toLowerCase()).orElse(null);
+        return gymRepo.findByEmailIgnoreCaseAndActiveTrue(email.trim().toLowerCase()).orElse(null);
     }
 
     public Gym getByUsername(String username) {
-        return repository.findByUsername(username).orElse(null);
+        return gymRepo.findByUsernameAndActiveTrue(username).orElse(null);
     }
 
     public Gym getByEmailOrUsername(String id) {
-        return (repository.findByEmail(id).or(() -> repository.findByUsername(id))).orElse(null);
+        return (gymRepo.findByEmailIgnoreCaseAndActiveTrue(id).or(() -> gymRepo.findByUsernameAndActiveTrue(id))).orElse(null);
     }
 
     public boolean passwordMatches(Gym gym, String rawPassword) {
         return passwordEncoder.matches(rawPassword, gym.getPasswordHash());
     }
+
+    @Transactional
+    public void deactivateGym(Long gymId) {
+        Gym gym = gymRepo.findById(gymId)
+            .orElseThrow(() -> new RuntimeException("Gym not found"));
+
+        gym.setActive(false);
+        gymRepo.save(gym);
+    }
+
+    public List<Gym> searchGyms(String email, String name, String phone) {
+        if ((email == null || email.isBlank()) &&
+            (name == null || name.isBlank()) &&
+            (phone == null || phone.isBlank())) {
+            return List.of();
+        }
+
+        return gymRepo.searchGymsFlexible(email, name, phone);
+    }
+
 }

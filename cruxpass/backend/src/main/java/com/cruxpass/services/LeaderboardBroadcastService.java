@@ -3,7 +3,7 @@ package com.cruxpass.services;
 import com.cruxpass.dtos.GroupLeaderboardUpdateDto;
 import com.cruxpass.dtos.LiveSubmissionEventDto;
 import com.cruxpass.dtos.RankedSubmissionDto;
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.cruxpass.events.SubmissionUpdatedEvent;
 import com.cruxpass.models.Climber;
@@ -53,7 +53,7 @@ public class LeaderboardBroadcastService {
         Registration registration = registrationService.getByClimberIdAndCompetitionId(climberId, competitionId);
         if (registration == null) throw new IllegalStateException("Climber not registered");
 
-        CompetitorGroup group = registration.getCompetitorGroup();
+        DefaultCompetitorGroup group = registration.getCompetitorGroup();
         Division division = registration.getDivision();
 
         // 2. Fetch climber info
@@ -95,7 +95,7 @@ public class LeaderboardBroadcastService {
         broadcastGroupLeaderboard(competitionId, group, division);
     }
 
-    public void broadcastGroupLeaderboard(Long competitionId, CompetitorGroup group, Division division) {
+    public void broadcastGroupLeaderboard(Long competitionId, DefaultCompetitorGroup group, Division division) {
         List<RankedSubmissionDto> rankings =
             submissionService.getRankingsByGroupAndDivision(competitionId, group, division);
 

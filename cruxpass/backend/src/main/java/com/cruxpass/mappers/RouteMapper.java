@@ -1,6 +1,6 @@
 package com.cruxpass.mappers;
 
-import com.cruxpass.dtos.RouteDto;
+import com.cruxpass.dtos.requests.RouteUpsertDto;
 import com.cruxpass.dtos.responses.RouteResponseDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
@@ -25,7 +25,8 @@ public class RouteMapper {
     }
 
     /** Map Route DTO -> Route entity for creation, linking Competition + Gym */
-    public Route toEntity(RouteDto dto, Gym gym, Competition competition) {
+    public Route toEntity(RouteUpsertDto dto, Gym gym, Competition competition) {
+        if (dto == null || gym == null || competition == null) return null;
         Route route = new Route();
         route.setNumber(dto.number());
         route.setPointValue(dto.pointValue());
@@ -43,7 +44,7 @@ public class RouteMapper {
     }
 
     /** Map list of Route DTOs -> list of Route entities */
-    public List<Route> toEntityList(List<RouteDto> dtos, Gym gym, Competition comp) {
+    public List<Route> toEntityList(List<RouteUpsertDto> dtos, Gym gym, Competition comp) {
         return dtos.stream()
                    .map(dto -> toEntity(dto, gym, comp))
                    .toList();

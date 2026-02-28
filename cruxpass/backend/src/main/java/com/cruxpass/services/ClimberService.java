@@ -1,16 +1,13 @@
 package com.cruxpass.services;
 
+import com.cruxpass.dtos.UpdateClimberRequestDto;
 import com.cruxpass.dtos.requests.CreateDependentDto;
 import com.cruxpass.dtos.requests.RegisterRequest;
-import com.cruxpass.dtos.requests.UpdateClimberRequestDto;
 import com.cruxpass.mappers.ClimberMapper;
 import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.ClimberRepository;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -224,25 +221,7 @@ public class ClimberService {
             return List.of();
         }
 
-        Set<Climber> results = new HashSet<>();
-
-        // Search by email
-        if (email != null && !email.isBlank()) {
-            climberRepo.findByEmailIgnoreCaseAndActiveTrue(email)
-                    .ifPresent(results::add);
-        }
-
-        // Search by name
-        if (name != null && !name.isBlank()) {
-            results.addAll(climberRepo.findByNameContainingIgnoreCaseAndActiveTrue(name));
-        }
-
-        // Search by phone
-        if (phone != null && !phone.isBlank()) {
-            results.addAll(climberRepo.findByPhoneContainingAndActiveTrue(phone));
-        }
-
-        return new ArrayList<>(results);
+        return climberRepo.searchClimbersFlexible(email, name, phone);
     }
 
 }

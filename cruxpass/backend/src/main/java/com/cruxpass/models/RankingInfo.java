@@ -2,7 +2,7 @@ package com.cruxpass.models;
 
 import java.util.List;
 
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 
 public record RankingInfo(
@@ -13,6 +13,6 @@ public record RankingInfo(
     int totalAttempts, // sum of top 5
     List<Integer> topPoints,
     List<Integer> topAttempts,
-    CompetitorGroup competitorGroup,
+    DefaultCompetitorGroup competitorGroup,
     Division division
 ) {}

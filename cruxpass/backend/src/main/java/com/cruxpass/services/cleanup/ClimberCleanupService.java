@@ -1,4 +1,4 @@
-package com.cruxpass.services;
+package com.cruxpass.services.cleanup;
 
 import java.util.List;
 

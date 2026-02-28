@@ -1,5 +1,6 @@
 package com.cruxpass.controllers;
 
+import com.cruxpass.annotations.CurrentClimber;
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.dtos.SubmittedRouteDto;
 import com.cruxpass.dtos.requests.SubmissionRequestDto;
@@ -13,6 +14,8 @@ import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.LeaderboardBroadcastService;
 import com.cruxpass.services.SubmissionService;
+
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -28,7 +31,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/gyms/{gymId}/competitions/{competitionId}/submissions")
+@RequiredArgsConstructor
+@RequestMapping("/api/competitions/{compId}/submissions")
 public class CompSubmissionController {
 
     private final CompetitionService competitionService;
@@ -38,21 +42,11 @@ public class CompSubmissionController {
     @Autowired
     private SubmissionMapper subMap;
 
-    public CompSubmissionController(
-        CompetitionService competitionService,
-        SubmissionService submissionService,
-        CurrentUserService currentUserService,
-        LeaderboardBroadcastService leaderboardService) {
-        this.competitionService = competitionService;
-        this.submissionService = submissionService;
-        this.currentUserService = currentUserService;
-        this.leaderboardService = leaderboardService;
-    }
     /*
     @GetMapping()
     public ResponseEntity<List<CompetitionResponseDto>> getAllSubmissionsForComp(
             @PathVariable Long gymId,
-            @PathVariable Long competitionId) {
+            @PathVariable Long compId) {
         
         List<Competition> comps = submissionService.get(gymId);
         if (comps == null) return null;
@@ -63,39 +57,29 @@ public class CompSubmissionController {
     }*/
 
     @PutMapping
-    public ResponseEntity<?> submitOrUpdateScore(
+    public ResponseEntity<SubmissionResponseDto> submitOrUpdateScore(
         @RequestBody SubmissionRequestDto dto,
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
+        @PathVariable Long compId,
+        @CurrentClimber Climber climber
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized climber");
-
-        Competition comp = competitionService.getByIdAndGymId(competitionId, gymId).orElse(null);
+        Competition comp = competitionService.getById(compId);
         if (comp == null) return ResponseEntity.notFound().build();
 
         if (comp.getCompStatus() != CompetitionStatus.LIVE) {
-            return ResponseEntity.badRequest().body("Competition is not live.");
+            return ResponseEntity.badRequest().build();
         }
 
         SubmissionResponseDto response = submissionService.submitOrUpdateScores(comp, climber, dto);
-        leaderboardService.handleNewSubmission(competitionId, climber.getId());
+        leaderboardService.handleNewSubmission(compId, climber.getId());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
     public ResponseEntity<List<SubmittedRouteDto>> getMyScores(
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
+        @PathVariable Long compId,
+        @CurrentClimber Climber climber
     ) {
-        Climber climber = currentUserService.getClimberFromToken(authHeader);
-        if (climber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Submission sub = submissionService.getByCompetitionIdAndClimberId(competitionId, climber.getId());
+        Submission sub = submissionService.getByCompetitionIdAndClimberId(compId, climber.getId());
         if (sub == null) return ResponseEntity.notFound().build();
         
         List<SubmittedRouteDto> submittedRoutes = sub.getRoutes().stream()
@@ -108,8 +92,7 @@ public class CompSubmissionController {
     @GetMapping("/{id}/rankings")
     public ResponseEntity<List<RankedSubmissionDto>> getRankings(
         @PathVariable Long id,
-        @PathVariable Long gymId,
-        @PathVariable Long competitionId,
+        @PathVariable Long compId,
         @RequestHeader("Authorization") String authHeader
     ) {
         List<RankedSubmissionDto> dtos = submissionService.getRankings(id);
@@ -121,7 +104,7 @@ public class CompSubmissionController {
     @GetMapping("/leaderboard")
     public ResponseEntity<List<RegionalScoreDto>> regionalLeaderboard(
         @PathVariable Long gymId,
-        @PathVariable Long competitionId,
+        @PathVariable Long compId,
         @RequestHeader("Authorization") String authHeader
     ) {
         currentUserService.validateGymAccess(gymId, authHeader);

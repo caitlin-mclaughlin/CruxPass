@@ -4,7 +4,7 @@ import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.dtos.SubmittedRouteDto;
 import com.cruxpass.dtos.requests.SubmissionRequestDto;
 import com.cruxpass.dtos.responses.SubmissionResponseDto;
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.cruxpass.events.SubmissionUpdatedEvent;
 import com.cruxpass.models.Competition;
@@ -260,7 +260,7 @@ public class SubmissionService {
 
     public List<RankedSubmissionDto> getRankingsByGroupAndDivision(
         Long competitionId,
-        CompetitorGroup group,
+        DefaultCompetitorGroup group,
         Division division
     ) {
         List<Submission> submissions = submissionRepository

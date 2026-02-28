@@ -26,7 +26,7 @@ public class RestExceptionHandler {
     }
     
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<?> handleAuthError(AuthenticationException ex) {
+    public ResponseEntity<Map<String, String>> handleAuthError(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "Invalid email or password"));
     }

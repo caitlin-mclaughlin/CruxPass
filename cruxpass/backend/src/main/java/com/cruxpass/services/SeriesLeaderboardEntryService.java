@@ -2,7 +2,7 @@ package com.cruxpass.services;
 
 import com.cruxpass.models.*;
 import com.cruxpass.dtos.RankedSubmissionDto;
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.cruxpass.repositories.SeriesLeaderboardEntryRepository;
 import com.cruxpass.repositories.SeriesRegistrationRepository;
@@ -32,7 +32,7 @@ public class SeriesLeaderboardEntryService {
      * Rebuild the leaderboard for a series (after a competition ends or scores are finalized)
      */
     @Transactional
-    public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, CompetitorGroup group, Division division) {
+    public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, DefaultCompetitorGroup group, Division division) {
         Series series = seriesRepo.findById(seriesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Series not found"));
 
         // Fetch all series registrations for this group/division
@@ -113,7 +113,7 @@ public class SeriesLeaderboardEntryService {
     /**
      * Fetch the leaderboard for a series, group, and division
      */
-    public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, CompetitorGroup group, Division division) {
+    public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, DefaultCompetitorGroup group, Division division) {
         return leaderboardRepo.findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(seriesId, group, division);
     }
 

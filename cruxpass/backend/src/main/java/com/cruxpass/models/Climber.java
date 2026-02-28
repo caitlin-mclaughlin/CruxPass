@@ -1,8 +1,10 @@
 package com.cruxpass.models;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -15,16 +17,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.ToString;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Entity
-@EntityListeners(AuditingEntityListener.class) 
-@NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Climber {
 
     @Id
@@ -62,8 +62,6 @@ public class Climber {
     private boolean active = true;
 
     @JsonIgnore
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @ManyToMany
     @JoinTable(
         name = "dependent_guardians",
@@ -73,8 +71,6 @@ public class Climber {
     private Set<Climber> guardians = new HashSet<>(); // Only for dependent climbers
 
     @JsonIgnore
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
     @ManyToMany(mappedBy = "guardians")
     private Set<Climber> dependents = new HashSet<>(); // Only for guardian climbers
 
@@ -83,10 +79,22 @@ public class Climber {
 
     @JsonIgnore
     @OneToMany(mappedBy = "climber")
-    private List<Registration> registrations;
+    private List<Registration> registrations = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "climber")
-    private List<Submission> submissions;
+    private List<Submission> submissions = new ArrayList<>();
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Climber)) return false;
+        Climber other = (Climber) o;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

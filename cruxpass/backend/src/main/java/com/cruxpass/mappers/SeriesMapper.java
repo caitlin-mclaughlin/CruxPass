@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import com.cruxpass.dtos.PublicSeriesDto;
 import com.cruxpass.dtos.SeriesDto;
 import com.cruxpass.dtos.SeriesRegistrationDto;
+import com.cruxpass.dtos.responses.SimpleSeriesDto;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Series;
 
@@ -16,6 +17,7 @@ import org.springframework.util.StringUtils;
 public class SeriesMapper {
 
     public SeriesDto toDto(Series series) {
+        if (series == null) return null;
         return new SeriesDto(
             series.getId(),
             series.getName(),
@@ -30,7 +32,21 @@ public class SeriesMapper {
         );
     }
 
-    public PublicSeriesDto toPublicDto(Series series, boolean registered, SeriesRegistrationDto seriesRegistrationDto) {
+    public SimpleSeriesDto toSimpleDto(Series series) {
+        if (series == null) return null;
+        return new SimpleSeriesDto(
+            series.getId(),
+            series.getName(),
+            series.getEmail(),
+            series.getStartDate(),
+            series.getEndDate(),
+            series.getDeadline(),
+            calculateStatus(series)
+        );
+    }
+
+    public PublicSeriesDto toPublicDto(Series series, boolean registered, SeriesRegistrationDto dto) {
+        if (series == null) return null;
         return new PublicSeriesDto(
             series.getId(),
             series.getName(),
@@ -41,17 +57,19 @@ public class SeriesMapper {
             series.getDeadline(),
             calculateStatus(series),
             registered,
-            seriesRegistrationDto
+            dto
         );
     }
 
     public Series toEntity(SeriesDto dto) {
+        if (dto == null) return null;
         Series series = new Series();
         updateSeriesFromDto(dto, series);
         return series;
     }
 
     public void updateSeriesFromDto(SeriesDto dto, Series series) {
+        if (dto == null || series == null) return;
         if (dto.id() != null) series.setId(dto.id());
         if (StringUtils.hasText(dto.name())) series.setName(dto.name());
         if (StringUtils.hasText(dto.email())) series.setEmail(dto.email());

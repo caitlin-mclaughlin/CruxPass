@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.lang.NonNull;
 
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 
 import jakarta.persistence.CollectionTable;
@@ -38,7 +38,7 @@ public class SeriesLeaderboardEntry {
 
     @NonNull
     @Enumerated(EnumType.STRING)
-    private CompetitorGroup competitorGroup;
+    private DefaultCompetitorGroup competitorGroup;
 
     @NonNull
     @Enumerated(EnumType.STRING)

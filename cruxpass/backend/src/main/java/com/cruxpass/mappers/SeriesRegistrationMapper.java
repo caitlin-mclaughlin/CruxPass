@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class SeriesRegistrationMapper {
 
     public SeriesRegistrationDto toDto(SeriesRegistration reg) {
+        if (reg == null) return null;
         return new SeriesRegistrationDto(
             reg.getSeries().getId(),
             reg.getClimber().getId(),
@@ -21,6 +22,7 @@ public class SeriesRegistrationMapper {
     }
 
     public SeriesRegistration toEntity(SeriesRegistrationDto dto, Series series, Climber climber) {
+        if (dto == null || series == null || climber == null) return null;
         SeriesRegistration seriesReg = new SeriesRegistration();
         seriesReg.setSeries(series);
         seriesReg.setClimber(climber);

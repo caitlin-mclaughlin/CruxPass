@@ -2,14 +2,14 @@ package com.cruxpass.dtos;
 
 import java.time.Instant;
 
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 
 public record LiveSubmissionEventDto(
     Long competitionId,
     Long climberId,
     String climberName,
-    CompetitorGroup competitorGroup,
+    DefaultCompetitorGroup competitorGroup,
     Division division,
     Long routeId,
     Integer routeNumber,

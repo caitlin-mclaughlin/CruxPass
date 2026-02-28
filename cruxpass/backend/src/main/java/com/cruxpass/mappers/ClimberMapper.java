@@ -4,7 +4,6 @@ import com.cruxpass.models.Address;
 import com.cruxpass.models.Climber;
 import com.cruxpass.dtos.requests.CreateDependentDto;
 import com.cruxpass.dtos.requests.RegisterRequest;
-import com.cruxpass.dtos.requests.UpdateClimberRequestDto;
 import com.cruxpass.dtos.responses.DependentDto;
 import com.cruxpass.dtos.responses.SimpleClimberDto;
 import com.cruxpass.dtos.responses.ClimberResponseDto;
@@ -13,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.cruxpass.dtos.AddressDto;
+import com.cruxpass.dtos.UpdateClimberRequestDto;
 
 @Component
 public class ClimberMapper {
@@ -75,6 +75,7 @@ public class ClimberMapper {
     }
 
     public Climber toEntity(RegisterRequest dto, PasswordEncoder passwordEncoder) {
+        if (dto == null) return null;
         Climber climber = new Climber();
         climber.setName(dto.name);
         climber.setUsername(dto.username);
@@ -98,6 +99,7 @@ public class ClimberMapper {
     }
 
     public Climber toDependentEntity(CreateDependentDto dto, Climber guardian) {
+        if (dto == null || guardian == null) return null;
         Climber dependent = new Climber();
         dependent.setName(dto.name());
         dependent.setDob(dto.dob());

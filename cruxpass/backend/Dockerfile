@@ -1,22 +1,32 @@
 # backend/Dockerfile
 
-### BUILD ###
-FROM gradle:8.10.0-jdk17 AS builder
+### BUILD STAGE ###
+#FROM gradle:8.10.0-jdk17 AS builder
+
+#WORKDIR /app
+
+# Copy only Gradle wrapper and build files first to cache dependencies
+#COPY gradlew .
+#COPY gradle/ gradle/
+#COPY build.gradle .
+
+# Download dependencies only (creates a reusable cache layer)
+#RUN ./gradlew dependencies --no-daemon
+
+#COPY . .
+
+#RUN ./gradlew clean build -x test --no-daemon
+
+### RUNTIME STAGE ###
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
-COPY . .
 
-RUN gradle clean build -x test --no-daemon
-
-### RUNTIME ###
-FROM eclipse-temurin:17-jdk-alpine
-
-WORKDIR /app
-
-# Copy built jar from the previous stage
-COPY --from=builder /app/build/libs/*.jar app.jar
+# Copy the built jar from the builder stage
+#COPY --from=builder /app/build/libs/*.jar app.jar
+ENV JAVA_TOOL_OPTIONS="-Dorg.postgresql.disableExtraFloatDigits=true"
+COPY build/libs/backend-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
-# Run in prod mode
 ENTRYPOINT ["java", "-jar", "app.jar"]

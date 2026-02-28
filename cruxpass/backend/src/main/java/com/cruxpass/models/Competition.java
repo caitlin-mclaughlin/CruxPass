@@ -1,30 +1,33 @@
 package com.cruxpass.models;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.cruxpass.enums.CompetitionFormat;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
-import com.cruxpass.enums.CompetitorGroup;
-import com.cruxpass.enums.Division;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
-@Data
-@Entity
 @NoArgsConstructor
+@Getter
+@Setter
+@Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Competition {
 
     @Id
@@ -34,40 +37,42 @@ public class Competition {
     @NotBlank
     private String name;
     @NonNull
-    private LocalDateTime date;
-    @Positive
-    private long duration;
+    private LocalDateTime startDate;
     @NonNull
     private LocalDateTime deadline;
-    @Positive
-    private int capacity;
     
     @NonNull
     @ElementCollection(targetClass = CompetitionType.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    private Set<CompetitionType> types;
+    private Set<CompetitionType> types = new HashSet<>();
 
     @NonNull
     @Enumerated(EnumType.STRING)
     private CompetitionFormat compFormat;
 
-    @NonNull
-    @ElementCollection(targetClass = CompetitorGroup.class, fetch = FetchType.EAGER)
-    @Enumerated(EnumType.STRING)
-    private Set<CompetitorGroup> competitorGroups;
+    @ElementCollection
+    @CollectionTable(
+        name = "competition_selected_groups",
+        joinColumns = @JoinColumn(name = "competition_id")
+    )
+    private Set<GroupRefEmbeddable> selectedGroups = new HashSet<>();
 
-    @Nullable
-    @ElementCollection(targetClass = Division.class, fetch = FetchType.EAGER)
-    @Enumerated(EnumType.STRING)
-    private Set<Division> divisions;
+    @JsonIgnore
+    @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("startTime ASC")
+    private List<Heat> heats = new ArrayList<>();
 
     @NonNull
     @Enumerated(EnumType.STRING)
     private CompetitionStatus compStatus;
+    
+    @JsonIgnore
+    @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Route> routes = new ArrayList<>();
 
     @JoinColumn(name = "gym_id", nullable = false)
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private Gym gym;
 
     @JoinColumn(name = "series_id", nullable = true)
@@ -77,25 +82,7 @@ public class Competition {
 
     @JsonIgnore
     @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Route> routes;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Registration> registrations;
-    
-    public CompetitionStatus getCompStatus() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("America/Denver"));
-
-        if (now.isBefore(date)) {
-            compStatus =  CompetitionStatus.UPCOMING;
-        } else if (now.isAfter(date.plusMinutes(duration))) {
-            compStatus = CompetitionStatus.FINISHED;
-        } else {
-            compStatus = CompetitionStatus.LIVE;
-        }
-
-        return compStatus;
-    }
+    private List<Registration> registrations = new ArrayList<>();
 
     public boolean isPastDeadline() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("America/Denver"));

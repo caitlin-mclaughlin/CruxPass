@@ -1,32 +1,42 @@
 package com.cruxpass.services;
 
+import com.cruxpass.dtos.requests.RouteUpsertDto;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Competition;
+import com.cruxpass.models.Gym;
 import com.cruxpass.models.Route;
+import com.cruxpass.repositories.CompetitionRepository;
 import com.cruxpass.repositories.RouteRepository;
+
+import lombok.AllArgsConstructor;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class RouteService {
     
     private final RouteRepository routeRepo;
+    private final CompetitionRepository compRepo;
 
-    public RouteService(RouteRepository routeRepo) {
-        this.routeRepo = routeRepo;
-    }
-
+    @Cacheable(value = "routes", key = "#competitionId")
     public List<Route> getAll() {
         return routeRepo.findAll();
+    }
+
+    @Cacheable(value = "routes", key = "#competitionId")
+    public Route getById(Long id) {
+        return routeRepo.findById(id).orElse(null);
     }
 
     @Cacheable(value = "routes", key = "#competitionId")
@@ -34,58 +44,47 @@ public class RouteService {
         return routeRepo.findByCompetitionId(competitionId).orElse(null);
     }
 
-    public Route getById(Long id) {
-        return routeRepo.findById(id).orElse(null);
+    private void syncRoutes(Competition comp, List<RouteUpsertDto> dtos) {
+        Map<Integer, Route> existing =
+            comp.getRoutes().stream()
+                .collect(Collectors.toMap(Route::getNumber, r -> r));
+
+        List<Route> newList = new ArrayList<>();
+
+        for (RouteUpsertDto dto : dtos) {
+            Route route = existing.remove(dto.number());
+
+            if (route == null) {
+                route = new Route();
+                route.setCompetition(comp);
+                route.setNumber(dto.number());
+            }
+
+            route.setPointValue(dto.pointValue());
+            newList.add(route);
+        }
+
+        comp.getRoutes().clear();
+        comp.getRoutes().addAll(newList);
     }
 
+    @CacheEvict(value = "routes", key = "#competitionId")
     @Transactional
-    public Route save(Route route) {
-        return routeRepo.save(route);
-    }
+    public List<Route> upsertRoutes(
+        Gym gym,
+        Long competitionId,
+        List<RouteUpsertDto> dtos
+    ) {
+        Competition comp = compRepo.findByIdAndGymId(competitionId, gym.getId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
 
-    @Transactional
-    @CacheEvict(value = "routes", key = "#routes.get(0).competition.id")
-    public List<Route> saveOrUpdateRoutes(List<Route> routes) {
-        if (routes == null || routes.isEmpty()) return List.of();
-
-        Competition competition = routes.get(0).getCompetition();
-        if (competition.getCompStatus() != CompetitionStatus.UPCOMING) {
+        if (comp.getCompStatus() != CompetitionStatus.UPCOMING) {
             throw new IllegalStateException("Cannot modify routes after competition has started.");
         }
 
-        List<Route> existing = getByCompetitionId(competition.getId());
-
-        if (existing == null || existing.isEmpty()) {
-            // Save all new routes
-            return routeRepo.saveAll(routes);
-        }
-
-        // Map existing routes by number
-        Map<Integer, Route> existingByNumber = existing.stream()
-            .collect(Collectors.toMap(Route::getNumber, r -> r));
-
-        List<Route> updatedRoutes = new ArrayList<>();
-
-        for (Route route : routes) {
-            Route existingRoute = existingByNumber.get(route.getNumber());
-            if (existingRoute == null) {
-                // New route
-                updatedRoutes.add(route);
-            } else {
-                // Update existing route
-                existingRoute.setPointValue(route.getPointValue());
-                updatedRoutes.add(existingRoute);
-            }
-        }
-
-        // Delete removed routes
-        Set<Integer> incomingNumbers = routes.stream().map(Route::getNumber).collect(Collectors.toSet());
-        List<Route> toDelete = existing.stream()
-            .filter(r -> !incomingNumbers.contains(r.getNumber()))
-            .toList();
-        routeRepo.deleteAll(toDelete);
-
-        return routeRepo.saveAll(updatedRoutes);
+        syncRoutes(comp, dtos);
+        return comp.getRoutes();
     }
+
 
 }

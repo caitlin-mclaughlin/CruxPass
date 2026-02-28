@@ -1,13 +1,13 @@
 package com.cruxpass.enums;
 
-public enum CompetitorGroup {
+public enum DefaultCompetitorGroup {
     REC,
     INTERMEDIATE,
     ADVANCED,
     OPEN,
-    JUNIOR,
-    YOUTH_A,
-    YOUTH_B,
+    YOUTH_D,
     YOUTH_C,
-    YOUTH_D
+    YOUTH_B,
+    YOUTH_A,
+    JUNIOR
 }

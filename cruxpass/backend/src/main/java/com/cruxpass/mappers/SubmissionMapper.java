@@ -13,20 +13,22 @@ import org.springframework.stereotype.Component;
 @Component
 public class SubmissionMapper {
 
-    public SubmissionResponseDto toSubmissionResponseDto(Submission submission) {
-        List<SubmittedRouteDto> routeDtos = submission.getRoutes().stream()
+    public SubmissionResponseDto toSubmissionResponseDto(Submission sub) {
+        if (sub == null) return null;
+        List<SubmittedRouteDto> routeDtos = sub.getRoutes().stream()
             .map(this::toSubmittedRouteDto)
             .toList();
 
         return new SubmissionResponseDto(
-            submission.getId(),
-            submission.getCompetition().getId(),
-            submission.getClimber().getId(),
+            sub.getId(),
+            sub.getCompetition().getId(),
+            sub.getClimber().getId(),
             routeDtos
         );
     }
 
     public SubmittedRouteDto toSubmittedRouteDto(SubmittedRoute route) {
+        if (route == null) return null;
         return new SubmittedRouteDto(
             route.getRoute().getId(),
             route.getAttempts(),
@@ -35,6 +37,7 @@ public class SubmissionMapper {
     }
 
     public SubmittedRouteResponseDto toSubmittedRouteResponseDto(SubmittedRoute route) {
+        if (route == null) return null;
         return new SubmittedRouteResponseDto(
             route.getRoute().getId(),
             route.getRoute().getNumber(),

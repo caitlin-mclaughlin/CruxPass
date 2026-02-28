@@ -36,33 +36,28 @@ public class CurrentUserService {
     }
 
     public Gym getGymFromToken(String authHeader) {
-        return gymRepo.findByEmail(extractEmail(authHeader)).orElse(null);
+        return gymRepo.findByEmailIgnoreCaseAndActiveTrueWithSeries(extractEmail(authHeader)).orElse(null);
     }
 
     public Series getSeriesFromToken(String authHeader) {
-        return seriesRepo.findByEmail(extractEmail(authHeader)).orElse(null);
+        return seriesRepo.findByEmailIgnoreCaseAndActiveTrueWithGymsAndCompetitions(extractEmail(authHeader)).orElse(null);
     }
 
     public String extractEmail(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("Auth header missing or invalid: " + authHeader);
-            return null;
-        }
+        String token = jwtUtil.extractToken(authHeader); // remove "Bearer "
 
-        String token = authHeader.substring(7); // remove "Bearer "
         if (!jwtUtil.validateToken(token)) {
             System.out.println("Invalid token: " + token);
             return null;
         }
 
         String email = jwtUtil.extractEmail(token);
-        System.out.println("Extracted email from auth header: " + email);
+        System.out.println("Extracted email from JWT: " + email);
         return email;
     }
 
     public Long getUserIdFromToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
-        String token = authHeader.substring(7);
+        String token = jwtUtil.extractToken(authHeader);
         if (!jwtUtil.validateToken(token)) return null;
         return jwtUtil.extractId(token);
     }

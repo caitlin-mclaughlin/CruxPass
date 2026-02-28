@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -35,7 +34,6 @@ public class AuthController {
     private final GymService gymService;
     private final SeriesService seriesService;
     private final JwtUtil jwtUtil;
-    private final AuthenticationManager authManager;
 
     @Autowired
     private final SeriesMapper seriesMap;
@@ -74,13 +72,11 @@ public class AuthController {
             default -> null;
         };
 
-        System.out.println("Generating token with email: " + email + " and role: " + type);
-
         String token = jwtUtil.generateToken(email, type, id);
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
-    @PostMapping("/")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest dto) {
         String id = dto.emailOrUsername();
 

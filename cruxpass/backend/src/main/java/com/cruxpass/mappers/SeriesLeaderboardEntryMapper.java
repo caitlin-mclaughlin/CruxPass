@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class SeriesLeaderboardEntryMapper {
 
     public SeriesLeaderboardEntryDto toDto(SeriesLeaderboardEntry entry) {
+        if (entry == null) return null;
         return new SeriesLeaderboardEntryDto(
             entry.getClimber().getId(),
             entry.getCompetitorGroup(),
@@ -28,6 +29,7 @@ public class SeriesLeaderboardEntryMapper {
     }
 
     public SeriesLeaderboardEntry toEntity(SeriesLeaderboardEntryDto dto, Series series, Climber climber) {
+        if (dto == null || series == null || climber == null) return null;
         SeriesLeaderboardEntry entry = new SeriesLeaderboardEntry();
         entry.setSeries(series);
         entry.setClimber(climber);

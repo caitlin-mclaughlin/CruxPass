@@ -2,11 +2,14 @@ package com.cruxpass.models;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.lang.NonNull;
 
 import com.cruxpass.enums.CompetitionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,6 +22,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -27,10 +33,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@NoArgsConstructor
 public class Series {
 
     @Id
@@ -62,9 +68,33 @@ public class Series {
     @CreatedDate
     private LocalDate createdAt;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     @JsonIgnore
-    @NonNull
     @OneToMany(mappedBy = "series")
-    private List<Competition> competitions;
+    private List<Competition> competitions = new ArrayList<>();
+
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+        name = "series_gyms",
+        joinColumns = @JoinColumn(name = "series_id"),
+        inverseJoinColumns = @JoinColumn(name = "gym_id")
+    )
+    private Set<Gym> gyms = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Series)) return false;
+        Series other = (Series) o;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }
 

@@ -2,7 +2,7 @@ package com.cruxpass.dtos.responses;
 
 import java.time.LocalDate;
 
-import com.cruxpass.enums.CompetitorGroup;
+import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 
 public record SimpleRegistrationResponseDto(
@@ -11,6 +11,6 @@ public record SimpleRegistrationResponseDto(
     String climberName,
     LocalDate climberDob,
     String climberEmail,
-    CompetitorGroup competitorGroup,
+    DefaultCompetitorGroup competitorGroup,
     Division division
 ) {}

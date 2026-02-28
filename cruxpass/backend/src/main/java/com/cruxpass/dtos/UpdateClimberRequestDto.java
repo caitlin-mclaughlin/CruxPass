@@ -1,6 +1,5 @@
-package com.cruxpass.dtos.requests;
+package com.cruxpass.dtos;
 
-import com.cruxpass.dtos.AddressDto;
 import com.cruxpass.enums.Gender;
 
 import java.time.LocalDate;
