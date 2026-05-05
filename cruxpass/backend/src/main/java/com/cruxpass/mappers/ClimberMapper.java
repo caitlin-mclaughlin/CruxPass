@@ -16,6 +16,8 @@ import com.cruxpass.dtos.UpdateClimberRequestDto;
 
 @Component
 public class ClimberMapper {
+    private static final String DEFAULT_CLIMBER_STREET = "N/A";
+    private static final String DEFAULT_CLIMBER_ZIP = "00000";
 
     public ClimberResponseDto toDto(Climber climber) {
         if (climber == null) return null;
@@ -85,14 +87,7 @@ public class ClimberMapper {
         climber.setGender(dto.gender);
         climber.setPasswordHash(passwordEncoder.encode(dto.password));
 
-        Address addr = new Address(
-            dto.address.streetAddress(),
-            dto.address.apartmentNumber(),
-            dto.address.city(),
-            dto.address.state(),
-            dto.address.zipCode()
-        );
-        climber.setAddress(addr);
+        climber.setAddress(toClimberAddress(dto.address));
         climber.setEmergencyName(dto.emergencyName);
         climber.setEmergencyPhone(dto.emergencyPhone);
         return climber;
@@ -118,8 +113,24 @@ public class ClimberMapper {
         if(!dto.username().isBlank()) climber.setUsername(dto.username());
         if(dto.dob() != null) climber.setDob(dto.dob());
         if(dto.gender() != null) climber.setGender(dto.gender());
-        if(dto.address() != null) climber.setAddress(dto.address().toEntity());
+        if(dto.address() != null) climber.setAddress(toClimberAddress(dto.address()));
         if(!dto.emergencyName().isBlank()) climber.setEmergencyName(dto.emergencyName());
         if(!dto.emergencyPhone().isBlank()) climber.setEmergencyPhone(dto.emergencyPhone());
+    }
+
+    private Address toClimberAddress(AddressDto dto) {
+        if (dto == null) return null;
+
+        final String city = dto.city() == null ? "" : dto.city();
+        final String state = dto.state() == null ? "" : dto.state();
+        final String street = (dto.streetAddress() == null || dto.streetAddress().isBlank())
+            ? DEFAULT_CLIMBER_STREET
+            : dto.streetAddress();
+        final String zip = (dto.zipCode() == null || dto.zipCode().isBlank())
+            ? DEFAULT_CLIMBER_ZIP
+            : dto.zipCode();
+        final String apartment = dto.apartmentNumber() == null ? "" : dto.apartmentNumber();
+
+        return new Address(street, apartment, city, state, zip);
     }
 }

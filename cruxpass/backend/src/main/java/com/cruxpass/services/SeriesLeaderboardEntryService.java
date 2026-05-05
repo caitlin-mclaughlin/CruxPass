@@ -4,6 +4,8 @@ import com.cruxpass.models.*;
 import com.cruxpass.dtos.RankedSubmissionDto;
 import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.enums.GroupRefType;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 import com.cruxpass.repositories.SeriesLeaderboardEntryRepository;
 import com.cruxpass.repositories.SeriesRegistrationRepository;
 import com.cruxpass.repositories.SeriesRepository;
@@ -33,6 +35,15 @@ public class SeriesLeaderboardEntryService {
      */
     @Transactional
     public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, DefaultCompetitorGroup group, Division division) {
+        GroupRefEmbeddable groupRef = new GroupRefEmbeddable(GroupRefType.DEFAULT, group, null);
+        return rebuildLeaderboard(seriesId, groupRef, division);
+    }
+
+    @Transactional
+    public List<SeriesLeaderboardEntry> rebuildLeaderboard(Long seriesId, GroupRefEmbeddable groupRef, Division division) {
+        if (groupRef == null || groupRef.getType() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing group reference");
+        }
         Series series = seriesRepo.findById(seriesId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Series not found"));
 
         // Fetch all series registrations for this group/division
@@ -47,7 +58,7 @@ public class SeriesLeaderboardEntryService {
             SeriesLeaderboardEntry entry = new SeriesLeaderboardEntry();
             entry.setSeries(series);
             entry.setClimber(reg.getClimber());
-            //entry.setCompetitorGroup(group);
+            entry.setCompetitorGroupRef(groupRef);
             entry.setDivision(division);
             entry.setTotalSeriesPoints(0);
             entry.setRawClimbingPoints(0);
@@ -60,7 +71,7 @@ public class SeriesLeaderboardEntryService {
         // Process all competitions in the series
         for (Competition comp : series.getCompetitions()) {
             // Fetch ranking for this comp/group/division
-            List<RankedSubmissionDto> rankings = submissionService.getRankingsByGroupAndDivision(comp.getId(), group, division);
+            List<RankedSubmissionDto> rankings = submissionService.getRankingsByGroupRefAndDivision(comp.getId(), groupRef, division);
 
             // Walk through full ranking list and award series points by absolute placement
             for (int i = 0; i < rankings.size(); i++) {
@@ -114,7 +125,19 @@ public class SeriesLeaderboardEntryService {
      * Fetch the leaderboard for a series, group, and division
      */
     public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, DefaultCompetitorGroup group, Division division) {
-        return leaderboardRepo.findBySeriesIdAndCompetitorGroupAndDivisionOrderByRankAsc(seriesId, group, division);
+        GroupRefEmbeddable groupRef = new GroupRefEmbeddable(GroupRefType.DEFAULT, group, null);
+        return getLeaderboard(seriesId, groupRef, division);
+    }
+
+    public List<SeriesLeaderboardEntry> getLeaderboard(Long seriesId, GroupRefEmbeddable groupRef, Division division) {
+        if (groupRef == null || groupRef.getType() == null) return Collections.emptyList();
+        return leaderboardRepo.findBySeriesIdAndGroupRefAndDivisionOrderByRankAsc(
+            seriesId,
+            groupRef.getType(),
+            groupRef.getDefaultKey(),
+            groupRef.getCustomGroupId(),
+            division
+        );
     }
 
     /**

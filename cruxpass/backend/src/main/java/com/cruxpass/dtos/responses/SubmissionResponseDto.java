@@ -7,5 +7,5 @@ public record SubmissionResponseDto(
     Long submissionId,
     Long competitionId,
     Long climberId,
-    List<SubmittedRouteDto> submittedRoutes
+    List<SubmittedRouteDto> routes
 ) {}

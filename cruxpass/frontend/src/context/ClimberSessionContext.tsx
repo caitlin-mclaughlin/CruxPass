@@ -9,15 +9,19 @@ import {
   getDependents, 
   addDependent, 
   updateDependent, 
-  removeDependent 
+  removeDependent, 
+  getCompetitionIds
 } from '@/services/climberService';
 
 interface ClimberSessionContextType {
   climber: ClimberData | null;
+  competitionIds: number[];
   dependents: DependentClimber[];
   error: Error | null;
+  climberSessionLoading: boolean;
   refreshAll: () => Promise<void>;
   refreshClimber: () => Promise<void>;
+  refreshCompetitionIds: () => Promise<void>;
   refreshDependents: () => Promise<void>;
   updateClimberProfile: (updatedData: Partial<ClimberData>) => Promise<void>;
   addDependentProfile: (data: DependentClimber) => Promise<void>;
@@ -27,10 +31,13 @@ interface ClimberSessionContextType {
 
 const ClimberSessionContext = createContext<ClimberSessionContextType>({
   climber: null,
+  competitionIds: [],
   dependents: [],
   error: null,
+  climberSessionLoading: false,
   refreshAll: async () => {},
   refreshClimber: async () => {},
+  refreshCompetitionIds: async () => {},
   refreshDependents: async () => {},
   updateClimberProfile: async () => {},
   addDependentProfile: async () => {},
@@ -41,17 +48,25 @@ const ClimberSessionContext = createContext<ClimberSessionContextType>({
 export function ClimberSessionProvider({ children }: { children: ReactNode }) {
   const { accountType, logout, token } = useAuth();
   const [climber, setClimber] = useState<ClimberData | null>(null);
+  const [competitionIds, setCompetitionIds] = useState<number[]>([]);
   const [dependents, setDependents] = useState<DependentClimber[]>([]);
   const [error, setError] = useState<Error | null>(null);
+  const [climberSessionLoading, setClimberSessionLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (accountType !== AccountType.CLIMBER || !token) return;
-    refreshClimber();
-    refreshDependents();
+    refreshAll();
   }, [accountType, token]);
 
+  async function refreshAll() {
+    await refreshClimber();
+    await refreshCompetitionIds();
+    await refreshDependents();
+  }
+  
   async function refreshClimber() {
-    setError(null);
+    setError(prev => (prev ? null : prev));
+    setClimberSessionLoading(true);
     if (accountType === AccountType.CLIMBER && token) {
       try {
         const res = await getClimberProfile();
@@ -60,17 +75,27 @@ export function ClimberSessionProvider({ children }: { children: ReactNode }) {
         logout();
         setError(err instanceof Error ? err : new Error('Unknown error'));
         console.warn('Could not fetch climber info:', err);
+      } finally {
+        setClimberSessionLoading(false);
       }
     }
   }
-  
-  async function refreshAll() {
-    await refreshClimber();
-    await refreshDependents();
+
+  async function refreshCompetitionIds() {
+    setError(prev => (prev ? null : prev));
+    if (accountType === AccountType.CLIMBER && token) {
+      try {
+        const res = await getCompetitionIds();
+        setCompetitionIds(res);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Unknown error'));
+        console.warn('Could not fetch dependents:', err);
+      }
+    }
   }
 
   async function refreshDependents() {
-    setError(null);
+    setError(prev => (prev ? null : prev));
     if (accountType === AccountType.CLIMBER && token) {
       try {
         const res = await getDependents();
@@ -83,7 +108,7 @@ export function ClimberSessionProvider({ children }: { children: ReactNode }) {
   }
 
   async function updateClimberProfile(updatedData: Partial<ClimberData>) {
-    setError(null);
+    setError(prev => (prev ? null : prev));
     try {
       await updateClimber(updatedData);
       await refreshClimber();
@@ -111,10 +136,13 @@ export function ClimberSessionProvider({ children }: { children: ReactNode }) {
   return (
     <ClimberSessionContext.Provider value={{ 
       climber,
+      competitionIds,
       dependents,
       error,
+      climberSessionLoading,
       refreshAll,
       refreshClimber,
+      refreshCompetitionIds,
       refreshDependents,
       updateClimberProfile,
       addDependentProfile,

@@ -116,6 +116,7 @@ public class CompetitorGroupService {
 
         if (dto.updated() != null) {
             for (CompetitorGroupDto u : dto.updated()) {
+                if (u.id() == null) continue;
                 updateGroup(ownerType, ownerId, u.id(), u);
             }
         }

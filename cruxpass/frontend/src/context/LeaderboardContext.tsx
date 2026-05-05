@@ -1,20 +1,21 @@
 import { createContext, useState, useContext, useEffect, ReactNode, useCallback, useMemo } from "react";
 import { Client } from "@stomp/stompjs";
-import { CompetitionSummary, LiveScoreEvent, RankedSubmission, Registration } from "@/models/domain";
+import { CompetitionEntity, HeatData, LiveScoreEvent, RankedSubmission, Registration } from "@/models/domain";
 import { getCompetition, getScoresForComp } from "@/services/leaderboardService";
-import { CompetitorGroup, Gender, GroupDivisionKey } from "@/constants/enum";
+import { DefaultCompetitorGroup, Division, GroupDivisionKey } from "@/constants/enum";
 import { PublicRegistrationDto, RankedSubmissionDto } from "@/models/dtos";
 import { getRegistrationsForCompetition } from "@/services/globalCompetitionService";
 import { useLiveScores } from "@/context/LiveScoresContext";
 import { useDebouncedCallback } from "use-debounce";
+import { getSummaryDefaultGroups, getSummaryDivisions } from "@/utils/competitionSummary";
 
 type ScoresByGroupDivision = Partial<Record<GroupDivisionKey, RankedSubmissionDto[]>>;
 
 interface LeaderboardContextType {
-  competition: CompetitionSummary | null;
+  competition: CompetitionEntity | null;
   registrations: Registration[];
   scores: ScoresByGroupDivision;
-  loading: boolean;
+  leaderboardLoading: boolean;
   error: Error | null;
   refreshCompetition: (competitionId: number) => Promise<void>;
   refreshRegistrations: (competitionId: number) => Promise<void>;
@@ -25,7 +26,7 @@ const LeaderboardContext = createContext<LeaderboardContextType>({
   competition: null,
   registrations: [],
   scores: {},
-  loading: true,
+  leaderboardLoading: true,
   error: null,
   refreshCompetition: async () => {},
   refreshRegistrations: async () => {},
@@ -33,10 +34,10 @@ const LeaderboardContext = createContext<LeaderboardContextType>({
 });
 
 export function LeaderboardProvider({ id, children }: { id?: number; children: ReactNode }) {
-  const [competition, setCompetition] = useState<CompetitionSummary | null>(null);
+  const [competition, setCompetition] = useState<CompetitionEntity | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [scores, setScores] = useState<ScoresByGroupDivision>({});
-  const [loading, setLoading] = useState(true);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { liveEvents } = useLiveScores();
   
@@ -66,15 +67,17 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
 
   // ---------------------- Refresh helpers ----------------------
   const refreshCompetition = useCallback(async (competitionId: number) => {
-    setLoading(true);
-    setError(null);
+    setLeaderboardLoading(true);
+    setError(prev => (prev ? null : prev));
     try {
       const { data } = await getCompetition(competitionId);
       setCompetition(data);
+      const groups = getSummaryDefaultGroups(data);
+      const divisions = getSummaryDivisions(data);
 
       // 1. Build promises for all group/division fetches
-      const scorePromises = data.competitorGroups.flatMap((group: CompetitorGroup) =>
-        data.divisions.map(async (division: Gender) => {
+      const scorePromises = groups.flatMap((group: DefaultCompetitorGroup) =>
+        divisions.map(async (division: Division) => {
           const res = await getScoresForComp(competitionId, group, division);
           const mapped: RankedSubmission[] = res.map((r: RankedSubmissionDto) => ({
             place: r.place,
@@ -106,13 +109,12 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
       console.error("Could not fetch competition info", err);
       setError(err instanceof Error ? err : new Error("Unknown error"));
     } finally {
-      setLoading(false);
+      setLeaderboardLoading(false);
     }
   }, []);
 
   const refreshRegistrations = useCallback(async (competitionId: number) => {
-    setLoading(true);
-    setError(null);
+    setError(prev => (prev ? null : prev));
     try {
       const res = await getRegistrationsForCompetition(competitionId);
       const data: Registration[] = res.map((r: PublicRegistrationDto) => ({
@@ -120,14 +122,15 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
         climberDob: r.climberDob,
         competitorGroup: r.competitorGroup,
         division: r.division,
+        heat: r.heat as HeatData,
+        feeamount: r.feeamount,
+        feeCurrency: r.feeCurrency,
       }))
       setRegistrations(data);
     } catch (err) {
       console.error("Could not fetch registration info", err);
       setRegistrations([]);
       setError(err instanceof Error ? err : new Error("Unknown error"));
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -169,15 +172,17 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
 
     client.onConnect = () => {
       console.log("Connected to leaderboard WebSocket");
+      const groups = getSummaryDefaultGroups(competition);
+      const divisions = getSummaryDivisions(competition);
 
-      competition.competitorGroups.forEach(group => {
-        competition.divisions.forEach(division => {
+      groups.forEach(group => {
+        divisions.forEach(division => {
           const topic = `/topic/leaderboard/${id}/${group}/${division}`;
           client.subscribe(topic, message => {
             try {
               const payload: { 
-                group: CompetitorGroup; 
-                division: Gender; 
+                group: DefaultCompetitorGroup; 
+                division: Division; 
                 leaderboard: RankedSubmissionDto[] 
               } = JSON.parse(message.body);
               const key = `${payload.group}-${payload.division}` as GroupDivisionKey;
@@ -221,12 +226,12 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
     competition,
     registrations,
     scores,
-    loading,
+    leaderboardLoading,
     error,
     refreshCompetition,
     refreshRegistrations,
     updateGroupLeaderboard,
-  }), [competition, registrations, scores, loading, error, refreshCompetition, refreshRegistrations, updateGroupLeaderboard]);
+  }), [competition, registrations, scores, leaderboardLoading, error, refreshCompetition, refreshRegistrations, updateGroupLeaderboard]);
 
   return (
     <LeaderboardContext.Provider value={contextValue}>

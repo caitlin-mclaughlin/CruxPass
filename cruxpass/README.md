@@ -39,7 +39,22 @@ docker stack deploy -c docker-compose.yml cruxpass
 docker service logs cruxpass_backend
 ```
 
+## Tear Down
+docker compose down -v --remove-orphans --rmi all
 
 ## Database
 docker exec -it f705fb495b74 psql -U postgres -d cruxpass
 (replace id with value shown by "docker ps")
+
+
+## TO DO:
+- Backend version or updatedAt field to avoid multiple fetches
+
+```
+@Version
+private Long version;
+```
+OR
+```
+private Instant updatedAt;
+```

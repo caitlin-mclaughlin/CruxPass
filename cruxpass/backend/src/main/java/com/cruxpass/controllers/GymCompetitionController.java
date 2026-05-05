@@ -2,26 +2,27 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.annotations.CurrentGym;
 import com.cruxpass.dtos.requests.CompetitionUpsertDto;
-import com.cruxpass.dtos.requests.HeatUpsertDto;
 import com.cruxpass.dtos.requests.RouteUpsertDto;
-import com.cruxpass.dtos.responses.CompetitionResponseDto;
 import com.cruxpass.dtos.responses.RegistrationResponseDto;
 import com.cruxpass.dtos.responses.ResolvedCompetitionDto;
 import com.cruxpass.dtos.responses.ResolvedHeatDto;
 import com.cruxpass.dtos.responses.RouteResponseDto;
-import com.cruxpass.mappers.CompetitionMapper;
+import com.cruxpass.dtos.responses.SubmissionResponseDto;
 import com.cruxpass.mappers.HeatMapper;
 import com.cruxpass.mappers.RegistrationMapper;
 import com.cruxpass.mappers.RouteMapper;
+import com.cruxpass.mappers.SubmissionMapper;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Heat;
 import com.cruxpass.models.Registration;
 import com.cruxpass.models.Route;
+import com.cruxpass.models.Submission;
 import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.HeatService;
 import com.cruxpass.services.RegistrationService;
 import com.cruxpass.services.RouteService;
+import com.cruxpass.services.SubmissionService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,11 +43,12 @@ public class GymCompetitionController {
     private final HeatService heatService;
     private final RegistrationService registrationService;
     private final RouteService routeService;
+    private final SubmissionService submissionService;
 
-    @Autowired private CompetitionMapper compMap;
     @Autowired private HeatMapper heatMap;
     @Autowired private RegistrationMapper regMap;
     @Autowired private RouteMapper routeMap;
+    @Autowired private SubmissionMapper subMap;
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCompetition(
@@ -62,7 +64,7 @@ public class GymCompetitionController {
     public ResponseEntity<List<ResolvedCompetitionDto>> getAllCompetitionsForGym(
         @CurrentGym Gym gym
     ) {
-        return ResponseEntity.ok(competitionService.getByGymWithHeats(gym));
+        return ResponseEntity.ok(competitionService.getDtosByGymWithHeats(gym));
     }
 
     @GetMapping("/{id}")
@@ -70,7 +72,7 @@ public class GymCompetitionController {
         @PathVariable Long id,
         @CurrentGym Gym gym
     ) {
-        return ResponseEntity.ok(competitionService.getDtoByIdWithHeats(id, gym));
+        return ResponseEntity.ok(competitionService.getDtoByIdAndGym(id, gym));
     }
 
     @PostMapping
@@ -94,32 +96,32 @@ public class GymCompetitionController {
 
     @PostMapping("/{id}/start")
     @PreAuthorize("hasRole('GYM')")
-    public ResponseEntity<CompetitionResponseDto> startCompetition(
+    public ResponseEntity<ResolvedCompetitionDto> startCompetition(
         @PathVariable Long id,
         @CurrentGym Gym gym
     ) {
-        Competition comp = competitionService.getById(id);
-        if (comp == null || !comp.getGym().getId().equals(gym.getId())) {
+        Competition comp = competitionService.getByIdAndGymId(id, gym.getId());
+        if (comp == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        Competition updated = competitionService.startCompetition(id);
-        return ResponseEntity.ok(compMap.toResponseDto(updated));
+        competitionService.startCompetition(id);
+        return ResponseEntity.ok(competitionService.getDtoByIdAndGym(id, gym));
     }
 
     @PostMapping("/{id}/stop")
     @PreAuthorize("hasRole('GYM')")
-    public ResponseEntity<CompetitionResponseDto> stopCompetition(
+    public ResponseEntity<ResolvedCompetitionDto> stopCompetition(
         @PathVariable Long id,
         @CurrentGym Gym gym
     ) {
-        Competition comp = competitionService.getById(id);
-        if (comp == null || !comp.getGym().getId().equals(gym.getId())) {
+        Competition comp = competitionService.getByIdAndGymId(id, gym.getId());
+        if (comp == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        Competition updated = competitionService.stopCompetition(id);
-        return ResponseEntity.ok(compMap.toResponseDto(updated));
+        competitionService.stopCompetition(id);
+        return ResponseEntity.ok(competitionService.getDtoByIdAndGym(id, gym));
     }
 
     @GetMapping("/{compId}/heats")
@@ -127,7 +129,7 @@ public class GymCompetitionController {
         @PathVariable Long compId,
         @CurrentGym Gym gym
     ) {
-        Competition comp = competitionService.getById(compId);
+        Competition comp = competitionService.getByIdAndGymId(compId, gym.getId());
 
         List<Heat> heats = heatService.getByCompetition(comp);
 
@@ -142,13 +144,36 @@ public class GymCompetitionController {
         @PathVariable Long compId,
         @CurrentGym Gym gym
     ) {
-        Competition comp = competitionService.getById(compId);
+        Competition comp = competitionService.getByIdAndGymId(compId, gym.getId());
 
         List<Registration> regs = registrationService.getByCompetition(comp);
 
         return ResponseEntity.ok(regs.stream()
             .map(regMap::toResponseDto)
             .toList()
+        );
+    }
+
+    @GetMapping("/{compId}/routes")
+    public ResponseEntity<List<RouteResponseDto>> getRoutes(
+        @PathVariable Long compId,
+        @CurrentGym Gym gym
+    ) {
+        competitionService.getByIdAndGymId(compId, gym.getId());
+        List<Route> routes = routeService.getByCompetitionId(compId);
+        if (routes == null) return ResponseEntity.ok(List.of());
+        return ResponseEntity.ok(routeMap.toResponseDtoList(routes));
+    }
+
+    @GetMapping("/{compId}/submissions")
+    public ResponseEntity<List<SubmissionResponseDto>> getSubmissions(
+        @PathVariable Long compId,
+        @CurrentGym Gym gym
+    ) {
+        competitionService.getByIdAndGymId(compId, gym.getId());
+        List<Submission> submissions = submissionService.getByCompetitionId(compId);
+        return ResponseEntity.ok(
+            submissions.stream().map(subMap::toSubmissionResponseDto).toList()
         );
     }
 

@@ -1,11 +1,11 @@
-import { CompetitorGroup, Gender } from "@/constants/enum";
+import { DefaultCompetitorGroup, Division } from "@/constants/enum";
 import api from "./apiService";
 import { RankedSubmissionDto } from "@/models/dtos";
 
 export async function getScoresForComp(
   competitionId: number,
-  group: CompetitorGroup,
-  division?: Gender
+  group: DefaultCompetitorGroup,
+  division?: Division
 ): Promise<RankedSubmissionDto[]> {
   const res = await api.get(`/competitions/${competitionId}/rankings`, {
     params: { group, division }

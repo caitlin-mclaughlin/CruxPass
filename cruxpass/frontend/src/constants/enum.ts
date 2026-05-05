@@ -1,21 +1,44 @@
 // enum.ts
 
+import { AgeRule } from "@/models/domain";
+
+/** AGE RULE TYPE ENUMS **/
+export type AgeRuleType = 'AGE' | 'BIRTHYEAR';
+
 /** COMPETITION ENUMS **/
+export type CompetitionStatus = 'UPCOMING' | 'LIVE' | 'FINISHED';
+
+/** COMPETITION TYPES **/
 export const COMPETITION_TYPES = ['BOULDERING', 'SPORT_CLIMBING', 'SPEED_CLIMBING'] as const;
-export const COMPETITION_FORMATS = ['MODIFIED_RED_POINT', 'JUDGED', 'OTHER'] as const;
-export const COMPETITOR_GROUPS = [
+
+// Enum string mappings for API requests
+export const CompetitionTypeMap = {
+  BOULDERING: 'Bouldering',
+  SPORT_CLIMBING: 'Sport Climbing',
+  SPEED_CLIMBING: 'Speed Climbing',  
+} as const;
+
+export type CompetitionType = typeof COMPETITION_TYPES[number];
+
+/** COMPETITION FORMATS **/
+export const COMPETITION_FORMATS = ['CLASSIC_REDPOINT', 'MODIFIED_REDPOINT', 'JUDGED', 'OTHER'] as const;
+
+export const CompetitionFormatMap = {
+  MODIFIED_REDPOINT: 'Modified Redpoint',
+  CLASSIC_REDPOINT: 'Classic Redpoint',
+  JUDGED: 'Judged',
+  OTHER: 'Other',
+} as const;
+
+export type CompetitionFormat = typeof COMPETITION_FORMATS[number];
+
+/** DEFAULT COMPETITOR GROUPS **/
+export const DEFAULT_COMPETITOR_GROUPS = [
   'REC', 'INTERMEDIATE', 'ADVANCED', 'OPEN', 'YOUTH_D',
   'YOUTH_C', 'YOUTH_B', 'YOUTH_A', 'JUNIOR'
 ] as const;
 
-// Enum string mappings for API requests
-export const CompetitionEnumMap = {
-  BOULDERING: 'Bouldering',
-  SPORT_CLIMBING: 'Sport Climbing',
-  SPEED_CLIMBING: 'Speed Climbing',
-  MODIFIED_RED_POINT: 'Modified Red Point',
-  JUDGED: 'Judged',
-  OTHER: 'Other',
+export const DefaultCompetitorGroupMap = {
   REC: 'Rec',
   INTERMEDIATE: 'Intermediate',
   ADVANCED: 'Advanced',
@@ -27,15 +50,50 @@ export const CompetitionEnumMap = {
   JUNIOR: 'Ages: 18-19',
 } as const;
 
-export type CompetitionStatus = 'UPCOMING' | 'LIVE' | 'FINISHED';
-export type CompetitionType = typeof COMPETITION_TYPES[number];
-export type CompetitionFormat = typeof COMPETITION_FORMATS[number];
-export type CompetitorGroup = typeof COMPETITOR_GROUPS[number];
-export type CompetitionEnumKey = keyof typeof CompetitionEnumMap
+export type DefaultCompetitorGroup = typeof DEFAULT_COMPETITOR_GROUPS[number];
 
-export const CompetitionLabelMap = Object.fromEntries(
-  Object.entries(CompetitionEnumMap).map(([label, value]) => [value, label])
-);
+export const DefaultGroupMeta: Record<
+  DefaultCompetitorGroup,
+  {
+    label: string;
+    ageRule?: AgeRule;
+  }
+> = {
+  REC: { label: 'Rec' },
+  INTERMEDIATE: { label: 'Intermediate' },
+  ADVANCED: { label: 'Advanced' },
+  OPEN: { label: 'Open' },
+  YOUTH_D: { label: 'Ages: 11 and Under', ageRule: { type: 'AGE', max: 11 } },
+  YOUTH_C: { label: 'Ages: 12-13', ageRule: { type: 'AGE', min: 12, max: 13 } },
+  YOUTH_B: { label: 'Ages: 14-15', ageRule: { type: 'AGE', min: 14, max: 15 } },
+  YOUTH_A: { label: 'Ages: 16-17', ageRule: { type: 'AGE', min: 16, max: 17 } },
+  JUNIOR: { label: 'Ages: 18-19', ageRule: { type: 'AGE', min: 18, max: 19 } },
+};
+
+const DefaultGroupLabelToKeyMap: Record<string, DefaultCompetitorGroup> =
+  Object.entries(DefaultGroupMeta).reduce(
+    (acc, [key, meta]) => {
+      acc[meta.label] = key as DefaultCompetitorGroup;
+      return acc;
+    },
+    {} as Record<string, DefaultCompetitorGroup>
+  );
+
+export function labelToDefaultKey(
+  label: string
+): DefaultCompetitorGroup {
+  const key = DefaultGroupLabelToKeyMap[label];
+  if (!key) {
+    throw new Error(`Unknown default competitor group label: ${label}`);
+  }
+  return key;
+}
+
+export enum ActionOptions {
+  CREATE = 'CREATE', 
+  UPDATE = 'UPDATE', 
+  DELETE = 'DELETE'
+};
 
 /** GENDER ENUMS **/
 export const DIVISION_OPTIONS = ['MALE', 'FEMALE', 'NONBINARY'] as const;
@@ -57,7 +115,7 @@ export const GenderEnumMap = {
 } as const;
 
 /** COMPETITOR GROUP - DIVISION KEY **/
-export type GroupDivisionKey = `${CompetitorGroup}-${Division}`
+export type GroupDivisionKey = `${DefaultCompetitorGroup}-${Division}`
 
 /** ROUTE GRADES **/
 export const BOULDER_GRADE = [
@@ -108,18 +166,83 @@ export const accountTypeOptions = Object.values(AccountType).map((role) => ({
 
 /** SEARCH TYPES **/
 export enum SearchType {
+  NAME = "Name",
   EMAIL = "Email",
-  PHONE = "Phone",
-  NAME = "Name"
+  PHONE = "Phone"
 }
 
 export const SearchTypeDisplay: Record<SearchType, string> = {
+  [SearchType.NAME]: "Name",
   [SearchType.EMAIL]: "Email",
-  [SearchType.PHONE]: "Phone",
-  [SearchType.NAME]: "Name"
+  [SearchType.PHONE]: "Phone"
 }
 
 export const searchTypeOptions = Object.values(SearchType).map((role) => ({
   value: role,
   label: SearchTypeDisplay[role],
 }));
+
+/** US STATES **/
+export const US_STATES = [
+  "UNSET","AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+  "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"
+] as const;
+
+export type USState = typeof US_STATES[number];
+
+export const USStateDisplay: Record<USState, string> = {
+  UNSET: "-- Select State --",
+  AL: "Alabama",
+  AK: "Alaska",
+  AZ: "Arizona",
+  AR: "Arkansas",
+  CA: "California",
+  CO: "Colorado",
+  CT: "Connecticut",
+  DE: "Delaware",
+  FL: "Florida",
+  GA: "Georgia",
+  HI: "Hawaii",
+  ID: "Idaho",
+  IL: "Illinois",
+  IN: "Indiana",
+  IA: "Iowa",
+  KS: "Kansas",
+  KY: "Kentucky",
+  LA: "Louisiana",
+  ME: "Maine",
+  MD: "Maryland",
+  MA: "Massachusetts",
+  MI: "Michigan",
+  MN: "Minnesota",
+  MS: "Mississippi",
+  MO: "Missouri",
+  MT: "Montana",
+  NE: "Nebraska",
+  NV: "Nevada",
+  NH: "New Hampshire",
+  NJ: "New Jersey",
+  NM: "New Mexico",
+  NY: "New York",
+  NC: "North Carolina",
+  ND: "North Dakota",
+  OH: "Ohio",
+  OK: "Oklahoma",
+  OR: "Oregon",
+  PA: "Pennsylvania",
+  RI: "Rhode Island",
+  SC: "South Carolina",
+  SD: "South Dakota",
+  TN: "Tennessee",
+  TX: "Texas",
+  UT: "Utah",
+  VT: "Vermont",
+  VA: "Virginia",
+  WA: "Washington",
+  WV: "West Virginia",
+  WI: "Wisconsin",
+  WY: "Wyoming",
+};

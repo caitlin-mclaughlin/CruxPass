@@ -2,10 +2,11 @@ import { ClimberData } from "@/models/domain";
 import { Input } from "@/components/ui/Input";
 import SegmentedDateInput from "@/components/ui/SegmentedDateInput";
 import CustomRadioGroup from "@/components/ui/CustomRadioGroup";
-import { formatAddress, formatPhoneNumber } from "@/utils/formatters";
+import { formatPhoneNumber } from "@/utils/formatters";
 import { formatDateFromString, makeDateChangeHandler } from "@/utils/datetime";
-import { GENDER_OPTIONS, GenderEnumMap } from "@/constants/enum";
+import { GENDER_OPTIONS, GenderEnumMap, US_STATES, USState, USStateDisplay } from "@/constants/enum";
 import { RenderInput } from "@/utils/uiRendering";
+import { EnumSelect } from "../ui/EnumSelect";
 
 interface Props {
   formData: ClimberData;
@@ -16,11 +17,10 @@ interface Props {
 export default function ClimberProfileForm({ formData, setFormData, editing }: Props) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name.startsWith("address.")) {
-      const field = name.split(".")[1];
+    if (name === "city" || name === "state") {
       setFormData((prev) => prev && ({
         ...prev,
-        address: { ...prev.address, [field]: value },
+        address: { ...prev.address, [name]: value },
       }));
     } else {
       setFormData((prev) => prev && ({ ...prev, [name]: value }));
@@ -29,31 +29,31 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
   
   return (
     <>
-      {RenderInput({
-        label: "Email:",
-        name: "email",
-        value: formData.email,
-        editing,
-        onChange: handleChange
-      })}
-      {RenderInput({
-        label: "Phone:", 
-        name: "phone",
-        value: formatPhoneNumber(formData.phone ?? ""),
-        editing,
-        onChange: handleChange
-      })}
-      {RenderInput({
-        label: "Username:",
-        name: "username",
-        value: formData.username,
-        editing,
-        onChange: handleChange
-      })}
+      <RenderInput
+        label="Email:"
+        name="email"
+        value={formData.email}
+        editing={editing}
+        onChange={handleChange}
+      />
+      <RenderInput
+        label="Phone:"
+        name="phone"
+        value={formatPhoneNumber(formData.phone ?? "")}
+        editing={editing}
+        onChange={handleChange}
+      />
+      <RenderInput
+        label="Username:"
+        name="username"
+        value={formData.username}
+        editing={editing}
+        onChange={handleChange}
+      />
 
       {/* DOB */}
       <div className="relative flex-col">
-        <div className="font-medium text-green">Date of Birth:</div>
+        <div className="font-medium font-semibold text-green">Date of Birth:</div>
         <div className="text-green">
           {editing ? (
             <div className="bg-background rounded-md">
@@ -71,7 +71,7 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
 
       {/* Gender */}
       <div className="relative flex-col">
-        <div className="font-medium text-green">Gender (Division):</div>
+        <div className="font-medium font-semibold text-green">Gender (Division):</div>
         <div className="text-green">
           {editing ? (
             <CustomRadioGroup
@@ -94,58 +94,45 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
         </div>
       </div>
 
-      {/* Address */}
+      {/* Location */}
       <div className="relative flex-col">
-        <div className="font-medium text-green">Address:</div>
+        <div className="font-medium font-semibold text-green">City & State:</div>
         <div className="text-green">
           {editing ? (
             <div className="grid grid-cols-1 gap-2">
               <Input
-                name="address.streetAddress"
-                value={formData.address?.streetAddress || ""}
-                placeholder="Street Address"
-                onChange={handleChange}
-                className="bg-background"
-              />
-              <Input
-                name="address.apartmentNumber"
-                value={formData.address?.apartmentNumber || ""}
-                placeholder="Apartment Number"
-                onChange={handleChange}
-                className="bg-background"
-              />
-              <Input
-                name="address.city"
+                name="city"
                 value={formData.address?.city || ""}
                 placeholder="City"
                 onChange={handleChange}
                 className="bg-background"
               />
-              <Input
-                name="address.state"
-                value={formData.address?.state || ""}
-                placeholder="State"
-                onChange={handleChange}
-                className="bg-background"
-              />
-              <Input
-                name="address.zipCode"
-                value={formData.address?.zipCode || ""}
-                placeholder="Zip Code"
-                onChange={handleChange}
-                className="bg-background"
+              <EnumSelect
+                labelMap={USStateDisplay}
+                options={US_STATES}
+                value={formData.address.state}
+                onChange={(val: USState) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    address: {
+                      ...prev.address,
+                      state: val,
+                    },
+                  }))
+                }} 
               />
             </div>
           ) : (
-            formData.address &&
-            formatAddress(formData.address)
-              .split("\n")
-              .map((line, idx) => <div key={idx}>{line}</div>)
+            <div>
+              {formData.address?.city && formData.address?.state
+                ? `${formData.address.city}, ${formData.address.state}`
+                : "—"}
+            </div>
           )}
         </div>
       </div>
       <div className="relative flex-col">
-        <div className="font-medium text-green">Emergency Contact:</div>
+        <div className="font-medium font-semibold text-green">Emergency Contact:</div>
         <div className="text-green">
           {editing ? (
             <div className="grid grid-cols-1 gap-2">

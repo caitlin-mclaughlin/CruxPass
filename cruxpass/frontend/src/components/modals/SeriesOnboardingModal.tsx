@@ -1,16 +1,23 @@
 import { useState } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/Dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog"
 import { Button } from "@/components/ui/Button"
 import { Textarea } from "@/components/ui/Textarea"
-import { updateSeries } from "@/services/seriesService"
 import SegmentedDateInput from "../ui/SegmentedDateInput"
+import DatePicker from "react-datepicker"
+import { useIsMobile } from "@/hooks/isMobile"
+import { Input } from "../ui/Input"
+import { Ban, Calendar, Save } from "lucide-react"
+import { SeriesData } from "@/models/domain"
+import { makeDateChangeHandler, normalizeBackendDateOrDateTime } from "@/utils/datetime"
+import { useSeriesSession } from "@/context/SeriesSessionContext"
 
-export default function SeriesOnboardingModal({ series, open, onClose }: {
-  series: any,
+export default function SeriesOnboardingModal({ open, onClose }: {
   open: boolean,
   onClose: () => void
 }) {
-  const [form, setForm] = useState({
+  const { series, updateSeriesProfile } = useSeriesSession()
+
+  const [form, setForm] = useState<Partial<SeriesData>>({
     description: series?.description ?? "",
     startDate: series?.startDate ?? "",
     endDate: series?.endDate ?? "",
@@ -22,19 +29,17 @@ export default function SeriesOnboardingModal({ series, open, onClose }: {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleDateChange = (name: string, date: Date | null) => {
-    setForm((prev) => ({ ...prev, [name]: date }))
-  }
-
   const handleSave = async () => {
     try {
-      await updateSeries(form)
+      await updateSeriesProfile(form)
       onClose()
     } catch (err) {
       console.error("Failed to update series:", err)
       alert("Could not save series details.")
     }
   }
+
+  const isMobile = useIsMobile();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -46,54 +51,63 @@ export default function SeriesOnboardingModal({ series, open, onClose }: {
           </DialogDescription>
         </DialogHeader>
 
-        <div>
-          <label className="font-semibold">Series Description (Optional)</label>
+        <div className="mt-1">
+          <span className="font-semibold">Series Description (Optional)</span>
           <Textarea
             name="description"
             placeholder="Your description"
             value={form.description}
             onChange={handleChange}
           />
-          <div className="flex gap-4 mt-4 w-full">
-            <label className="flex-1 font-semibold">Start Date</label>
-            <label className="flex-1 font-semibold">End Date</label>
-            <label className="flex-1 font-semibold">Deadline</label>
+          <div className="flex gap-2 mt-1 w-full">
+            <span className="flex-3 font-semibold">Start Date</span>
+            <span className="flex-3 font-semibold">End Date</span>
+            <span className="flex-4 font-semibold">Deadline</span>
           </div>
-          <div className="flex gap-4 w-full">
-            <div className="w-full flex-1 bg-shadow border rounded-md shadow-md">
+          <div className="flex gap-2 w-full">
+            <div className="flex-3 bg-shadow rounded-md">
               <SegmentedDateInput
                 mode="generic"
                 value={form.startDate}
-                onChange={(date) => handleDateChange("startDate", date)}
+                onChange={makeDateChangeHandler<Partial<SeriesData>>("startDate", setForm, "date")}
               />
             </div>
-            <div className="w-full flex-1 bg-shadow border rounded-md shadow-md">
+            <div className="flex-3 bg-shadow rounded-md">
               <SegmentedDateInput
                 mode="generic"
                 value={form.endDate}
-                onChange={(date) => handleDateChange("endDate", date)}
-                minDate={form.startDate ?? undefined}
+                onChange={makeDateChangeHandler<Partial<SeriesData>>("endDate", setForm, "date")}
+                minDate={normalizeBackendDateOrDateTime(form.startDate ?? "") ?? undefined}
               />
             </div>
-            <div className="w-full flex-1 bg-shadow border rounded-md shadow-md">
-              <SegmentedDateInput
-                mode="generic"
-                value={form.deadline}
-                onChange={(date) => handleDateChange("deadline", date)}
-                maxDate={form.endDate ?? undefined}
+            <div className="flex-4 bg-shadow rounded-md">
+              <DatePicker
+                selected={normalizeBackendDateOrDateTime(form.deadline ?? null)}
+                onChange={makeDateChangeHandler<Partial<SeriesData>>("deadline", setForm, "datetime")}
+                showTimeSelect={true}
+                dateFormat="Pp"
+                placeholderText="MM/DD/YYYY, hh:mm"
+                customInput={<Input />}
+                popperPlacement="bottom-start"
+                portalId={isMobile ? "datepicker-portal" : undefined}
+                popperClassName="z-[9999]"
+                popperContainer={(props) => <div {...props} />}
               />
+              <Calendar className="absolute right-1/18 top-2/3 focus-visible:outline-none" size={18} />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-4">
-          <Button className="bg-accent text-background" onClick={onClose}>
-            Skip for Now
+        <DialogFooter>
+          <Button className="bg-accent hover:bg-accentHighlight text-background" onClick={onClose}>
+            <Ban size={18} />
+            <span className="relative top-[1px]">Skip for Now</span>
           </Button>
           <Button onClick={handleSave}>
-            Save & Continue
+            <Save size={18} />
+            <span className="relative top-[1px]">Save & Continue</span>
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

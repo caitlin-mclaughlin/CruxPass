@@ -278,11 +278,11 @@ export default function AddDependentModal({ open, onClose, onSubmit, initialData
         <DialogFooter>
           <Button onClick={handleCancel} className="bg-accent text-background hover:bg-accentHighlight">
             <Ban size={18} />
-            <span>Cancel</span>
+            <span className="relative top-[1px]">Cancel</span>
           </Button>
           <Button onClick={handleSave} disabled={loading}>
             <Save size={18} />
-            <span>{loading ? "Saving..." : "Save Dependent"}</span>
+            <span className="relative top-[1px]">{loading ? "Saving..." : "Save Dependent"}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

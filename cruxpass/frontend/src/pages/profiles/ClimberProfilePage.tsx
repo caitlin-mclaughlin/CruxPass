@@ -5,14 +5,17 @@ import { ClimberData, DependentClimber } from "@/models/domain";
 import ClimberProfileForm from "@/components/forms/ClimberForm";
 import { Button } from "@/components/ui/Button";
 import AddDependentModal from "@/components/modals/AddDependentModal";
-import { Trash2, UserPen } from "lucide-react";
+import { Plus, Trash2, UserPen } from "lucide-react";
 import { GenderEnumMap } from "@/constants/enum";
 import { formatDateFromString } from "@/utils/datetime";
+import PageContainer from "@/components/PageContainer";
+import FloatingActionButton from "@/components/ui/FloatingActionButton";
 
 export default function ClimberProfilePage() {
   const {
     climber, 
-    dependents, 
+    dependents,
+    climberSessionLoading,
     addDependentProfile,
     refreshClimber,
     removeDependentProfile,
@@ -20,7 +23,6 @@ export default function ClimberProfilePage() {
   } = useClimberSession();
   const [formData, setFormData] = useState<ClimberData>();
   const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
 
   // State for editing dependents
@@ -31,7 +33,6 @@ export default function ClimberProfilePage() {
   useEffect(() => {
     if (climber) {
       setFormData(climber);
-      setLoading(false);
     }
   }, [climber]);
 
@@ -70,32 +71,34 @@ export default function ClimberProfilePage() {
   };
 
   return (
-    <div className="h-screen p-8 bg-background text-green">
+    <PageContainer>
       <h1 className="text-2xl font-bold mb-2">{formData?.name}</h1>
       <ProfileLayout
         editing={editing}
         setEditing={setEditing}
         handleSubmit={handleSubmit}
-        loading={loading}
+        loading={climberSessionLoading}
       >
-        {formData && (
-          <ClimberProfileForm
-            formData={formData}
-            setFormData={setFormData as React.Dispatch<React.SetStateAction<ClimberData>>}
-            editing={editing}
-          />
-        )}
-        
-        {/* Created At */}
-        <div className="relative flex-col">
-          <div className="font-medium text-green">User Since:</div>
-          <div className="text-green">{new Date(formData?.createdAt ?? "").toLocaleDateString()}</div>
-        </div>
+        <>
+          {formData && (
+            <ClimberProfileForm
+              formData={formData}
+              setFormData={setFormData as React.Dispatch<React.SetStateAction<ClimberData>>}
+              editing={editing}
+            />
+          )}
+          
+          {/* Created At */}
+          <div className="relative flex-col">
+            <div className="font-medium font-semibold text-green">User Since:</div>
+            <div className="text-green">{new Date(formData?.createdAt ?? "").toLocaleDateString()}</div>
+          </div>
+        </>
       </ProfileLayout>
 
       {/* Dependents Section (only if exist) */}
       {dependents.length > 0 && (
-        <div className="relative flex-col mt-5">
+        <div className="relative flex-col mt-4">
           <h2 className="text-xl font-semibold text-green mb-2">My Dependents</h2>
           <div className="grid grid-cols-3 gap-3">
             {dependents.map((dep) => (
@@ -112,7 +115,7 @@ export default function ClimberProfilePage() {
                 </div>
                 <div className="flex justify-between gap-x-3 mt-2">
                   <Button 
-                    disabled={loading}
+                    disabled={climberSessionLoading}
                     className="flex-1"
                     onClick={() => {
                       setEditingDependent(dep);
@@ -136,28 +139,27 @@ export default function ClimberProfilePage() {
         </div>
       )}
 
-      {/* Floating Add Dependent Button */}
-      <button
-        onClick={() => {
-          setEditingDependent(null);
-          setModalOpen(true);
-        }}
-        className="fixed bottom-6 right-6 px-3.5 py-2 rounded-full bg-green font-semibold text-background shadow-md flex items-center justify-center text-lg hover:bg-select transition"
-      >
-        + Add Dependent
-      </button>
-
       {/* Competitions */}
-      <div className="relative flex-col mt-5">
+      <div className="relative flex-col mt-4">
         <h2 className="text-xl font-semibold text-green mb-1">My Competitions</h2>
         <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">Register for a competition and it will show up here!</div>
       </div>
 
       {/* Badges */}
-      <div className="relative flex-col mt-5">
+      <div className="relative flex-col mt-4">
         <h2 className="text-xl font-semibold text-green mb-1">My Badges</h2>
         <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">Compete in competitions and series to earn badges!</div>
       </div>
+
+      {/* Floating Add Dependent Button */}
+      <FloatingActionButton
+        onClick={() => {
+          setEditingDependent(null);
+          setModalOpen(true);
+        }}
+        label="Add Dependent"
+        icon={<Plus size={18} />}
+      />
 
       {/* Add/Edit Modal */}
       <AddDependentModal
@@ -187,6 +189,6 @@ export default function ClimberProfilePage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

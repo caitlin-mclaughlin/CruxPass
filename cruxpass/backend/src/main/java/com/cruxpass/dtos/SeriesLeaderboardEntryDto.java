@@ -2,13 +2,12 @@ package com.cruxpass.dtos;
 
 import java.util.List;
 
-import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.cruxpass.models.CompetitionResult;
 
 public record SeriesLeaderboardEntryDto(
     Long climberId,
-    DefaultCompetitorGroup group,
+    ResolvedCompetitorGroup group,
     Division division,
     String climberName,
     int totalSeriesPoints,
@@ -18,4 +17,3 @@ public record SeriesLeaderboardEntryDto(
     List<Integer> placementCounts, // index 0 = 1st place count, etc.
     List<CompetitionResult> results
 ) {}
-

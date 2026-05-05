@@ -10,6 +10,7 @@ import com.cruxpass.mappers.ClimberMapper;
 import com.cruxpass.models.Climber;
 import com.cruxpass.security.CurrentUserService;
 import com.cruxpass.services.ClimberService;
+import com.cruxpass.services.RegistrationService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,13 +25,19 @@ public class ClimberController {
 
     private final ClimberService climberService;
     private final CurrentUserService currentUserService;
+    private final RegistrationService registrationService;
     
     @Autowired
     private ClimberMapper climberMap;
 
-    public ClimberController(ClimberService climberService, CurrentUserService currentUserService) {
+    public ClimberController(
+        ClimberService climberService,
+        CurrentUserService currentUserService,
+        RegistrationService registrationService
+    ) {
         this.climberService = climberService;
         this.currentUserService = currentUserService;
+        this.registrationService = registrationService;
     }
 
     @GetMapping("/search")
@@ -68,6 +75,13 @@ public class ClimberController {
         @CurrentClimber Climber climber
     ) {
         return ResponseEntity.ok(climberMap.toDto(climber));
+    }
+
+    @GetMapping("/me/competitionIds")
+    public ResponseEntity<List<Long>> getCurrentClimberCompetitionIds(
+        @CurrentClimber Climber climber
+    ) {
+        return ResponseEntity.ok(registrationService.getCompetitionIdsByClimberId(climber.getId()));
     }
 
     @PutMapping("/me")

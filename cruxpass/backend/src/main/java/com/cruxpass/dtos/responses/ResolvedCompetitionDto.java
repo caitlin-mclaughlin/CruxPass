@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.cruxpass.dtos.ResolvedCompetitorGroup;
 import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.PricingType;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.models.Address;
@@ -18,6 +19,10 @@ public record ResolvedCompetitionDto(
     LocalDateTime deadline,
     Set<CompetitionType> types,
     CompetitionFormat compFormat,
+    PricingType pricingType,
+    Integer flatFee,
+    String feeCurrency,
+    List<ResolvedPricingRuleDto> pricingRules,
     Set<ResolvedCompetitorGroup> selectedGroups,
     List<ResolvedHeatDto> heats,
     CompetitionStatus compStatus,

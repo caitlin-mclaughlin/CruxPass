@@ -15,7 +15,7 @@ export default function RecentComps() {
       <h2 className="text-xl font-semibold mb-2">Recent Competitions</h2>
       <ul>
         {comps.map((comp: any) => (
-          <li key={comp.id} className="border p-2 mb-2 rounded">{comp.name} — {comp.date}</li>
+          <li key={comp.id} className="border p-2 mb-2 rounded">{comp.name} — {comp.startDate}</li>
         ))}
       </ul>
     </div>

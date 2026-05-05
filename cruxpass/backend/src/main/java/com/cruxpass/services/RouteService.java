@@ -1,7 +1,6 @@
 package com.cruxpass.services;
 
 import com.cruxpass.dtos.requests.RouteUpsertDto;
-import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Route;
@@ -18,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -77,10 +78,6 @@ public class RouteService {
     ) {
         Competition comp = compRepo.findByIdAndGymId(competitionId, gym.getId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
-
-        if (comp.getCompStatus() != CompetitionStatus.UPCOMING) {
-            throw new IllegalStateException("Cannot modify routes after competition has started.");
-        }
 
         syncRoutes(comp, dtos);
         return comp.getRoutes();

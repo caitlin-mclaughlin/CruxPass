@@ -1,6 +1,5 @@
 package com.cruxpass.dtos;
 
-import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 
 public record RankedSubmissionDto(
@@ -9,6 +8,6 @@ public record RankedSubmissionDto(
     String climberName,
     int totalPoints, // sum of top 5
     int totalAttempts, // sum of top 5
-    DefaultCompetitorGroup competitorGroup,
+    ResolvedCompetitorGroup competitorGroup,
     Division division
 ) {}

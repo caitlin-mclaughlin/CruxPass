@@ -6,13 +6,17 @@ import com.cruxpass.dtos.requests.SubmissionRequestDto;
 import com.cruxpass.dtos.responses.SubmissionResponseDto;
 import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.enums.GroupRefType;
 import com.cruxpass.events.SubmissionUpdatedEvent;
+import com.cruxpass.mappers.ResolvedCompetitorGroupMapper;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.RankingInfo;
+import com.cruxpass.models.Registration;
 import com.cruxpass.models.Route;
 import com.cruxpass.models.Submission;
 import com.cruxpass.models.SubmittedRoute;
 import com.cruxpass.models.Climber;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 import com.cruxpass.repositories.SubmissionRepository;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,15 +35,21 @@ public class SubmissionService {
     
     private final SubmissionRepository submissionRepository;
     private final RouteService routeService;
+    private final RegistrationService registrationService;
+    private final ResolvedCompetitorGroupMapper resolvedGroupMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     public SubmissionService(
         SubmissionRepository submissionRepository,
         RouteService routeService,
+        RegistrationService registrationService,
+        ResolvedCompetitorGroupMapper resolvedGroupMapper,
         ApplicationEventPublisher eventPublisher
     ) {
         this.submissionRepository = submissionRepository;
         this.routeService = routeService;
+        this.registrationService = registrationService;
+        this.resolvedGroupMapper = resolvedGroupMapper;
         this.eventPublisher = eventPublisher;
     }
 
@@ -54,6 +64,10 @@ public class SubmissionService {
 
     public Submission getByCompetitionIdAndClimberId(Long compId, Long climberId) {
         return submissionRepository.findByCompetitionIdAndClimberIdWithRoutes(compId, climberId).orElse(null);
+    }
+
+    public List<Submission> getByCompetitionId(Long competitionId) {
+        return submissionRepository.findAllByCompetitionIdWithRoutes(competitionId);
     }
 
     @Transactional
@@ -71,8 +85,13 @@ public class SubmissionService {
             submission.setRoutes(new ArrayList<>());
         }
 
-        submission.setCompetitorGroup(dto.competitorGroup());
-        submission.setDivision(dto.division());
+        Registration registration = registrationService.getByClimberAndCompetition(climber, comp);
+        if (registration == null) {
+            throw new IllegalStateException("Climber is not registered for this competition.");
+        }
+        submission.setRegistration(registration);
+        submission.setCompetitorGroupRef(registration.getCompetitorGroupRef());
+        submission.setDivision(registration.getDivision());
 
         Map<Long, SubmittedRoute> routeMap = submission.getRoutes().stream()
             .collect(Collectors.toMap(sr -> sr.getRoute().getId(), sr -> sr));
@@ -163,7 +182,7 @@ public class SubmissionService {
             totalAttempts,
             points,
             attempts,
-            sub.getCompetitorGroup(),
+            sub.getCompetitorGroupRef(),
             sub.getDivision()
         );
     }
@@ -224,7 +243,7 @@ public class SubmissionService {
                     tied.climberName(),
                     tied.totalPoints(),
                     tied.totalAttempts(),
-                    tied.competitorGroup(),
+                    resolvedGroupMapper.toResolved(tied.competitorGroup()),
                     tied.division()
                 ));
             }
@@ -263,9 +282,27 @@ public class SubmissionService {
         DefaultCompetitorGroup group,
         Division division
     ) {
+        GroupRefEmbeddable groupRef = new GroupRefEmbeddable(GroupRefType.DEFAULT, group, null);
+        return getRankingsByGroupRefAndDivision(competitionId, groupRef, division);
+    }
+
+    public List<RankedSubmissionDto> getRankingsByGroupRefAndDivision(
+        Long competitionId,
+        GroupRefEmbeddable groupRef,
+        Division division
+    ) {
+        if (groupRef == null || groupRef.getType() == null) return Collections.emptyList();
+
         List<Submission> submissions = submissionRepository
-            .findByCompetitionIdAndGroupAndDivision(competitionId, group, division)
+            .findByCompetitionIdAndGroupAndDivision(
+                competitionId,
+                groupRef.getType(),
+                groupRef.getDefaultKey(),
+                groupRef.getCustomGroupId(),
+                division
+            )
             .orElse(Collections.emptyList());
+
         return rankSubmissions(submissions);
     }
 }

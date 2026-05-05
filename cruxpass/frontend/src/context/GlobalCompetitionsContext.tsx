@@ -1,12 +1,12 @@
 // context/GlobalCompetitionsContext.tsx
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { CompetitionSummary, Registration, Route } from '@/models/domain';
+import { CompetitionEntity, HeatData, Registration, Route } from '@/models/domain';
 import { getAllCompetitions, getRegistrationsForCompetition, getRoutesForCompetition } from '@/services/globalCompetitionService';
-import { CompetitionSummaryDto, PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
+import { CompetitionDto, PublicRegistrationDto, RouteResponseDto } from '@/models/dtos';
 
 interface GlobalCompetitionsContextValue {
-  competitions: CompetitionSummary[];
-  loading: boolean;
+  competitions: CompetitionEntity[];
+  globalCompsLoading: boolean;
   error: Error | null;
   refreshCompetitions: () => Promise<void>;
   getRegistrationsForComp: (competitionId: number) => Promise<Registration[]>;
@@ -15,7 +15,7 @@ interface GlobalCompetitionsContextValue {
 
 const GlobalCompetitionsContext = createContext<GlobalCompetitionsContextValue>({
   competitions: [],
-  loading: true,
+  globalCompsLoading: true,
   error: null,
   refreshCompetitions: async () => {},
   getRegistrationsForComp: async () => [],
@@ -23,40 +23,39 @@ const GlobalCompetitionsContext = createContext<GlobalCompetitionsContextValue>(
 });
 
 export function GlobalCompetitionsProvider({ children }: { children: ReactNode }) {
-  const [competitions, setCompetitions] = useState<CompetitionSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [competitions, setCompetitions] = useState<CompetitionEntity[]>([]);
+  const [globalCompsLoading, setGlobalCompsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   // stable function - no deps
   const refreshCompetitions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setGlobalCompsLoading(true);
+    setError(prev => (prev ? null : prev));
     try {
       const res = await getAllCompetitions();
-      const data: CompetitionSummary[] = res.map((c: CompetitionSummaryDto) => ({
+      const data: CompetitionEntity[] = res.map((c: CompetitionDto) => ({
         id: c.id,
         gymId: c.gymId,
         name: c.name,
-        date: c.date,
-        duration: c.duration,
+        startDate: c.startDate,
         deadline: c.deadline,
-        capacity: c.capacity,
-        types: c.types,
+        types: Array.isArray(c.types) ? c.types : [],
         compFormat: c.compFormat,
-        competitorGroups: c.competitorGroups,
-        divisions: c.divisions,
-        divisionsEnabled: c.divisionsEnabled,
+        pricingType: c.pricingType ?? 'FLAT',
+        flatFee: c.flatFee ?? 0,
+        feeCurrency: c.feeCurrency ?? 'USD',
+        pricingRules: Array.isArray(c.pricingRules) ? c.pricingRules : [],
+        selectedGroups: Array.isArray(c.selectedGroups) ? c.selectedGroups : [],
+        heats: Array.isArray(c.heats) ? c.heats : [],
         compStatus: c.compStatus,
         location: c.location,
-        hostGymName: c.hostGymName,
-        registered: c.registered,
-        registration: c.registration
+        hostGymName: c.hostGymName
       }));
       setCompetitions(data);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
-      setLoading(false);
+      setGlobalCompsLoading(false);
     }
   }, []);
 
@@ -69,6 +68,9 @@ export function GlobalCompetitionsProvider({ children }: { children: ReactNode }
         climberDob: r.climberDob,
         division: r.division,
         competitorGroup: r.competitorGroup,
+        heat: r.heat as HeatData,
+        feeamount: r.feeamount,
+        feeCurrency: r.feeCurrency,
       }));
       return data;
     } catch (err) {
@@ -101,7 +103,7 @@ export function GlobalCompetitionsProvider({ children }: { children: ReactNode }
   return (
     <GlobalCompetitionsContext.Provider value={{
       competitions,
-      loading,
+      globalCompsLoading,
       error,
       refreshCompetitions,
       getRegistrationsForComp,

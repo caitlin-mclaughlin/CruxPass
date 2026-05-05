@@ -3,13 +3,14 @@ package com.cruxpass.services;
 import com.cruxpass.dtos.GroupLeaderboardUpdateDto;
 import com.cruxpass.dtos.LiveSubmissionEventDto;
 import com.cruxpass.dtos.RankedSubmissionDto;
-import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.cruxpass.events.SubmissionUpdatedEvent;
+import com.cruxpass.mappers.ResolvedCompetitorGroupMapper;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Registration;
 import com.cruxpass.models.Submission;
 import com.cruxpass.models.SubmittedRoute;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +30,7 @@ public class LeaderboardBroadcastService {
     private final SubmissionService submissionService;
     private final RegistrationService registrationService;
     private final ClimberService climberService;
+    private final ResolvedCompetitorGroupMapper resolvedGroupMapper;
 
     @Async
     @EventListener
@@ -45,7 +47,7 @@ public class LeaderboardBroadcastService {
         Registration registration = registrationService.getByClimberIdAndCompetitionId(climberId, competitionId);
         if (registration == null) throw new IllegalStateException("Climber not registered");
 
-        broadcastGroupLeaderboard(competitionId, registration.getCompetitorGroup(), registration.getDivision());
+        broadcastGroupLeaderboard(competitionId, registration.getCompetitorGroupRef(), registration.getDivision());
     }
     
     public void handleNewSubmission(Long competitionId, Long climberId, Long routeId) {
@@ -53,7 +55,7 @@ public class LeaderboardBroadcastService {
         Registration registration = registrationService.getByClimberIdAndCompetitionId(climberId, competitionId);
         if (registration == null) throw new IllegalStateException("Climber not registered");
 
-        DefaultCompetitorGroup group = registration.getCompetitorGroup();
+        GroupRefEmbeddable groupRef = registration.getCompetitorGroupRef();
         Division division = registration.getDivision();
 
         // 2. Fetch climber info
@@ -74,7 +76,7 @@ public class LeaderboardBroadcastService {
             competitionId,
             climberId,
             climberName,
-            group,
+            resolvedGroupMapper.toResolved(groupRef),
             division,
             route.getRoute().getId(),
             route.getRoute().getNumber(),
@@ -92,22 +94,22 @@ public class LeaderboardBroadcastService {
         );
 
         // 6. Optionally still send the group leaderboard update
-        broadcastGroupLeaderboard(competitionId, group, division);
+        broadcastGroupLeaderboard(competitionId, groupRef, division);
     }
 
-    public void broadcastGroupLeaderboard(Long competitionId, DefaultCompetitorGroup group, Division division) {
+    public void broadcastGroupLeaderboard(Long competitionId, GroupRefEmbeddable groupRef, Division division) {
         List<RankedSubmissionDto> rankings =
-            submissionService.getRankingsByGroupAndDivision(competitionId, group, division);
+            submissionService.getRankingsByGroupRefAndDivision(competitionId, groupRef, division);
 
         GroupLeaderboardUpdateDto update = new GroupLeaderboardUpdateDto(
             competitionId,
-            group,
+            resolvedGroupMapper.toResolved(groupRef),
             division,
             rankings
         );
 
         messagingTemplate.convertAndSend(
-            "/topic/leaderboard/" + competitionId + "/" + group + "/" + division,
+            "/topic/leaderboard/" + competitionId + "/" + resolvedGroupMapper.toTopicToken(groupRef) + "/" + division,
             update
         );
     }

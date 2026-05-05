@@ -2,13 +2,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Input } from '@/components/ui/Input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { COMPETITION_TYPES, COMPETITION_FORMATS, COMPETITOR_GROUPS, CompetitionEnumMap, CompetitionStatus, Division, DivisionEnumMap, DIVISION_OPTIONS } from '@/constants/enum'
-import { CompetitionFormat, CompetitionType, CompetitorGroup } from '@/constants/enum'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { COMPETITION_TYPES, COMPETITION_FORMATS, DEFAULT_COMPETITOR_GROUPS, Division, DivisionEnumMap, DIVISION_OPTIONS, CompetitionTypeMap, CompetitionFormatMap, DefaultCompetitorGroupMap } from '@/constants/enum'
+import { CompetitionFormat, CompetitionType, DefaultCompetitorGroup } from '@/constants/enum'
 import DatePicker from 'react-datepicker'
 import { useEffect, useState } from 'react'
 import { parseAddress } from '@/utils/formatters'
-import { CompetitionFormPayload } from '@/models/dtos'
+import { CreateCompetitionDto } from '@/models/dtos'
 import { format } from 'date-fns'
 import { parseBackendLocal } from '@/utils/datetime'
 import { useIsMobile } from '@/hooks/isMobile'
@@ -16,18 +16,19 @@ import { useIsMobile } from '@/hooks/isMobile'
 type Props = {
   open: boolean
   onClose: () => void
-  onSubmit: (data: CompetitionFormPayload) => void
+  onSubmit: (data: CreateCompetitionDto) => void
+  gymId?: number
   gymName: string
   gymAddress: string
   initialData?: {
     name: string
-    date: string
+    startDate: string
     duration: number
     deadline: string
     capacity: number
     types: CompetitionType[]
     compFormat: CompetitionFormat
-    competitorGroups: CompetitorGroup[]
+    competitorGroups: DefaultCompetitorGroup[]
     divisions: Division[]
     divisionsEnabled: boolean
   }
@@ -41,7 +42,7 @@ type FormState = {
   capacity: number | ''
   types: CompetitionType[]
   compFormat: CompetitionFormat
-  groups: CompetitorGroup[]
+  groups: DefaultCompetitorGroup[]
   divisions: Division[]
   divisionsEnabled: boolean
 }
@@ -50,7 +51,7 @@ function buildInitialForm(data?: Props['initialData']): FormState {
   return data
     ? {
         name: data.name,
-        date: parseBackendLocal(data.date),
+        date: parseBackendLocal(data.startDate),
         duration: data.duration ?? 180, 
         deadline: parseBackendLocal(data.deadline),
         capacity: data.capacity,
@@ -75,7 +76,7 @@ function buildInitialForm(data?: Props['initialData']): FormState {
 }
 
 export default function CreateCompetitionModal(props: Props) {
-  const { open, onClose, onSubmit, gymName, gymAddress, initialData } = props;
+  const { open, onClose, onSubmit, gymId = 0, gymName, gymAddress, initialData } = props;
   const [form, setForm] = useState<FormState>(() => buildInitialForm(initialData));
   
   useEffect(() => {
@@ -83,43 +84,43 @@ export default function CreateCompetitionModal(props: Props) {
   }, [initialData, open]);
 
   const handleSubmit = async () => {
-    const { name, date, deadline, capacity, types, compFormat, groups, divisions, divisionsEnabled } = form
+    const { name, date, deadline, capacity, types, compFormat: selectedFormat, groups, divisions, divisionsEnabled } = form
 
-    if (!name || !date || !deadline || capacity === '' || !types.length || !compFormat 
+    if (!name || !date || !deadline || capacity === '' || !types.length || !selectedFormat 
       || !groups.length || (divisionsEnabled && !divisions.length)
     ) {
       alert('Please complete all fields before submitting.')
       return
     }
-    
-    const now = new Date()
-    const compStart = form.date!
-    const compEnd = new Date(compStart.getTime() + Number(form.duration))
 
-    let compStatus: CompetitionStatus
-    if (now < compStart) {
-      compStatus = 'UPCOMING'
-    } else if (now >= compStart && now <= compEnd) {
-      compStatus = 'LIVE'
-    } else {
-      compStatus = 'FINISHED'
-    }
-
-    const payload = {
-      name: name,
-      date: form.date ? format(form.date, 'yyyy-MM-dd HH:mm:ss') : null,
-      duration: form.duration,
-      deadline: form.deadline ? format(form.deadline, 'yyyy-MM-dd HH:mm:ss') : null,
-      capacity: capacity,
+    const payload: CreateCompetitionDto = {
+      gymId,
+      name: name.trim(),
+      startDate: format(form.date!, "yyyy-MM-dd'T'HH:mm:ss"),
+      deadline: format(form.deadline!, "yyyy-MM-dd'T'HH:mm:ss"),
       types: types as CompetitionType[],
-      compFormat: compFormat as CompetitionFormat,
-      competitorGroups: groups as CompetitorGroup[],
-      divisions: divisions as Division[],
-      compStatus: compStatus as CompetitionStatus,
-      location: parseAddress(gymAddress) // parse into structured fields
-    }
+      compFormat: selectedFormat as CompetitionFormat,
+      pricingType: 'FLAT',
+      flatFee: 0,
+      feeCurrency: 'USD',
+      pricingRules: [],
+      selectedGroups: groups.map(group => ({ type: 'DEFAULT', key: group })),
+      heats: [
+        {
+          heatName: undefined,
+          startTime: format(form.date!, "yyyy-MM-dd'T'HH:mm:ss"),
+          capacity: Number(capacity),
+          duration: Number(form.duration || 0),
+          groups: groups.map(group => ({ type: 'DEFAULT', key: group })),
+          divisions: divisionsEnabled ? divisions : [],
+          divisionsEnabled,
+        }
+      ],
+      hostGymName: gymName,
+      location: parseAddress(gymAddress)
+    };
 
-    onSubmit(payload as CompetitionFormPayload)
+    onSubmit(payload)
     onClose()
   }
 
@@ -152,7 +153,7 @@ export default function CreateCompetitionModal(props: Props) {
             <DatePicker
               selected={form.date}
               onChange={(date) => setForm((prev: any) => ({ ...prev, date }))}
-              showTimeSelect
+              showTimeSelect={true}
               dateFormat="Pp"
               placeholderText="Competition Date & Time"
               customInput={<Input />}
@@ -168,7 +169,7 @@ export default function CreateCompetitionModal(props: Props) {
             <DatePicker
               selected={form.deadline}
               onChange={(deadline) => setForm((prev: any) => ({ ...prev, deadline }))}
-              showTimeSelect
+              showTimeSelect={true}
               dateFormat="Pp"
               placeholderText="Registration Deadline"
               customInput={<Input />}
@@ -223,7 +224,7 @@ export default function CreateCompetitionModal(props: Props) {
                     setForm({ ...form, types: toggleArrayValue(type, form.types) })
                   }
                 />
-                <span>{CompetitionEnumMap[type]}</span>
+                <span>{CompetitionTypeMap[type]}</span>
               </div>
             ))}
           </div>
@@ -241,7 +242,7 @@ export default function CreateCompetitionModal(props: Props) {
             <SelectContent>
               {COMPETITION_FORMATS.map(f => (
                 <SelectItem key={f} value={f}>
-                  {CompetitionEnumMap[f]}
+                  {CompetitionFormatMap[f]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -251,7 +252,7 @@ export default function CreateCompetitionModal(props: Props) {
         <div className="mt-1">
           <label className="font-semibold">Competitor Groups</label>
           <div className="flex flex-wrap space-x-5 gap-2 border border-green bg-shadow px-3 py-1 rounded-md shadow-md">
-            {COMPETITOR_GROUPS.map(group => (
+            {DEFAULT_COMPETITOR_GROUPS.map(group => (
               <div key={group} className="flex items-center space-x-2">
                 <Checkbox
                   checked={form.groups.includes(group)}
@@ -259,7 +260,7 @@ export default function CreateCompetitionModal(props: Props) {
                     setForm({ ...form, groups: toggleArrayValue(group, form.groups) })
                   }
                 />
-                <span>{CompetitionEnumMap[group]}</span>
+                <span>{DefaultCompetitorGroupMap[group]}</span>
               </div>
             ))}
           </div>

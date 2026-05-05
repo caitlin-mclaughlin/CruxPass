@@ -5,12 +5,14 @@ import com.cruxpass.dtos.SeriesLeaderboardEntryDto;
 import com.cruxpass.dtos.requests.RegisterRequest;
 import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.enums.GroupRefType;
 import com.cruxpass.mappers.SeriesMapper;
 import com.cruxpass.mappers.SeriesLeaderboardEntryMapper;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Series;
 import com.cruxpass.models.SeriesLeaderboardEntry;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 import com.cruxpass.repositories.CompetitionRepository;
 import com.cruxpass.repositories.GymRepository;
 import com.cruxpass.repositories.SeriesRepository;
@@ -115,8 +117,16 @@ public class SeriesService {
     public List<SeriesLeaderboardEntryDto> getLeaderboard(Long seriesId,
                                                           DefaultCompetitorGroup group,
                                                           Division division) {
+        GroupRefEmbeddable groupRef = new GroupRefEmbeddable(GroupRefType.DEFAULT, group, null);
+        return getLeaderboard(seriesId, groupRef, division);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SeriesLeaderboardEntryDto> getLeaderboard(Long seriesId,
+                                                          GroupRefEmbeddable groupRef,
+                                                          Division division) {
         List<SeriesLeaderboardEntry> entries =
-                leaderboardService.rebuildLeaderboard(seriesId, group, division);
+                leaderboardService.rebuildLeaderboard(seriesId, groupRef, division);
 
         // sort + assign ranks
         SeriesLeaderboardUtils.assignRanks(entries);
@@ -135,7 +145,13 @@ public class SeriesService {
      */
     @Transactional
     public void updateLeaderboardAfterCompetition(Long seriesId, DefaultCompetitorGroup group, Division division) {
-        leaderboardService.rebuildLeaderboard(seriesId, group, division);
+        GroupRefEmbeddable groupRef = new GroupRefEmbeddable(GroupRefType.DEFAULT, group, null);
+        leaderboardService.rebuildLeaderboard(seriesId, groupRef, division);
+    }
+
+    @Transactional
+    public void updateLeaderboardAfterCompetition(Long seriesId, GroupRefEmbeddable groupRef, Division division) {
+        leaderboardService.rebuildLeaderboard(seriesId, groupRef, division);
     }
 
     @Transactional

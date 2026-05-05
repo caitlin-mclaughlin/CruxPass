@@ -5,6 +5,7 @@ import { RadioGroup } from '@headlessui/react'
 interface Option {
   value: string
   label: string
+  disabled?: boolean
 }
 
 interface Props {
@@ -13,10 +14,11 @@ interface Props {
   selected: string | null
   onChange: (value: any) => void
   name: string
-  invalid?: boolean // 👈 added
+  invalid?: boolean
+  orientation?: 'vertical' | 'horizontal'
 }
 
-export default function CustomRadioGroup({ label, options, selected, onChange, name, invalid = false }: Props) {
+export default function CustomRadioGroup({ label, options, selected, onChange, name, invalid = false, orientation = 'vertical' }: Props) {
   const groupId = useId()
 
   return (
@@ -31,14 +33,27 @@ export default function CustomRadioGroup({ label, options, selected, onChange, n
         </p>
       )}
 
-      <RadioGroup value={selected} onChange={onChange} name={name} className="space-y-2">
+      <RadioGroup
+        value={selected}
+        onChange={onChange}
+        name={name}
+        className={
+          orientation === 'horizontal'
+            ? 'flex flex-wrap gap-6'
+            : 'space-y-2'
+        }
+      >
         {options.map(option => (
           <RadioGroup.Option
             key={option.value}
             value={option.value}
+            disabled={option.disabled}
             className={({ checked }) =>
-              `flex items-center gap-2 cursor-pointer focus:outline-none transition
+              `flex items-center gap-2 focus:outline-none transition
                ${
+                 option.disabled
+                   ? 'text-muted cursor-not-allowed opacity-60'
+                   :
                  invalid
                    ? 'text-accent'
                    : checked
@@ -52,6 +67,9 @@ export default function CustomRadioGroup({ label, options, selected, onChange, n
                 <span
                   className={`w-4 h-4 border rounded-full flex items-center bg-background justify-center transition
                     ${
+                      option.disabled
+                        ? 'border-muted'
+                        :
                       invalid
                         ? 'border-accent'
                         : checked
@@ -67,7 +85,7 @@ export default function CustomRadioGroup({ label, options, selected, onChange, n
                     ></span>
                   )}
                 </span>
-                <span className="select-none text-sm">{option.label}</span>
+                <span className="select-none text-sm relative top-[1px]">{option.label}</span>
               </>
             )}
           </RadioGroup.Option>

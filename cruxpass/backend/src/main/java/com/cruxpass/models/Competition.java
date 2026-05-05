@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.PricingType;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
@@ -50,6 +51,15 @@ public class Competition {
     @Enumerated(EnumType.STRING)
     private CompetitionFormat compFormat;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PricingType pricingType = PricingType.FLAT;
+
+    private Integer flatFee;
+
+    @Column(nullable = false)
+    private String feeCurrency = "USD";
+
     @ElementCollection
     @CollectionTable(
         name = "competition_selected_groups",
@@ -61,6 +71,11 @@ public class Competition {
     @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("startTime ASC")
     private List<Heat> heats = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "competition", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("priority ASC, id ASC")
+    private List<PricingRule> pricingRules = new ArrayList<>();
 
     @NonNull
     @Enumerated(EnumType.STRING)

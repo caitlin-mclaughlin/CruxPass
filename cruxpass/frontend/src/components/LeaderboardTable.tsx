@@ -1,5 +1,5 @@
 // LeaderboardTable.tsx
-import { CompetitorGroup, Division } from "@/constants/enum";
+import { DefaultCompetitorGroup, Division } from "@/constants/enum";
 import { RankedSubmissionDto } from "@/models/dtos";
 import { formatGroupDivision } from "@/utils/formatters";
 import { ArrowUp } from "lucide-react";
@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 
 type LeaderboardTableProps = {
   submissions?: (RankedSubmissionDto & { movement?: "up" | "down" | "same" })[] | null;
-  group: CompetitorGroup;
+  group: DefaultCompetitorGroup;
   division: Division;
 }
 

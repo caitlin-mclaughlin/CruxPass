@@ -1,7 +1,7 @@
 package com.cruxpass.models;
 
-import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,13 +21,27 @@ public class Registration {
 
     private boolean paid;
 
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    private DefaultCompetitorGroup competitorGroup;
+    @Column(nullable = false)
+    private Integer feeamount = 0;
+
+    @Column(nullable = false)
+    private String feeCurrency = "USD";
+
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "type", column = @Column(name = "competitor_group_type", nullable = false)),
+        @AttributeOverride(name = "defaultKey", column = @Column(name = "competitor_group_default_key")),
+        @AttributeOverride(name = "customGroupId", column = @Column(name = "competitor_group_custom_id"))
+    })
+    private GroupRefEmbeddable competitorGroupRef;
 
     @NonNull
     @Enumerated(EnumType.STRING)
     Division division;
+
+    @JoinColumn(name = "heat_id")
+    @ManyToOne
+    private Heat heat;
 
     @JoinColumn(name = "climber_id", nullable = false)
     @ManyToOne

@@ -11,41 +11,39 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 
-
 public interface CompetitionRepository extends JpaRepository<Competition, Long> {
-    @Query("""
-        SELECT DISTINCT c FROM Competition c 
-        LEFT JOIN FETCH c.selectedGroups
-        LEFT JOIN FETCH c.heats h
-        LEFT JOIN FETCH h.groups
-    """)
-    List<Competition> findAllWithHeats();
 
+    // Fetch all competitions, gyms, and selected groups
+    @Query("""
+        SELECT DISTINCT c FROM Competition c 
+        LEFT JOIN FETCH c.gym
+        LEFT JOIN FETCH c.selectedGroups
+    """)
+    List<Competition> findAllBase();
+
+    // Fetch all competitions and selected groups for a gym
     @Query("""
         SELECT DISTINCT c FROM Competition c 
         LEFT JOIN FETCH c.selectedGroups
-        LEFT JOIN FETCH c.heats h
-        LEFT JOIN FETCH h.groups
         WHERE c.gym.id = :gymId
     """)
-    List<Competition> findByGymIdWithHeats(Long gymId);
+    List<Competition> findAllByGymIdBase(@Param("gymId") Long gymId);
 
-    @Query("""
-        SELECT DISTINCT c FROM Competition c 
-        LEFT JOIN FETCH c.selectedGroups
-        LEFT JOIN FETCH c.heats h
-        LEFT JOIN FETCH h.groups
-        WHERE c.id = :id
-    """)
-    Optional<Competition> findByIdWithHeats(@Param("id") Long id);
-    
     // Fetch competition and selected groups only (no heats/groups)
     @Query("""
         SELECT DISTINCT c FROM Competition c
         LEFT JOIN FETCH c.selectedGroups
         WHERE c.id = :id
     """)
-    Optional<Competition> findByIdWithSelectedGroups(@Param("id") Long id);
+    Optional<Competition> findByIdBase(@Param("id") Long id);
+
+    @Query("""
+        SELECT DISTINCT c FROM Competition c
+        LEFT JOIN FETCH c.gym
+        LEFT JOIN FETCH c.selectedGroups
+        WHERE c.id = :id
+    """)
+    Optional<Competition> findByIdWithGymBase(@Param("id") Long id);
 
     // Fetch heats separately, preserving order
     @Query("""
@@ -54,6 +52,13 @@ public interface CompetitionRepository extends JpaRepository<Competition, Long> 
         ORDER BY h.startTime ASC
     """)
     List<Heat> findHeatsByCompetitionId(@Param("competitionId") Long competitionId);
+    
+    @Query("""
+        SELECT h FROM Heat h
+        WHERE h.competition.id IN :competitionIds
+        ORDER BY h.startTime ASC
+    """)
+    List<Heat> findHeatsByCompetitionIds(@Param("competitionIds") List<Long> competitionIds);
 
     // Fetch groups for a list of heats
     @Query("""

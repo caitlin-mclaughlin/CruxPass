@@ -2,6 +2,8 @@ import { GymData } from "@/models/domain";
 import { Input } from "@/components/ui/Input";
 import { formatAddress, formatPhoneNumber } from "@/utils/formatters";
 import { RenderInput } from "@/utils/uiRendering";
+import { EnumSelect } from "../ui/EnumSelect";
+import { USStateDisplay, US_STATES, USState } from "@/constants/enum";
 
 interface Props {
   formData: GymData;
@@ -25,38 +27,38 @@ export default function GymProfileForm({ formData, setFormData, editing }: Props
   
   return (
     <>
-      {RenderInput({
-        label: "Name:", 
-        name: "name",
-        value: formData.name, 
-        editing,
-        onChange: handleChange
-      })}
-      {RenderInput({
-        label: "Email:",
-        name: "email",
-        value: formData.email,
-        editing,
-        onChange: handleChange
-      })}
-      {RenderInput({
-        label: "Phone:", 
-        name: "phone",
-        value: formatPhoneNumber(formData.phone ?? ""),
-        editing,
-        onChange: handleChange
-      })}
-      {RenderInput({
-        label: "Username:",
-        name: "username",
-        value: formData.username,
-        editing,
-        onChange: handleChange
-      })}
+      <RenderInput
+        label="Name:"
+        name="name"
+        value={formData.name}
+        editing={editing}
+        onChange={handleChange}
+      />
+      <RenderInput
+        label="Email:"
+        name="email"
+        value={formData.email}
+        editing={editing}
+        onChange={handleChange}
+      />
+      <RenderInput
+        label="Phone:"
+        name="phone"
+        value={formatPhoneNumber(formData.phone ?? "")}
+        editing={editing}
+        onChange={handleChange}
+      />
+      <RenderInput
+        label="Username:"
+        name="username"
+        value={formData.username}
+        editing={editing}
+        onChange={handleChange}
+      />
 
       {/* Address */}
       <div className="relative flex-col">
-        <div className="font-medium text-green">Address:</div>
+        <div className="font-medium font-semibold text-green">Address:</div>
         <div className="text-green">
           {editing ? (
             <div className="grid grid-cols-1 gap-2">
@@ -81,12 +83,19 @@ export default function GymProfileForm({ formData, setFormData, editing }: Props
                 onChange={handleChange}
                 className="bg-background"
               />
-              <Input
-                name="address.state"
-                value={formData.address?.state || ""}
-                placeholder="State"
-                onChange={handleChange}
-                className="bg-background"
+              <EnumSelect
+                labelMap={USStateDisplay}
+                options={US_STATES}
+                value={formData.address.state}
+                onChange={(val: USState) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    address: {
+                      ...prev.address,
+                      state: val,
+                    },
+                  }))
+                }} 
               />
               <Input
                 name="address.zipCode"

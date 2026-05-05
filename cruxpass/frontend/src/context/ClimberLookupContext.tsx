@@ -5,7 +5,7 @@ import { createContext, ReactNode, useContext, useState } from "react";
 
 interface ClimberLookupContextType {
     results: SimpleClimber[];
-    loading: boolean;
+    climberSearchLoading: boolean;
     searchClimbers: (query: string) => Promise<void>;
     getClimberDetails: (climberId: number) => Promise<SimpleClimber | null>;
     getDependents: (climberId: number) => Promise<DependentClimber[]>;
@@ -14,7 +14,7 @@ interface ClimberLookupContextType {
 
 export const ClimberLookupContext = createContext<ClimberLookupContextType>({
     results: [],
-    loading: false,
+    climberSearchLoading: false,
     searchClimbers: async () => {},
     getClimberDetails: async () => null,
     getDependents: async () => [],
@@ -23,11 +23,11 @@ export const ClimberLookupContext = createContext<ClimberLookupContextType>({
 
 export const ClimberLookupProvider = ({ children }: { children: ReactNode }) => {
   const [results, setResults] = useState<SimpleClimber[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [climberSearchLoading, setClimberSearchLoading] = useState(false);
 
   const clearSearch = async () => {
     setResults([]);
-    setLoading(false);
+    setClimberSearchLoading(false);
   }
 
   const searchClimbers = async (query: string) => {
@@ -36,7 +36,7 @@ export const ClimberLookupProvider = ({ children }: { children: ReactNode }) => 
       return;
     }
 
-    setLoading(true);
+    setClimberSearchLoading(true);
     try {
       const res = await searchClimbersByQuery(query);
       setResults(res);
@@ -44,7 +44,7 @@ export const ClimberLookupProvider = ({ children }: { children: ReactNode }) => 
       console.error("Failed to search climbers:", err);
       setResults([]);
     } finally {
-      setLoading(false);
+      setClimberSearchLoading(false);
     }
   };
 
@@ -62,7 +62,7 @@ export const ClimberLookupProvider = ({ children }: { children: ReactNode }) => 
   };
 
   return (
-    <ClimberLookupContext.Provider value={{ results, loading, searchClimbers, getClimberDetails, getDependents, clearSearch }}>
+    <ClimberLookupContext.Provider value={{ results, climberSearchLoading, searchClimbers, getClimberDetails, getDependents, clearSearch }}>
       {children}
     </ClimberLookupContext.Provider>
   );

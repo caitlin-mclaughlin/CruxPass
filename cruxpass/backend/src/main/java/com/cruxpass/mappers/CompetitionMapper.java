@@ -5,9 +5,11 @@ import com.cruxpass.dtos.requests.UpdateCompetitionDto;
 import com.cruxpass.dtos.responses.CompetitionResponseDto;
 import com.cruxpass.dtos.responses.ResolvedCompetitionDto;
 import com.cruxpass.dtos.responses.ResolvedHeatDto;
+import com.cruxpass.dtos.responses.ResolvedPricingRuleDto;
 import com.cruxpass.dtos.responses.SimpleCompetitionDto;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.models.Competition;
+import com.cruxpass.models.PricingRule;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Heat;
 import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
@@ -29,6 +31,29 @@ public class CompetitionMapper {
     private final HeatMapper heatMapper;
     private final CompetitorGroupResolver groupResolver;
 
+    private List<GroupRefEmbeddable> effectiveGroups(PricingRule rule) {
+        if (rule.getGroups() != null && !rule.getGroups().isEmpty()) {
+            return rule.getGroups().stream().toList();
+        }
+        return List.of();
+    }
+
+    private ResolvedPricingRuleDto toResolvedPricingRuleDto(PricingRule rule) {
+        if (rule == null) return null;
+        return new ResolvedPricingRuleDto(
+            rule.getId(),
+            rule.getRuleType(),
+            effectiveGroups(rule).stream()
+                .map(g -> g.toDomain())
+                .map(groupResolver::resolve)
+                .toList(),
+            rule.getMinAge(),
+            rule.getMaxAge(),
+            rule.getAmount(),
+            rule.getPriority()
+        );
+    }
+
     public ResolvedCompetitionDto toDto(Competition comp, Gym gym) {
         if (comp == null || gym == null) return null;
         return new ResolvedCompetitionDto(
@@ -39,6 +64,10 @@ public class CompetitionMapper {
             comp.getDeadline(),
             comp.getTypes(),
             comp.getCompFormat(),
+            comp.getPricingType(),
+            comp.getFlatFee(),
+            comp.getFeeCurrency(),
+            comp.getPricingRules().stream().map(this::toResolvedPricingRuleDto).toList(),
             comp.getSelectedGroups()
                 .stream()
                 .map(g -> g.toDomain())
@@ -49,6 +78,10 @@ public class CompetitionMapper {
             gym.getName(), 
             gym.getAddress()
         );
+    }
+
+    public List<ResolvedCompetitionDto> toDtoList(List<Competition> comps) {
+        return comps.stream().map(comp -> toDto(comp, comp.getGym())).toList();
     }
 
     public List<ResolvedCompetitionDto> toDtoList(List<Competition> comps, Gym gym) {
@@ -65,6 +98,10 @@ public class CompetitionMapper {
             comp.getDeadline(),
             comp.getTypes(),
             comp.getCompFormat(),
+            comp.getPricingType(),
+            comp.getFlatFee(),
+            comp.getFeeCurrency(),
+            comp.getPricingRules().stream().map(this::toResolvedPricingRuleDto).toList(),
             comp.getSelectedGroups()
                 .stream()
                 .map(g -> g.toDomain())
@@ -130,6 +167,9 @@ public class CompetitionMapper {
         comp.setDeadline(dto.deadline());
         comp.setCompFormat(dto.compFormat());
         comp.setTypes(dto.types());
+        comp.setPricingType(dto.pricingType());
+        comp.setFlatFee(dto.flatFee());
+        comp.setFeeCurrency(dto.feeCurrency());
         comp.setSelectedGroups(dto.selectedGroups()
             .stream()
             .map(GroupRefEmbeddable::fromDomain)
@@ -144,10 +184,21 @@ public class CompetitionMapper {
     public CompetitionStatus calculateStatus(Competition comp) {
         if (comp == null || comp.getStartDate() == null) return null;
         LocalDateTime now = LocalDateTime.now(ZoneId.of("America/Denver"));
-        Heat lastHeat = comp.getHeats().getLast();
         if (now.isBefore(comp.getStartDate())) return CompetitionStatus.UPCOMING;
-        else if (now.isAfter(lastHeat.getStartTime().plusMinutes(lastHeat.getDuration()))) return CompetitionStatus.FINISHED;
-        else return CompetitionStatus.LIVE;
+
+        if (comp.getHeats() == null || comp.getHeats().isEmpty()) {
+            return CompetitionStatus.LIVE;
+        }
+
+        Heat lastHeat = comp.getHeats().getLast();
+        if (lastHeat == null || lastHeat.getStartTime() == null) {
+            return CompetitionStatus.LIVE;
+        }
+
+        if (now.isAfter(lastHeat.getStartTime().plusMinutes(lastHeat.getDuration()))) {
+            return CompetitionStatus.FINISHED;
+        }
+        return CompetitionStatus.LIVE;
     }
 
 }

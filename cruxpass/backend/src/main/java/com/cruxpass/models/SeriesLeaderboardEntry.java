@@ -5,9 +5,13 @@ import java.util.List;
 
 import org.springframework.lang.NonNull;
 
-import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -36,9 +40,13 @@ public class SeriesLeaderboardEntry {
     @ManyToOne
     private Series series;
 
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    private DefaultCompetitorGroup competitorGroup;
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "type", column = @Column(name = "competitor_group_type", nullable = false)),
+        @AttributeOverride(name = "defaultKey", column = @Column(name = "competitor_group_default_key")),
+        @AttributeOverride(name = "customGroupId", column = @Column(name = "competitor_group_custom_id"))
+    })
+    private GroupRefEmbeddable competitorGroupRef;
 
     @NonNull
     @Enumerated(EnumType.STRING)

@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.springframework.lang.NonNull;
 
-import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @AllArgsConstructor
@@ -38,15 +38,23 @@ public class Submission {
     @JoinColumn(name = "competition_id", nullable = false)
     private Competition competition;
 
-    @NonNull
-    @Enumerated(EnumType.STRING)
-    private DefaultCompetitorGroup competitorGroup;
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "type", column = @Column(name = "competitor_group_type", nullable = false)),
+        @AttributeOverride(name = "defaultKey", column = @Column(name = "competitor_group_default_key")),
+        @AttributeOverride(name = "customGroupId", column = @Column(name = "competitor_group_custom_id"))
+    })
+    private GroupRefEmbeddable competitorGroupRef;
 
     private int totalPoints;
     private int totalAttempts;
 
     @Enumerated(EnumType.STRING)
     private Division division;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "registration_id")
+    private Registration registration;
 
     @JsonIgnore
     @OneToMany(

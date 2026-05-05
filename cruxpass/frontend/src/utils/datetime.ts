@@ -4,7 +4,7 @@ import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 const MT_TZ = 'America/Denver';
 
-export function parseBackendLocal(s?: string | null): Date | null {
+export function parseBackendLocal(s: string | null): Date | null {
   if (!s) return null;
   // backend sends "2025-08-17T17:00:00" (no zone)
   const normalized = s.replace(' ', 'T');
@@ -16,7 +16,7 @@ export function parseBackendLocal(s?: string | null): Date | null {
 
 // What the backend expects when you POST/PUT
 export function formatForApi(d: Date): string {
-  return formatInTimeZone(d, MT_TZ, 'yyyy-MM-dd HH:mm:ss');
+  return formatInTimeZone(d, MT_TZ, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
 // Pretty display with time included
@@ -34,6 +34,49 @@ export function formatDate(d: Date): string {
   return formatInTimeZone(d, MT_TZ, "MM/dd/yyyy");
 }
 
+interface HeatTimeFormatOptions {
+  showDate?: boolean;
+  showWeekday?: boolean;
+  timezone?: string;
+}
+
+export function formatHeatTimeRange(
+  startTime: string | null,
+  durationMinutes: number | null,
+  {
+    showDate = false,
+    showWeekday = false,
+    timezone,
+  }: HeatTimeFormatOptions = {}
+): string {
+  if (!startTime || !durationMinutes) return "Time TBD";
+
+  const start = new Date(startTime);
+
+  const end = new Date(start.getTime() + durationMinutes * 60_000);
+
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: timezone,
+  });
+
+  const dateFormatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(showWeekday && { weekday: "short" }),
+    timeZone: timezone,
+  });
+
+  const timeRange =
+    `${timeFormatter.format(start)} – ${timeFormatter.format(end)}`;
+
+  if (!showDate) return timeRange;
+
+  return `${dateFormatter.format(start)} • ${timeRange}`;
+}
+
 export function displayDateTime(s: string | null): string {
   const date = normalizeBackendDateOrDateTime(s);
   if (!date) return '—';
@@ -44,9 +87,22 @@ export function displayDateTime(s: string | null): string {
     : prettyDate(date);
 }
 
+export function displayShortDateTime (s: string | null): string {
+  const date = normalizeBackendDateOrDateTime(s);
+  if (!date) return '—';
+
+  // If input included a time component, show with time
+  return s && s.includes("T")
+    ? formatInTimeZone(date, MT_TZ, "h:mm a '–' MM/dd/yyyy")
+    : prettyDate(date);
+}
+
 // Takes either yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss and gives back a Date
 export function normalizeBackendDateOrDateTime(s: string | null): Date | null {
   if (!s) return null;
+  if(s.includes('.')) {
+    s = s.split(".")[0];
+  }
 
   if (s.includes("T")) {
     return parseBackendLocal(s); // handles datetime
@@ -61,6 +117,11 @@ export function normalizeBackendDateOrDateTime(s: string | null): Date | null {
 export function formatDateFromString(s: string | null): string {
   const date = normalizeBackendDateOrDateTime(s);
   return date ? formatDate(date) : "—";
+}
+
+export function ensureDate(d: Date | string | null): Date | null {
+  if (!d) return null;
+  return d instanceof Date ? d : new Date(d);
 }
 
 /**
@@ -86,8 +147,12 @@ export function makeDateChangeHandler<T extends object>(
             ? ""
             : mode === "date"
             ? date.toISOString().split("T")[0]
-            : date.toISOString(),
+            : formatForApi(date)
       };
     });
   };
+}
+
+export function addMinutes(date: Date, minutes: number) {
+  return new Date(date.getTime() + minutes * 60000);
 }

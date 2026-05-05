@@ -1,12 +1,15 @@
 /* global.css */
 @import "tailwindcss";
 
+:root{
+  /* sensible defaults so layout doesn't jump before hook runs */
+  --top-nav-height: 56px;    /* default header height */
+  --bottom-nav-height: 0px;  /* default bottom (if no bottom nav) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @layer base {
-  input, select, textarea {
-    color: var(--color-green) !important;
-    border-color: var(--color-green) !important;
-    @apply border rounded-md p-2 w-full;
-  }
   
   *::selection {
     background-color: var(--color-highlight) !important;
@@ -99,8 +102,8 @@
   .react-datepicker__day-name  {
     background-color: var(--color-green) !important;
     color: var(--color-background) !important;
-    border-color: var(--color-select) !important;
-    @apply rounded-md font-semibold focus:outline-none;
+    border-color: var(--color-green) !important;
+    @apply rounded-b-md font-semibold focus:outline-none;
   }
 
   .react-datepicker__navigation-icon::before {
@@ -192,18 +195,22 @@
   .react-datepicker__day--today {
     background-color: var(--color-green) !important;
     color: var(--color-background) !important;
-    @apply rounded-md;
+    outline: none !important;
+    @apply rounded-md focus-visible:outline-none rounded-md;;
   }
 
   .react-datepicker__day--today:hover {
     background-color: var(--color-select) !important;
     color: var(--color-background) !important;
+    outline: none !important;
+    @apply focus-visible:outline-none rounded-md;
   }
 
   .react-datepicker__day--selected {
     background-color: var(--color-highlight) !important;
     color: var(--color-background) !important;
-    @apply rounded-md font-semibold;
+    outline: none !important;
+    @apply rounded-md font-semibold focus-visible:outline-none;
   }
   
   .react-datepicker__year-option--selected:hover,
@@ -211,7 +218,8 @@
     background-color: var(--color-background) !important;
     color: var(--color-highlight) !important;
     border-color: var(--color-highlight) !important;
-    @apply border rounded-md font-semibold;
+    outline: none !important;
+    @apply border rounded-md font-semibold focus-visible:outline-none;
   }
 
   .react-datepicker__year-dropdown {
@@ -266,7 +274,6 @@
       display: none;
     }
   }
-
 }
 
 @layer utilities {
@@ -285,6 +292,14 @@
   input:-moz-autofill {
     box-shadow: 0 0 0px 1000px var(--color-shadow) inset !important;
     -webkit-text-fill-color: var(--color-green) !important;
+  }
+
+  .pt-nav-safe {
+    padding-top: calc(var(--top-nav-height) + var(--safe-top));
+  }
+
+  .pb-nav-safe {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
   }
 
   /* Tailwind-style custom scrollbar for AddRoutesModal */
@@ -306,6 +321,20 @@
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: content-box;
+  }
+
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  [data-radix-scroll-area-viewport] {
+    display: block !important;
+    min-width: 150px !important;
+  }
+
+  [data-radix-scroll-area-viewport] > div {
+    display: block !important;
+    min-width: 150px !important;
   }
 
 }

@@ -1,8 +1,8 @@
 // utils/ageEligibility.ts
 import { differenceInYears } from 'date-fns'
-import { CompetitorGroup } from '@/constants/enum'
+import { DefaultCompetitorGroup } from '@/constants/enum'
 
-export function isEligibleForGroup(dob: string, group: CompetitorGroup): boolean {
+export function isEligibleForGroup(dob: string, group: DefaultCompetitorGroup): boolean {
   const age = differenceInYears(new Date(), new Date(dob))
   switch (group) {
     case 'JUNIOR': return age <= 19

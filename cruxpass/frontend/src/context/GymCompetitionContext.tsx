@@ -1,41 +1,43 @@
 // context/CompetitionContext
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { CompetitionSummary, GymRegistration, Registration, Route, SubmittedRoute } from '@/models/domain'
-import { getCompetition, getRegistrationsForComp, getRoutesForComp, getSubmissionsForComp, updateCompetitionInfo, updateRegistrationsForComp, updateRoutesForComp } from '@/services/gymCompetitionService';
-import { CompetitionFormPayload, CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto } from '@/models/dtos';
+import { CompetitionEntity, GymRegistration, HeatData, Registration, Route, SubmittedRoute } from '@/models/domain'
+import { getCompetition, getHeats, getRegistrationsForComp, getRoutesForComp, getSubmissionsForComp, updateCompetitionInfo, updateRegistrationsForComp, updateRoutesForComp } from '@/services/gymCompetitionService';
+import { CompetitionDto, CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto, SubmissionResponseDto, SubmittedRouteDto, UpdateCompetitionDto } from '@/models/dtos';
 
 interface GymCompetitionContextType {
-  competition: CompetitionSummary | null;
-  registrations: GymRegistration[] | null;
+  competition: CompetitionEntity | null;
+  heats: HeatData[];
+  registrations: GymRegistration[];
   routes: Route[] | null;
-  submissions: SubmittedRoute[] | null;
-  loading: boolean;
+  submissions: SubmittedRoute[];
+  gymCompLoading: boolean;
   error: Error | null;
-  refreshAll: (gymId: number, competitionId: number) => Promise<void>;
-  refreshCompetition: (gymId: number, competitionId: number) => Promise<void>;
-  refreshRegistrations: (gymId: number, competitionId: number) => Promise<void>;
-  refreshRoutes: (gymId: number, competitionId: number) => Promise<void>;
-  refreshSubmissions: (gymId: number, competitionId: number) => Promise<void>;
-//  setCompetitionFocus: (gymId: number, competitionId: number) => Promise<void>;
-  updateCompetition: (gymId: number, competitionId: number, updatedData: CompetitionFormPayload) => Promise<void>;
-  updateRegistrations: (gymId: number, competitionId: number, updatedData: Registration[]) => Promise<void>;
-  updateRoutes: (gymId: number, competitionId: number, updatedData: RouteDto[]) => Promise<void>;
+  refreshAll: (compId: number) => Promise<void>;
+  refreshCompetition: (compId: number) => Promise<void>;
+  refreshHeats: (compId: number) => Promise<void>;
+  refreshRegistrations: (compId: number) => Promise<void>;
+  refreshRoutes: (compId: number) => Promise<void>;
+  refreshSubmissions: (compId: number) => Promise<void>;
+  updateCompetition: (compId: number, updatedData: UpdateCompetitionDto) => Promise<void>;
+  updateRegistrations: (compId: number, updatedData: Registration[]) => Promise<void>;
+  updateRoutes: (compId: number, updatedData: RouteDto[]) => Promise<void>;
   //updateSubmissions: (updatedData: Partial<SubmittedRoute[]>) => Promise<void>;
 }
 
 const GymCompetitionContext = createContext<GymCompetitionContextType>({
   competition: null,
+  heats: [],
   registrations: [],
   routes: [],
   submissions: [],
-  loading: true,
+  gymCompLoading: true,
   error: null,
   refreshAll: async () => {},
   refreshCompetition: async () => {},
+  refreshHeats: async () => {},
   refreshRegistrations: async () => {},
   refreshRoutes: async () => {},
   refreshSubmissions: async () => {},
-//  setCompetitionFocus: async () => {},
   updateCompetition: async () => {},
   updateRegistrations: async () => {},
   updateRoutes: async () => {},
@@ -43,81 +45,98 @@ const GymCompetitionContext = createContext<GymCompetitionContextType>({
 });
 
 export function GymCompetitionProvider({ id, children }: { id?: number, children: ReactNode }) {
-  const [competition, setCompetition] = useState<CompetitionSummary | null>(null);
-  const [registrations, setRegistrations] = useState<GymRegistration[] | null>(null);
+  const [competition, setCompetition] = useState<CompetitionEntity | null>(null);
+  const [heats, setHeats] = useState<HeatData[]>([]);
+  const [registrations, setRegistrations] = useState<GymRegistration[]>([]);
   const [routes, setRoutes] = useState<Route[] | null>(null);
-  const [submissions, setSubmissions] = useState<SubmittedRoute[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [submissions, setSubmissions] = useState<SubmittedRoute[]>([]);
+  const [gymCompLoading, setGymCompLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  async function refreshAll(gymId: number, competitionId: number) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    setLoading(true);
-    setError(null);
+  async function refreshAll(compId: number) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    setError(prev => (prev ? null : prev));
     try {
       await Promise.all([
-        refreshCompetition(gymId, targetId),
-        refreshRegistrations(gymId, targetId),
-        refreshRoutes(gymId, targetId),
-        //refreshSubmissions(gymId, targetId),
+        refreshCompetition(targetId),
+        //refreshHeats(targetId),
+        refreshRegistrations(targetId),
+        //refreshRoutes(targetId),
+        //refreshSubmissions(targetId),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));
-    } finally {
-      setLoading(false);
     }
   }
 
-  async function refreshCompetition(gymId: number, competitionId: number) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    setLoading(true);
-    setError(null);
+  async function refreshCompetition(compId: number) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    setGymCompLoading(true);
+    setError(prev => (prev ? null : prev));
     try {
-      const { data } = await getCompetition(gymId, targetId);
-      setCompetition(data);
+      const data = await getCompetition(targetId);
+      setCompetition(data as CompetitionEntity);
+      setHeats(data.heats as HeatData[]);
     } catch (err) {
       console.warn('Could not fetch competition info', err);
       setCompetition(null);
       setError(err as Error);
     } finally {
-      setLoading(false);
+      setGymCompLoading(false);
+    }
+  }
+  
+  async function refreshHeats(compId: number) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    setError(prev => (prev ? null : prev));
+    try {
+      const data = await getHeats(targetId);
+      setHeats(data as HeatData[]);
+      setCompetition(prev => prev && ({
+         ...prev, 
+         heats: data as HeatData[] 
+      }));
+    } catch (err) {
+      console.warn('Could not fetch heat info', err);
+      setHeats([]);
+      setError(err as Error);
     }
   }
 
-  async function refreshRegistrations(gymId: number, competitionId: number) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    setLoading(true);
-    setError(null);
+  async function refreshRegistrations(compId: number) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    setError(prev => (prev ? null : prev));
     try {
-      const res = await getRegistrationsForComp(gymId, targetId);
+      const res = await getRegistrationsForComp(targetId);
       const data: GymRegistration[] = res.map((r: CompRegistrationResponseDto) => ({
         climberName: r.climberName,
         climberDob: r.climberDob,
         climberEmail: r.climberEmail,
         competitorGroup: r.competitorGroup,
         division: r.division,
+        heat: r.heat as HeatData,
+        feeamount: r.feeamount,
+        feeCurrency: r.feeCurrency,
         paid: r.paid,
       }));
       setRegistrations(data);
     } catch (err) {
       console.warn('Could not fetch registration info', err);
-      setRegistrations(null);
+      setRegistrations([]);
       setError(err as Error);
-    } finally {
-      setLoading(false);
     }
   }
 
-  async function refreshRoutes(gymId: number, competitionId: number) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    setLoading(true);
-    setError(null);
+  async function refreshRoutes(compId: number) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    setError(prev => (prev ? null : prev));
     try {
-      const res = await getRoutesForComp(gymId, targetId);
+      const res = await getRoutesForComp(targetId);
       const data: Route[] = res.map((r: RouteResponseDto) => ({
         id: r.id,
         number: r.number,
@@ -128,71 +147,49 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
       console.warn('Could not fetch route info', err);
       setRoutes(null);
       setError(err as Error);
-    } finally {
-      setLoading(false);
     }
   }
 
-  async function refreshSubmissions(gymId: number, competitionId: number) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    setLoading(true);
-    setError(null);
+  async function refreshSubmissions(compId: number) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    setError(prev => (prev ? null : prev));
     try {
-      const res = await getSubmissionsForComp(gymId, targetId);
-      const data: SubmittedRoute[] = res.map((r: any) => ({
-        routeId: r.routeId,
-        attempts: r.attempts,
-        send: r.send,
-      }));
+      const res = await getSubmissionsForComp(targetId);
+      const data: SubmittedRoute[] = res.flatMap((submission: SubmissionResponseDto) =>
+        (submission.routes ?? []).map((route: SubmittedRouteDto) => ({
+          routeId: route.routeId,
+          attempts: route.attempts,
+          send: route.send,
+        }))
+      );
       setSubmissions(data);
     } catch (err) {
       console.warn('Could not fetch route info', err);
       setError(err as Error);
-      setSubmissions(null);
-    } finally {
-      setLoading(false);
+      setSubmissions([]);
     }
   }
 
-/*
-  async function setCompetitionFocus(gymId: number, competitionId: number) {
-    if (!competitionId || !gymId || competitionId === id) return null;
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await getCompetition(gymId, competitionId);
-      setCompetition(data);
-      setCompetitionId(competitionId);
-    } catch (err) {
-      console.warn('Could not change competition focus', err);
-      setCompetition(null);
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  }
-*/
-
-  async function updateCompetition(gymId: number, competitionId: number, updatedData: CompetitionFormPayload) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    await updateCompetitionInfo(gymId, targetId, updatedData);
-    await refreshCompetition(gymId, targetId);
+  async function updateCompetition(compId: number, updatedData: UpdateCompetitionDto) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    await updateCompetitionInfo(targetId, updatedData);
+    await refreshCompetition(targetId);
   }
 
-  async function updateRegistrations(gymId: number, competitionId: number, updatedData: Registration[]) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    await updateRegistrationsForComp(gymId, targetId, updatedData);
-    await refreshRegistrations(gymId, targetId);
+  async function updateRegistrations(compId: number, updatedData: Registration[]) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    await updateRegistrationsForComp(targetId, updatedData);
+    await refreshRegistrations(targetId);
   }
 
-  async function updateRoutes(gymId: number, competitionId: number, updatedData: RouteDto[]) {
-    const targetId = id ?? competitionId;
-    if (!targetId || !gymId) return;
-    await updateRoutesForComp(gymId, targetId, updatedData);
-    await refreshRoutes(gymId, targetId);
+  async function updateRoutes(compId: number, updatedData: RouteDto[]) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    await updateRoutesForComp(targetId, updatedData);
+    await refreshRoutes(targetId);
   }
 /*
   async function updateSubmissions(gymId: number, updatedData: Partial<SubmittedRoute[]>) {
@@ -202,7 +199,7 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
 */
   useEffect(() => {
     if (!id || !competition) return;
-    refreshAll(competition?.gymId, id);
+    refreshAll(id);
   }, [id]);
 
   if (!id) {
@@ -213,22 +210,23 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
   return (
     <GymCompetitionContext.Provider value={{ 
       competition, 
+      heats,
       registrations,
       routes, 
       submissions,
-      loading, 
+      gymCompLoading, 
       error,
       refreshAll, 
       refreshCompetition, 
+      refreshHeats, 
       refreshRegistrations,
       refreshRoutes,
       refreshSubmissions,
-//      setCompetitionFocus,
       updateCompetition,
       updateRegistrations,
       updateRoutes 
       //updateSubmissions 
-      }}>
+    }}>
       {children}
     </GymCompetitionContext.Provider>
   )

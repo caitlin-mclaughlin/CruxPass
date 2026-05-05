@@ -1,4 +1,4 @@
-import { COMPETITOR_GROUPS, CompetitionEnumMap, CompetitorGroup, Division, DivisionEnumMap, GroupDivisionKey } from '@/constants/enum'
+import { DEFAULT_COMPETITOR_GROUPS, DefaultCompetitorGroup, DefaultCompetitorGroupMap, Division, DivisionEnumMap, GroupDivisionKey } from '@/constants/enum'
 import { Address } from '@/models/domain';
 
 export function formatPhoneNumber(value: string): string {
@@ -18,12 +18,12 @@ export function stripNonDigits(str: string): string {
 }
 
 export function formatAddress(location: {
-      streetAddress: string;
-      apartmentNumber?: string;
-      city: string;
-      state: string;
-      zipCode: string;
-    } | Address): string {
+  streetAddress: string;
+  apartmentNumber?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+} | Address): string {
   if (!location) return '';
   const line1 = location.apartmentNumber
     ? `${location.streetAddress}, Apt ${location.apartmentNumber}`
@@ -32,6 +32,18 @@ export function formatAddress(location: {
   const line2 = `${location.city}, ${location.state} ${location.zipCode}`
 
   return `${line1},\n${line2}`
+}
+
+export function formatCityState(location: {
+  streetAddress: string;
+  apartmentNumber?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+} | Address): string {
+  if (!location) return '';
+
+  return `${location.city}, ${location.state}`
 }
 
 export function formatDate(date: Date): string {
@@ -65,13 +77,20 @@ export function formatDateTimePretty(isoString: string): string {
   return `${time} on ${month} ${day}, ${year}`
 }
 
-export function formatGroupsInOrder(groups: string[]): string {
-  const ordered = COMPETITOR_GROUPS.filter(competitorGroup => groups.includes(competitorGroup))
-  return ordered.map(competitorGroup => CompetitionEnumMap[competitorGroup]).join(', ')
+export function formatGroupsInOrder(groups?: string[] | null): string {
+  const safeGroups = Array.isArray(groups)
+    ? groups.filter((g): g is string => typeof g === 'string' && g.length > 0)
+    : [];
+  if (safeGroups.length === 0) return "—";
+
+  const ordered = DEFAULT_COMPETITOR_GROUPS.filter(competitorGroup => safeGroups.includes(competitorGroup))
+  return ordered.length > 0
+    ? ordered.map(competitorGroup => DefaultCompetitorGroupMap[competitorGroup]).join(', ')
+    : safeGroups.join(', ')
 }
 
-export function formatGroupDivision(group: CompetitorGroup, division: Division): string {
-  return `${DivisionEnumMap[division]}'s ${CompetitionEnumMap[group]}`
+export function formatGroupDivision(group: DefaultCompetitorGroup, division: Division): string {
+  return `${DivisionEnumMap[division]}'s ${DefaultCompetitorGroupMap[group]}`
 }
 
 export function parseAddress(address: string): Address {
@@ -87,4 +106,14 @@ export function parseAddress(address: string): Address {
     state: stateZip[0] || '',
     zipCode: stateZip[1] || ''
   }
+}
+
+export function moveItem<T>(arr: T[], from: number, to: number): T[] {
+  if (from === to) return arr;
+
+  const copy = [...arr];
+  const [item] = copy.splice(from, 1);
+  copy.splice(to, 0, item);
+
+  return copy;
 }

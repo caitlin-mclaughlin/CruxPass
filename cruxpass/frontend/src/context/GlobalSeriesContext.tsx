@@ -6,7 +6,7 @@ import { PublicSeriesDto, SeriesDto } from '@/models/dtos';
 
 interface GlobalSeriesContextValue {
   globalSeries: PublicSeries[];
-  loading: boolean;
+  globalSeriesLoading: boolean;
   error: Error | null;
   refreshSeries: () => Promise<void>;
 //  getRegistrationsForComp: (seriesId: number) => Promise<Registration[]>;
@@ -15,7 +15,7 @@ interface GlobalSeriesContextValue {
 
 const GlobalSeriesContext = createContext<GlobalSeriesContextValue>({
   globalSeries: [],
-  loading: true,
+  globalSeriesLoading: true,
   error: null,
   refreshSeries: async () => {}
 //  getRegistrationsForComp: async () => [],
@@ -24,13 +24,13 @@ const GlobalSeriesContext = createContext<GlobalSeriesContextValue>({
 
 export function GlobalSeriesProvider({ children }: { children: ReactNode }) {
   const [globalSeries, setSeries] = useState<PublicSeries[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [globalSeriesLoading, setGlobalSeriesLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   // stable function - no deps
   const refreshSeries = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setGlobalSeriesLoading(true);
+    setError(prev => (prev ? null : prev));
     try {
       const res = await getAllSeries();
       const data: PublicSeries[] = res.map((s: PublicSeriesDto) => ({
@@ -49,7 +49,7 @@ export function GlobalSeriesProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
-      setLoading(false);
+      setGlobalSeriesLoading(false);
     }
   }, []);
 /*
@@ -94,7 +94,7 @@ export function GlobalSeriesProvider({ children }: { children: ReactNode }) {
   return (
     <GlobalSeriesContext.Provider value={{
       globalSeries,
-      loading,
+      globalSeriesLoading,
       error,
       refreshSeries,
 //      getRegistrationsForComp,

@@ -7,12 +7,15 @@ import { useNavigate } from 'react-router-dom'
 import { EnumSelect } from '@/components/ui/EnumSelect'
 import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
-import { AccountType, AccountTypeDisplay, Gender, GENDER_OPTIONS, GenderEnumMap } from '@/constants/enum'
+import { AccountType, AccountTypeDisplay, Gender, GENDER_OPTIONS, GenderEnumMap, US_STATES, USState, USStateDisplay } from '@/constants/enum'
 import SegmentedDateInput from '@/components/ui/SegmentedDateInput'
 import { useSeriesSession } from '@/context/SeriesSessionContext'
 import logo from '@/assets/logo_transparent.png'
 import { PasswordInput } from '@/utils/uiRendering'
 import { Button } from '@/components/ui/Button'
+import PageContainer from '@/components/PageContainer'
+import { Select, SelectItem } from '@/components/ui/Select'
+import { Address, ClimberLocation } from '@/models/domain'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -32,7 +35,7 @@ export default function Login() {
       streetAddress: "",
       apartmentNumber: "",
       city: "",
-      state: "",
+      state: "UNSET" as USState,
       zipCode: ""
     },
     emergencyName: "",
@@ -46,7 +49,7 @@ export default function Login() {
   const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    if (token) navigate("/dashboard")
+    if (token) navigate("/")
   }, [token, navigate])
 
   useEffect(() => {
@@ -72,6 +75,8 @@ export default function Login() {
         ...prev,
         address: { ...prev.address, [key]: value }
       }));
+    } else if (name === "city" || name === "state") {
+      setFormData(prev => ({ ...prev, [name]: value }));
     } else if (name === "phone" || name === "emergencyPhone") {
       setFormData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }));
     } else {
@@ -97,7 +102,7 @@ export default function Login() {
     if (formData.accountType === AccountType.CLIMBER) {
       return [
         "name", "email", "phone", "password", "confirmPassword", "dob", "gender",
-        "address.streetAddress", "address.city", "address.state", "address.zipCode"
+        "address.city", "address.state"
       ];
     } else if (formData.accountType === AccountType.GYM) {
       return [
@@ -167,7 +172,10 @@ export default function Login() {
             dob: formData.dob?.toISOString().split('T')[0],
             gender: formData.gender,
             password: formData.password,
-            address: formData.address,
+            address: {
+              city: formData.address.city.trim(),
+              state: formData.address.state,
+            } as ClimberLocation,
             emergencyName: formData.emergencyName,
             emergencyPhone: stripNonDigits(formData.emergencyPhone)
           });
@@ -179,7 +187,7 @@ export default function Login() {
             username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
             phone: stripNonDigits(formData.phone),
             password: formData.password,
-            address: formData.address
+            address: formData.address as Address
           });
         } else {
           // SERIES registration
@@ -204,7 +212,7 @@ export default function Login() {
       } else {
         await refreshSeries()
       }
-      navigate("/dashboard")
+      navigate("/")
 
     } catch (err: any) {
       console.error("Login error:", err.response?.data)
@@ -219,9 +227,10 @@ export default function Login() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-background">
-      <div className="flex flex-col items-center w-full overflow-y-auto scrollbar-thin-green p-4 pb-4">
+    <PageContainer>
+      <div className="h-full w-full flex flex-col items-center justify-center pb-6">
         <img src={logo} alt="CruxPass Logo" className="h-75 w-auto " />
+        <div className={`w-full max-w-lg flex flex-col items-center max-w-lg overflow-y-auto scrollbar-thin-green scroll-smooth px-4 ${isCreating ? 'h-full' : ''}`}>
         <h1 className="text-green text-2xl font-bold mb-2" >
           {isCreating ? "Create Account" : "Login"}
         </h1>
@@ -239,13 +248,13 @@ export default function Login() {
                     ...prev,
                     accountType: val,
                     ...(val === AccountType.GYM
-                      ? { dob: null, gender: null }
+                      ? { dob: null, gender: null, city: "", state: "UNSET" as USState }
                       : val === AccountType.SERIES
-                      ? { dob: null, gender: null, phone: "", address: {
+                      ? { dob: null, gender: null, city: "", state: "", phone: "", address: {
                           streetAddress: "",
                           apartmentNumber: "",
                           city: "",
-                          state: "",
+                          state: "UNSET" as USState,
                           zipCode: ""
                         }}
                       : {}
@@ -312,6 +321,33 @@ export default function Login() {
                       }}
                     />
                   </div>
+                  <div className="space-y-3 mt-3">
+                    <label className="font-medium text-green" >
+                      City & State:
+                    </label>
+                    <Input
+                      name="city"
+                      value={formData.address.city}
+                      onChange={handleChange}
+                      placeholder="City"
+                      required
+                    />
+                    <EnumSelect
+                      labelMap={USStateDisplay}
+                      options={US_STATES}
+                      value={formData.address.state}
+                      onChange={(val: USState) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          address: {
+                            ...prev.address,
+                            state: val,
+                          },
+                        }))
+                      }} 
+                    />
+                  </div>
+
                   {/* Emergency Contact Name and Phone */}
                   <div className="space-y-3 mt-3 mb-1 ">
                     <label className="font-medium text-green" >
@@ -323,7 +359,7 @@ export default function Login() {
                 </div>
               )}
 
-              {formData.accountType !== AccountType.SERIES && (
+              {formData.accountType === AccountType.GYM && (
                 <>
                   <label htmlFor="address" className="mt-3 mb-1 font-medium text-green" >
                     Address:
@@ -331,7 +367,20 @@ export default function Login() {
                   <Input name="address.streetAddress" value={formData.address.streetAddress} onChange={handleChange} placeholder="Street Address" required />
                   <Input name="address.apartmentNumber" value={formData.address.apartmentNumber} onChange={handleChange} placeholder="Apartment (optional)" />
                   <Input name="address.city" value={formData.address.city} onChange={handleChange} placeholder="City" required />
-                  <Input name="address.state" value={formData.address.state} onChange={handleChange} placeholder="State" required />
+                  <EnumSelect
+                    labelMap={USStateDisplay}
+                    options={US_STATES}
+                    value={formData.address.state}
+                    onChange={(val: USState) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        address: {
+                          ...prev.address,
+                          state: val,
+                        },
+                      }))
+                    }} 
+                  />
                   <Input name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} placeholder="Zip Code" required />
                 </>
               )}
@@ -370,7 +419,7 @@ export default function Login() {
             type="button"
             onClick={() => {
               skipLogin()
-              navigate("/dashboard")
+              navigate("/")
             }}
             className="text-green underline hover:text-select"
           >
@@ -378,6 +427,7 @@ export default function Login() {
           </button>
         </form>
       </div>
-    </div>
+      </div>
+    </PageContainer>
   )
 }

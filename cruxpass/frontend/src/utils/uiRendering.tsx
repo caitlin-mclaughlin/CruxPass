@@ -14,7 +14,7 @@ interface Props {
 export function RenderInput({ label, name, value, placeholder, editing, onChange }: Props) {
   return (
     <div className="flex-col relative">
-      <div className="flex-1 font-medium text-green">{label}</div>
+      <div className="flex-1 font-medium font-semibold text-green">{label}</div>
       <div className="flex-1 text-green">
         {editing ? (
           <Input

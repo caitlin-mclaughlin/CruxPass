@@ -1,14 +1,18 @@
 package com.cruxpass.services;
 import com.cruxpass.dtos.HeatGroupProjection;
 import com.cruxpass.dtos.requests.CompetitionUpsertDto;
+import com.cruxpass.dtos.requests.PricingRuleUpsertDto;
 import com.cruxpass.dtos.requests.HeatUpsertDto;
 import com.cruxpass.dtos.requests.UpdateCompetitionDto;
 import com.cruxpass.dtos.responses.ResolvedCompetitionDto;
 import com.cruxpass.dtos.responses.ResolvedHeatDto;
+import com.cruxpass.enums.PricingRuleType;
+import com.cruxpass.enums.PricingType;
 import com.cruxpass.enums.CompetitionStatus;
 import com.cruxpass.mappers.CompetitionMapper;
 import com.cruxpass.mappers.HeatMapper;
 import com.cruxpass.models.Competition;
+import com.cruxpass.models.PricingRule;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Heat;
 import com.cruxpass.models.Series;
@@ -42,27 +46,78 @@ public class CompetitionService {
     private final CompetitionMapper compMap;
     private final HeatMapper heatMap;
 
-    public List<Competition> getByGymId(Long gymId) {
-        return competitionRepo.findByGymId(gymId);
+    private Map<Long, Set<GroupRefEmbeddable>> mapGroupsByHeatId(List<Heat> heats) {
+        if (heats.isEmpty()) return Map.of();
+
+        List<Long> heatIds = heats.stream().map(Heat::getId).toList();
+        List<HeatGroupProjection> projections = competitionRepo.findGroupsByHeatIds(heatIds);
+
+        Map<Long, Set<GroupRefEmbeddable>> groupsByHeatId = new HashMap<>();
+        for (HeatGroupProjection row : projections) {
+            groupsByHeatId
+                .computeIfAbsent(row.heatId(), k -> new HashSet<>())
+                .add(row.group());
+        }
+        return groupsByHeatId;
     }
 
     @Transactional(readOnly = true)
-    public List<ResolvedCompetitionDto> getByGymWithHeats(Gym gym) {
-        List<Competition> comps = competitionRepo.findByGymIdWithHeats(gym.getId());
-        return compMap.toDtoList(comps, gym);
-    }
-    
-    public List<Competition> getAll() {
-        return competitionRepo.findAll();
-    }
-    
-    public List<Competition> getAllWithHeats() {
-        return competitionRepo.findAllWithHeats();
-    }
+    public List<ResolvedCompetitionDto> getDtosByGymWithHeats(Gym gym) {
+        List<Competition> comps = competitionRepo.findAllByGymIdBase(gym.getId());
+        if (comps.isEmpty()) return List.of();
 
-    public Competition getById(Long id) {
-        return competitionRepo.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        List<Long> compIds = comps.stream()
+            .map(Competition::getId)
+            .toList();
+
+        List<Heat> heats = competitionRepo.findHeatsByCompetitionIds(compIds);
+
+        Map<Long, List<Heat>> heatsByCompId = heats.stream()
+            .collect(Collectors.groupingBy(h -> h.getCompetition().getId()));
+
+        Map<Long, Set<GroupRefEmbeddable>> groupsByHeatId = mapGroupsByHeatId(heats);
+
+        return comps.stream()
+            .map(comp -> {
+                List<Heat> compHeats =
+                    heatsByCompId.getOrDefault(comp.getId(), List.of());
+
+                List<ResolvedHeatDto> heatDtos =
+                    heatMap.toDtoListWithGroups(compHeats, groupsByHeatId);
+
+                return compMap.toDtoWithHeats(comp, heatDtos, comp.getGym());
+            })
+            .toList();
+    }
+    
+    @Transactional(readOnly = true)
+    public List<ResolvedCompetitionDto> getAllDtos() {
+
+        List<Competition> comps = competitionRepo.findAllBase();
+        if (comps.isEmpty()) return List.of();
+
+        List<Long> compIds = comps.stream()
+            .map(Competition::getId)
+            .toList();
+
+        List<Heat> heats = competitionRepo.findHeatsByCompetitionIds(compIds);
+
+        Map<Long, List<Heat>> heatsByCompId = heats.stream()
+            .collect(Collectors.groupingBy(h -> h.getCompetition().getId()));
+
+        Map<Long, Set<GroupRefEmbeddable>> groupsByHeatId = mapGroupsByHeatId(heats);
+
+        return comps.stream()
+            .map(comp -> {
+                List<Heat> compHeats =
+                    heatsByCompId.getOrDefault(comp.getId(), List.of());
+
+                List<ResolvedHeatDto> heatDtos =
+                    heatMap.toDtoListWithGroups(compHeats, groupsByHeatId);
+
+                return compMap.toDtoWithHeats(comp, heatDtos, comp.getGym());
+            })
+            .toList();
     }
 
     public Competition getByIdAndGymId(Long id, Long gymId) {
@@ -75,33 +130,48 @@ public class CompetitionService {
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    public Competition getByIdWithHeats(Long id) {
-        return competitionRepo.findByIdWithHeats(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    }
-
     @Transactional(readOnly = true)
-    public ResolvedCompetitionDto getDtoByIdWithHeats(Long id, Gym gym) {
-        // Fetch comp
-        Competition comp = competitionRepo.findByIdWithSelectedGroups(id).orElseThrow(
+    public ResolvedCompetitionDto getDtoByIdAndGym(Long id, Gym gym) {
+        Competition comp = competitionRepo.findByIdAndGymId(id, gym.getId()).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         // Fetch heats
         List<Heat> heats = competitionRepo.findHeatsByCompetitionId(id);
 
-        // Fetch groups for heats
-        List<HeatGroupProjection> projections = competitionRepo.findGroupsByHeatIds(
-            heats.stream().map(Heat::getId).toList());
-
-        // Map heatId -> Set<GroupRefEmbeddable>
-        Map<Long, Set<GroupRefEmbeddable>> groupsByHeatId = new HashMap<>();
-        for (HeatGroupProjection row : projections) {
-            groupsByHeatId.computeIfAbsent(row.heatId(), k -> new HashSet<>()).add(row.group());
-        }
+        Map<Long, Set<GroupRefEmbeddable>> groupsByHeatId = mapGroupsByHeatId(heats);
 
         List<ResolvedHeatDto> heatDtos = heatMap.toDtoListWithGroups(heats, groupsByHeatId);
 
         return compMap.toDtoWithHeats(comp, heatDtos, gym);
+    }
+
+    @Transactional(readOnly = true)
+    public ResolvedCompetitionDto getDtoById(Long id) {
+        // Fetch comp
+        Competition comp = competitionRepo.findByIdWithGymBase(id).orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // Fetch heats
+        List<Heat> heats = competitionRepo.findHeatsByCompetitionId(id);
+
+        Map<Long, Set<GroupRefEmbeddable>> groupsByHeatId = mapGroupsByHeatId(heats);
+
+        List<ResolvedHeatDto> heatDtos = heatMap.toDtoListWithGroups(heats, groupsByHeatId);
+
+        return compMap.toDtoWithHeats(comp, heatDtos, comp.getGym());
+    }
+
+    @Transactional(readOnly = true)
+    public Competition getById(Long id) {
+        return competitionRepo.findById(id).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public Competition getByIdWithHeats(Long id) {
+        Competition comp = competitionRepo.findByIdWithGymBase(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        comp.setHeats(heatService.getByCompetition(comp));
+        return comp;
     }
 
     private void syncSelectedGroups(
@@ -172,7 +242,118 @@ public class CompetitionService {
         comp.setCompFormat(dto.compFormat());
 
         syncSelectedGroups(comp, dto.selectedGroups(), gym, series);
+        syncPricing(comp, dto, gym, series);
         syncHeats(comp, dto.heats(), gym, series);
+        comp.setCompStatus(compMap.calculateStatus(comp));
+    }
+
+    private void validatePricing(CompetitionUpsertDto dto) {
+        if (dto.pricingType() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pricing type is required.");
+        }
+
+        if (dto.feeCurrency() == null || dto.feeCurrency().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fee currency is required.");
+        }
+
+        if (dto.pricingType() == PricingType.FLAT) {
+            if (dto.flatFee() == null || dto.flatFee() < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Flat fee must be a non-negative amount.");
+            }
+            return;
+        }
+
+        if (dto.pricingRules() == null || dto.pricingRules().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pricing rules are required.");
+        }
+    }
+
+    private void syncPricing(
+        Competition comp,
+        CompetitionUpsertDto dto,
+        Gym gym,
+        Series series
+    ) {
+        validatePricing(dto);
+
+        comp.setPricingType(dto.pricingType());
+        comp.setFeeCurrency(dto.feeCurrency().trim().toUpperCase());
+        comp.setFlatFee(dto.pricingType() == PricingType.FLAT ? dto.flatFee() : null);
+
+        List<PricingRuleUpsertDto> rulesDto = dto.pricingRules() == null ? List.of() : dto.pricingRules();
+
+        if (dto.pricingType() == PricingType.FLAT) {
+            comp.getPricingRules().clear();
+            return;
+        }
+
+        Map<Long, PricingRule> existing =
+            comp.getPricingRules().stream()
+                .filter(r -> r.getId() != null)
+                .collect(Collectors.toMap(PricingRule::getId, r -> r));
+
+        List<PricingRule> newRules = new ArrayList<>();
+
+        for (PricingRuleUpsertDto ruleDto : rulesDto) {
+            PricingRule rule;
+
+            if (ruleDto.id() != null) {
+                rule = existing.remove(ruleDto.id());
+                if (rule == null) {
+                    throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Pricing rule does not belong to this competition: " + ruleDto.id()
+                    );
+                }
+            } else {
+                rule = new PricingRule();
+                rule.setCompetition(comp);
+            }
+
+            rule.setRuleType(ruleDto.ruleType());
+            rule.setAmount(ruleDto.amount());
+            rule.setPriority(ruleDto.priority() == null ? 100 : ruleDto.priority());
+            rule.setMinAge(ruleDto.minAge());
+            rule.setMaxAge(ruleDto.maxAge());
+
+            if (rule.getAmount() == null || rule.getAmount() < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pricing rule amount must be non-negative.");
+            }
+
+            if (dto.pricingType() == PricingType.BY_GROUP) {
+                Set<GroupRef> groups = ruleDto.groups() == null
+                    ? Set.of()
+                    : ruleDto.groups();
+
+                if (rule.getRuleType() != PricingRuleType.GROUP || groups.isEmpty()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group pricing requires group-based rules.");
+                }
+                groupService.validateGroupRefs(groups, gym, series);
+                rule.setGroups(
+                    groups.stream()
+                        .map(GroupRefEmbeddable::fromDomain)
+                        .collect(Collectors.toSet())
+                );
+                rule.setMinAge(null);
+                rule.setMaxAge(null);
+            } else if (dto.pricingType() == PricingType.BY_AGE) {
+                if (rule.getRuleType() != PricingRuleType.AGE) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Age pricing requires age-based rules.");
+                }
+                if (rule.getMinAge() == null && rule.getMaxAge() == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Age pricing rules require minAge or maxAge.");
+                }
+                if (rule.getMinAge() != null && rule.getMaxAge() != null && rule.getMinAge() > rule.getMaxAge()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Age pricing rule minAge cannot exceed maxAge.");
+                }
+                rule.getGroups().clear();
+            }
+
+            newRules.add(rule);
+        }
+
+        comp.getPricingRules().clear();
+        comp.getPricingRules().addAll(newRules);
     }
 
     @Transactional

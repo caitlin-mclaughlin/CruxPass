@@ -12,11 +12,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class SeriesLeaderboardEntryMapper {
 
+    private final ResolvedCompetitorGroupMapper resolvedGroupMapper;
+
+    public SeriesLeaderboardEntryMapper(ResolvedCompetitorGroupMapper resolvedGroupMapper) {
+        this.resolvedGroupMapper = resolvedGroupMapper;
+    }
+
     public SeriesLeaderboardEntryDto toDto(SeriesLeaderboardEntry entry) {
         if (entry == null) return null;
         return new SeriesLeaderboardEntryDto(
             entry.getClimber().getId(),
-            entry.getCompetitorGroup(),
+            resolvedGroupMapper.toResolved(entry.getCompetitorGroupRef()),
             entry.getDivision(),
             entry.getClimber().getName(),
             entry.getTotalSeriesPoints(),
@@ -33,7 +39,7 @@ public class SeriesLeaderboardEntryMapper {
         SeriesLeaderboardEntry entry = new SeriesLeaderboardEntry();
         entry.setSeries(series);
         entry.setClimber(climber);
-        entry.setCompetitorGroup(dto.group());
+        entry.setCompetitorGroupRef(resolvedGroupMapper.toEmbeddable(dto.group()));
         entry.setDivision(dto.division());
         entry.setTotalSeriesPoints(dto.totalSeriesPoints());
         entry.setRawClimbingPoints(dto.rawClimbingPoints());
@@ -44,4 +50,3 @@ public class SeriesLeaderboardEntryMapper {
         return entry;
     }
 }
-

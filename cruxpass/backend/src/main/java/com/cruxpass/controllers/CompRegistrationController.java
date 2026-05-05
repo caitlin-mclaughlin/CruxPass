@@ -3,6 +3,7 @@ package com.cruxpass.controllers;
 import com.cruxpass.annotations.CurrentClimber;
 import com.cruxpass.dtos.requests.CompRegistrationRequestDto;
 import com.cruxpass.dtos.responses.RegistrationResponseDto;
+import com.cruxpass.dtos.responses.SimpleRegistrationResponseDto;
 import com.cruxpass.mappers.RegistrationMapper;
 import com.cruxpass.models.Climber;
 import com.cruxpass.models.Competition;
@@ -13,10 +14,10 @@ import com.cruxpass.services.RegistrationService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,13 +41,27 @@ public class CompRegistrationController {
         return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
 
-    /*@PutMapping("/me")
+    @GetMapping
+    public ResponseEntity<List<SimpleRegistrationResponseDto>> getRegistrations(
+        @PathVariable Long compId
+    ) {
+        Competition competition = competitionService.getById(compId);
+        if (competition == null) return ResponseEntity.notFound().build();
+
+        List<Registration> regs = registrationService.getByCompetition(competition);
+        return ResponseEntity.ok(
+            regs.stream().map(regMap::toSimpleResponseDto).toList()
+        );
+    }
+
+    @PutMapping("/me")
     public ResponseEntity<RegistrationResponseDto> registerForCompetition(
         @PathVariable Long compId,
         @RequestBody CompRegistrationRequestDto dto,
         @CurrentClimber Climber climber
     ) {
-        Competition competition = competitionService.getById(compId);
+        Competition competition = competitionService.getByIdWithHeats(compId);
+        if (competition == null) return ResponseEntity.notFound().build();
 
         // Prevent duplicate registration
         if (registrationService.existsByClimberAndCompetition(climber, competition)) {
@@ -58,16 +73,15 @@ public class CompRegistrationController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Check capacity
-        long currentCount = registrationService.countByCompetition(competition);
-        if (competition.getCapacity() > 0 && currentCount >= competition.getCapacity()) {
+        Registration reg;
+        try {
+            reg = regMap.toEntity(dto, climber, competition);
+        } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().build();
         }
-
-        Registration reg = regMap.toEntity(dto, climber, competition);
         registrationService.save(reg);
 
         return ResponseEntity.ok(regMap.toResponseDto(reg));
     }
-    */
+
 }

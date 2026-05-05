@@ -11,6 +11,7 @@ import { useClimberCompetition } from '@/context/ClimberCompetitionContext'
 import { SubmissionRequestDto } from '@/models/dtos'
 import { useLeaderboard } from '@/context/LeaderboardContext'
 import { Input } from '../ui/Input'
+import { LoadingSnippet } from '../ui/loading/LoadingSnippet'
 
 interface Props {
   open: boolean
@@ -43,10 +44,10 @@ export default function AddScoresModal({
 
     const fetchData = async () => {
       setLoading(true);
-      setError(null);
+      setError(prev => (prev ? null : prev));
 
       try {
-        refreshAll(gymId, competitionId);
+        refreshAll(competitionId);
       } catch (err) {
         setError("Failed to load competition data");
       } finally {
@@ -89,16 +90,14 @@ export default function AddScoresModal({
     if (!registration || !competitionId || !gymId) return;
 
     const payload: SubmissionRequestDto = {
-      competitorGroup: registration.competitorGroup,
-      division: registration.division,
       routes: submissions.filter(r => r.attempts > 0),
     };
 
     try {
       setLoading(true);
-      setError(null);
+      setError(prev => (prev ? null : prev));
       // Submit to backend
-      await updateSubmissions(gymId, competitionId, payload);
+      await updateSubmissions(competitionId, payload);
 
       if (competitionId) {
         const key = `${registration.competitorGroup}-${registration.division}`;
@@ -139,9 +138,7 @@ export default function AddScoresModal({
 
         {loading ? (
           // Spinner state
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green" />
-          </div>
+          <LoadingSnippet />
         ) : error ? (
           // Error state
           <div className="text-accent text-center py-8">
@@ -149,7 +146,7 @@ export default function AddScoresModal({
           </div>
         ) : (
           // Success state (your existing table)
-          <div className="overflow-y-auto max-h-96 bg-shadow border shadow-md rounded-md scrollbar-thin-green">
+          <div className="overflow-y-auto max-h-96 bg-shadow border shadow-md rounded-md scrollbar-thin-green scroll-smooth">
             <table className="w-full border-collapse bg-background text-green">
               <thead>
                 <tr className="bg-green text-shadow">

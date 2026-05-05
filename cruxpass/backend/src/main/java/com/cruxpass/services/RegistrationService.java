@@ -38,6 +38,10 @@ public class RegistrationService {
         return registrationRepo.findByClimberIdAndCompetitionId(climberId, competitionId).orElse(null);
     }
 
+    public List<Long> getCompetitionIdsByClimberId(Long climberId) {
+        return registrationRepo.findCompetitionIdsByClimberId(climberId);
+    }
+
     public boolean existsByClimberAndCompetition(Climber climber, Competition competition) {
         return registrationRepo.existsByClimberAndCompetition(climber, competition);
     }

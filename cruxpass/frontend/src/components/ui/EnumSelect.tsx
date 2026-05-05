@@ -9,7 +9,7 @@ import { ChevronDown } from 'lucide-react'
 
 interface EnumSelectProps<T extends string> {
   labelMap?: Record<T, string>
-  options: T[]
+  options: readonly T[]
   value: T
   onChange: (val: T) => void
   onOpen?: (open: boolean) => void
@@ -49,7 +49,7 @@ export function EnumSelect<T extends string>({
 
             {open && (
               <ListboxOptions
-                className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10 focus:outline-none"
+                className="absolute mt-1 max-h-50 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10 focus:outline-none"
               >
                 {options.map((option) => (
                   <ListboxOption key={option} value={option}>

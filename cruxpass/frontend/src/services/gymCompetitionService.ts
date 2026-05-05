@@ -1,52 +1,52 @@
-import { CompetitionFormPayload, CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto, SubmissionResponseDto, SubmittedRouteDto } from '@/models/dtos';
+import { CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionResponseDto, CompetitionDto, HeatDto, UpdateCompetitionDto } from '@/models/dtos';
 import api from './apiService';
-import { Registration, Route, SubmittedRoute } from '@/models/domain';
+import { Registration } from '@/models/domain';
 
-export async function createCompetitionForGym(gymId: number, data: CompetitionFormPayload) {
-  const res = api.put(`/gyms/${gymId}/competitions`, data);
-  return res;
-} 
-
-export async function getCompetition(gymId: number, competitionId: number) {
-  const res = api.get(`/gyms/${gymId}/competitions/${competitionId}`);
-  return res;
-}
-
-export async function getRegistrationsForComp(gymId: number, competitionId: number): Promise<CompRegistrationResponseDto[]> {
-  const res = await api.get(`/gyms/${gymId}/competitions/${competitionId}/registrations`);
-  return res.data;
-} 
-
-export async function getRoutesForComp(gymId: number, competitionId: number): Promise<RouteResponseDto[]>  {
-  const res = await api.get(`/gyms/${gymId}/competitions/${competitionId}/routes`);
-  return res.data;
-} 
-
-export async function getSubmissionsForComp(gymId: number, competitionId: number): Promise<SubmissionResponseDto[]>  {
-  const res = await api.get(`/gyms/${gymId}/competitions/${competitionId}/submissions`);
-  return res.data;
-} 
-
-export async function updateCompetitionInfo(gymId: number, competitionId: number, data: CompetitionFormPayload) {
-  const res = api.put(`gyms/${gymId}/competitions/${competitionId}`, data);
-  return res;
-}
-
-export async function updateRegistrationsForComp(gymId: number, competitionId: number, data: Registration[]) {
-  const res = api.put(`gyms/${gymId}/competitions/${competitionId}/registrations`, data);
-  return res;
-}
-
-export async function updateRoutesForComp(gymId: number, competitionId: number, data: RouteDto[]): Promise<RouteResponseDto[]> {
-  const res = await api.put(`gyms/${gymId}/competitions/${competitionId}/routes`, data);
+export async function getCompetition(compId: number): Promise<CompetitionDto> {
+  const res = await api.get(`/gyms/me/competitions/${compId}`);
   return res.data;
 }
 
-export async function startCompetition(gymId: number, compId: number) {
-  return api.post(`/gyms/${gymId}/competitions/${compId}/start`);
+export async function getHeats(compId: number): Promise<HeatDto[]> {
+  const res = await api.get(`/gyms/me/competitions/${compId}/heats`);
+  return res.data;
 }
 
-export async function stopCompetition(gymId: number, compId: number) {
-  return api.post(`/gyms/${gymId}/competitions/${compId}/stop`);
+export async function getRegistrationsForComp(compId: number): Promise<CompRegistrationResponseDto[]> {
+  const res = await api.get(`/gyms/me/competitions/${compId}/registrations`);
+  return res.data;
+} 
+
+export async function getRoutesForComp(compId: number): Promise<RouteResponseDto[]>  {
+  const res = await api.get(`/gyms/me/competitions/${compId}/routes`);
+  return res.data;
+} 
+
+export async function getSubmissionsForComp(compId: number): Promise<SubmissionResponseDto[]>  {
+  const res = await api.get(`/gyms/me/competitions/${compId}/submissions`);
+  return res.data;
+} 
+
+export async function updateCompetitionInfo(compId: number, data: UpdateCompetitionDto) {
+  const res = api.put(`gyms/me/competitions/${compId}`, data);
+  return res;
+}
+
+export async function updateRegistrationsForComp(compId: number, data: Registration[]) {
+  const res = api.put(`gyms/me/competitions/${compId}/registrations`, data);
+  return res;
+}
+
+export async function updateRoutesForComp(compId: number, data: RouteDto[]): Promise<RouteResponseDto[]> {
+  const res = await api.put(`gyms/me/competitions/${compId}/routes`, data);
+  return res.data;
+}
+
+export async function startCompetition(compId: number) {
+  return api.post(`/gyms/me/competitions/${compId}/start`);
+}
+
+export async function stopCompetition(compId: number) {
+  return api.post(`/gyms/me/competitions/${compId}/stop`);
 }
 

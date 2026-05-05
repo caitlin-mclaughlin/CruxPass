@@ -25,16 +25,15 @@ export default function SegmentedDateInput({
   mode = "generic",
   invalid = false, 
 }: SegmentedDateInputProps) {
-  const initial = normalizeBackendDateOrDateTime(
-    value instanceof Date ? value.toISOString() : value ? value : null
+  const date = normalizeBackendDateOrDateTime(
+    value instanceof Date ? value.toISOString() : value ?? null
   );
-  const [date, setDate] = useState<Date | null>(initial);
   const [showPicker, setShowPicker] = useState(false);
 
+  const lastSyncedValueRef = useRef<string>("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const maskRef = useRef<InputMask<any> | null>(null);
-  const lastSyncedValueRef = useRef<string>("");
 
   // fallback for birthdays only
   const today = new Date();
@@ -66,7 +65,7 @@ export default function SegmentedDateInput({
   useEffect(() => {
     if (!inputRef.current) return;
 
-    maskRef.current = IMask(inputRef.current, {
+    const mask = IMask(inputRef.current, {
       mask: "MM/DD/YYYY",
       lazy: true,
       autofix: true,
@@ -77,40 +76,50 @@ export default function SegmentedDateInput({
       },
     });
 
-    maskRef.current.on("accept", () => {
-      const val = maskRef.current!.value;
-      const parsed = parseInput(val);
-      setDate(parsed);
-      onChange(parsed);
+    mask.on("accept", () => {
+      // mark as user-originated update
+      lastSyncedValueRef.current = mask.value;
+
+      const parsed = parseInput(mask.value);
+
+      // ONLY update parent when valid date exists
+      if (parsed) {
+        onChange(parsed);
+      }
     });
 
-    return () => maskRef.current?.destroy();
-  }, [onChange]);
+    maskRef.current = mask;
 
-  // update mask value when parent changes
-  useEffect(() => {
-    const d = normalizeBackendDateOrDateTime(
-      value instanceof Date ? value.toISOString() : value ? value : null
-    );
-    setDate(d);
-    
-    const formatted = d ? formatDate(d) : "";
-    if (maskRef.current && lastSyncedValueRef.current !== formatted) {
-      maskRef.current.value = formatted;
-      lastSyncedValueRef.current = formatted;
-    }
-  }, [value]);
+    return () => mask.destroy();
+  }, [onChange]);
 
   const handleDateSelect = (d: Date | null) => {
     if (!d) return;
+
     d.setHours(12);
-    setDate(d);
+
+    const formatted = formatDate(d);
+    lastSyncedValueRef.current = formatted;
+
     if (maskRef.current) {
-      maskRef.current.value = formatDate(d);
+      maskRef.current.value = formatted;
     }
+
     onChange(d);
     setShowPicker(false);
   };
+
+  useEffect(() => {
+    if (!maskRef.current) return;
+
+    const formatted = date ? formatDate(date) : "";
+
+    // only sync if change came from outside
+    if (lastSyncedValueRef.current !== formatted) {
+      maskRef.current.value = formatted;
+      lastSyncedValueRef.current = formatted;
+    }
+  }, [date]);
 
   // close on outside click
   useEffect(() => {

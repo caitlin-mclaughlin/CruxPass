@@ -1,7 +1,7 @@
 # backend/Dockerfile
 
 ### BUILD STAGE ###
-#FROM gradle:8.10.0-jdk17 AS builder
+#FROM gradle:9.0.0-jdk17 AS builder
 
 #WORKDIR /app
 

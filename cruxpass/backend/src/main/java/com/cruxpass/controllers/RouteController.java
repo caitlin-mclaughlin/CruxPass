@@ -2,10 +2,7 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.responses.RouteResponseDto;
 import com.cruxpass.mappers.RouteMapper;
-import com.cruxpass.models.Competition;
 import com.cruxpass.models.Route;
-import com.cruxpass.security.CurrentUserService;
-import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.RouteService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,19 +20,13 @@ import java.util.List;
 public class RouteController {
 
     private final RouteService routeService;
-    private final CompetitionService competitionService;
 
     @Autowired private RouteMapper routeMap;
 
     @GetMapping
     public ResponseEntity<List<RouteResponseDto>> getRoutes(
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
+        @PathVariable Long competitionId
     ) {
-            
-        Competition comp = competitionService.getById(competitionId);
-        if (comp == null) return ResponseEntity.notFound().build();
-
         List<Route> routes = routeService.getByCompetitionId(competitionId);
         if (routes == null) return ResponseEntity.notFound().build();
 
@@ -45,11 +36,13 @@ public class RouteController {
     @GetMapping("/{id}")
     public ResponseEntity<RouteResponseDto> getById(
         @PathVariable Long id,
-        @PathVariable Long competitionId,
-        @RequestHeader("Authorization") String authHeader
+        @PathVariable Long competitionId
     ) {
         Route route = routeService.getById(id);
         if (route == null) return ResponseEntity.notFound().build();
+        if (route.getCompetition() == null || !route.getCompetition().getId().equals(competitionId)) {
+            return ResponseEntity.notFound().build();
+        }
 
         return ResponseEntity.ok(routeMap.toResponseDto(route));
     }

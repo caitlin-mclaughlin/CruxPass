@@ -7,34 +7,37 @@ import { useClimberCompetition } from '@/context/ClimberCompetitionContext'
 import { useClimberLookup } from '@/context/ClimberLookupContext'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
 import {
-  CompetitionEnumMap,
-  COMPETITOR_GROUPS,
-  CompetitorGroup,
+  DEFAULT_COMPETITOR_GROUPS,
+  DefaultCompetitorGroup,
   DivisionEnumMap,
   Division,
+  DIVISION_OPTIONS,
   SearchType,
-  SearchTypeDisplay
+  SearchTypeDisplay,
+  DefaultCompetitorGroupMap
 } from '@/constants/enum'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
 import { Button } from '@/components/ui/Button'
-import { CompetitionSummary, DependentClimber, SimpleClimber } from '@/models/domain'
+import { CompetitionEntity, DependentClimber, SimpleClimber } from '@/models/domain'
 import { EnumSelect } from '../ui/EnumSelect'
-import { ClimberSearchResults } from '../ui/ClimberSearchResults'
+import { SearchResults } from '../ui/SearchResults'
 import { Input } from '../ui/Input'
 import { Search } from 'lucide-react'
 import { formatDate, formatPhoneNumber } from '@/utils/formatters'
 import DependentSelect from '../ui/DependentSelect'
+import { displayDateTime, formatHeatTimeRange } from '@/utils/datetime'
+import { getSummaryDefaultGroups, getSummaryDivisions, heatSupportsGroup } from '@/utils/competitionSummary'
 
 interface Props {
   open: boolean
   onClose: () => void
-  competition: CompetitionSummary
+  competition: CompetitionEntity
   onSuccess: () => void
   mode?: 'climber' | 'gym'
 }
 
 export default function RegisterModal({ open, onClose, competition, onSuccess, mode = 'climber' }: Props) {
-  const [selectedGroup, setSelectedGroup] = useState<CompetitorGroup | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<DefaultCompetitorGroup | null>(null)
   const [selectedDivision, setSelectedDivision] = useState<Division | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedClimberId, setSelectedClimberId] = useState<number | null>(null)
@@ -47,12 +50,122 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
 
   const { climber, dependents: climberDependents, refreshClimber } = useClimberSession()
   const { gym, refreshGym } = useGymSession()
-  const { updateRegistration, refreshRegistration } = useClimberCompetition()
-  const { results, loading, searchClimbers, getDependents, clearSearch } = useClimberLookup()
+  const {
+    competition: detailedCompetition,
+    refreshCompetition,
+    updateRegistration,
+    refreshRegistration
+  } = useClimberCompetition()
+  const { results, climberSearchLoading, searchClimbers, getDependents, clearSearch } = useClimberLookup()
 
-  const divisions = competition.divisions || []
-  const sortedGroups = COMPETITOR_GROUPS.filter(group => competition.competitorGroups.includes(group))
+  const heats = (detailedCompetition ?? competition)?.heats ?? []
+  const availableGroups = getSummaryDefaultGroups((detailedCompetition ?? competition) as CompetitionEntity)
+  const divisions = getSummaryDivisions((detailedCompetition ?? competition) as CompetitionEntity)
+  const availableDivisions = divisions.length > 0 ? divisions : [...DIVISION_OPTIONS]
+  const sortedGroups = DEFAULT_COMPETITOR_GROUPS.filter(group => availableGroups.includes(group))
   const isYouthGroup = (group: string) => group.includes('YOUTH') || group.includes('JUNIOR')
+
+  const getTargetClimber = () => {
+    if (mode === 'climber') {
+      if (climberDependents?.length && selectedClimberId) {
+        return climberDependents.find(c => c.id === selectedClimberId) ?? null
+      }
+      return climber ?? null
+    }
+
+    if (!selectedClimber) return null
+    if (dependents?.length && selectedClimberId) {
+      return dependents.find(c => c.id === selectedClimberId) ?? null
+    }
+    return selectedClimber
+  }
+
+  const targetClimber = getTargetClimber()
+
+  const heatHasGroup = (heat: any, group: DefaultCompetitorGroup): boolean => {
+    return heatSupportsGroup(heat, group)
+  }
+
+  const heatAllowsDivision = (heat: any, division: Division): boolean => {
+    if (!heat?.divisionsEnabled) return true
+    const heatDivisions = Array.isArray(heat?.divisions) ? heat.divisions : []
+    if (heatDivisions.length === 0) return true
+    return heatDivisions.includes(division)
+  }
+
+  const matchingHeatsFor = (group: DefaultCompetitorGroup, division?: Division | null) => {
+    return heats.filter((heat: any) => {
+      if (!heatHasGroup(heat, group)) return false
+      if (!division) return true
+      return heatAllowsDivision(heat, division)
+    })
+  }
+
+  const hasEligibleHeatForGroup = (group: DefaultCompetitorGroup) => {
+    if (availableDivisions.length === 0) {
+      return matchingHeatsFor(group).length > 0
+    }
+    return availableDivisions.some(d => matchingHeatsFor(group, d).length > 0)
+  }
+
+  const groupOptions = sortedGroups.map(group => {
+    const ageEligible = targetClimber ? isEligibleForGroup(targetClimber.dob, group) : true
+    const hasHeat = heats.length > 0 ? hasEligibleHeatForGroup(group) : true
+    return {
+      value: group,
+      label: DefaultCompetitorGroupMap[group as keyof typeof DefaultCompetitorGroupMap],
+      disabled: !ageEligible || !hasHeat
+    }
+  })
+  const validGroupOptions = groupOptions.filter(option => !option.disabled)
+
+  const selectedGroupHeats = selectedGroup ? matchingHeatsFor(selectedGroup, selectedDivision) : []
+  const divisionOptions = availableDivisions.map(d => {
+    const hasHeat = selectedGroup
+      ? matchingHeatsFor(selectedGroup, d).length > 0
+      : true
+    return {
+      value: d,
+      label: DivisionEnumMap[d as keyof typeof DivisionEnumMap],
+      disabled: !hasHeat
+    }
+  })
+  const validDivisionOptions = divisionOptions.filter(option => !option.disabled)
+
+  useEffect(() => {
+    if (!selectedGroup) return
+    const selectedGroupOption = groupOptions.find(o => o.value === selectedGroup)
+    if (selectedGroupOption?.disabled) {
+      setSelectedGroup(null)
+      setSelectedDivision(null)
+    }
+  }, [selectedGroup, targetClimber, heats.length])
+
+  useEffect(() => {
+    if (!selectedDivision || !selectedGroup) return
+    const stillValid = matchingHeatsFor(selectedGroup, selectedDivision).length > 0
+    if (!stillValid) {
+      setSelectedDivision(null)
+    }
+  }, [selectedDivision, selectedGroup, heats.length])
+
+  useEffect(() => {
+    if (!open) return
+    if (mode === 'gym' && !targetClimber) return
+    if (selectedGroup !== null) return
+    if (validGroupOptions.length !== 1) return
+
+    setSelectedGroup(validGroupOptions[0].value as DefaultCompetitorGroup)
+  }, [open, mode, targetClimber, selectedGroup, validGroupOptions.length])
+
+  useEffect(() => {
+    if (!open) return
+    if (!selectedGroup) return
+    if (selectedDivision !== null) return
+    if (validDivisionOptions.length !== 1) return
+
+    setSelectedDivision(validDivisionOptions[0].value as Division)
+  }, [open, selectedGroup, selectedDivision, validDivisionOptions.length])
 
   const searchRef = useRef<HTMLDivElement>(null)
   const [showResults, setShowResults] = useState(false)
@@ -87,24 +200,9 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
 
   const handleSubmit = async () => {
     try {
-      let targetClimber: any = null
-
-      if (mode === 'climber') {
-        if (climberDependents?.length && selectedClimberId) {
-          targetClimber = climberDependents.find(c => c.id === selectedClimberId)
-        } else {
-          targetClimber = climber
-        }
-      } else if (mode === 'gym') {
-        if (!selectedClimber) {
-          setError('Please select a climber from search results.')
-          return
-        }
-        if (dependents?.length && selectedClimberId) {
-          targetClimber = dependents.find(c => c.id === selectedClimberId)
-        } else {
-          targetClimber = selectedClimber
-        }
+      if (mode === 'gym' && !selectedClimber) {
+        setError('Please select a climber from search results.')
+        return
       }
 
       if (!selectedGroup || !selectedDivision || !targetClimber) {
@@ -121,17 +219,33 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
         return
       }
 
+      if (matchingHeatsFor(selectedGroup, selectedDivision).length === 0) {
+        setError('No valid heat is available for this group/division selection.')
+        return
+      }
+
+      const chosenHeat = matchingHeatsFor(selectedGroup, selectedDivision)[0]
+      if (!chosenHeat) {
+        setError('No valid heat is available for this group/division selection.')
+        return
+      }
+
       const payload: CompRegistrationRequestDto = {
         id: targetClimber.id,
         climberName: targetClimber.name,
-        email: targetClimber.email,
+        email: (targetClimber as any).email ?? selectedClimber?.email ?? "",
         dob: targetClimber.dob,
-        competitorGroup: selectedGroup,
+        competitorGroup: {
+          id: null,
+          name: selectedGroup,
+          ageRule: null,
+        } as any,
         division: selectedDivision,
+        heat: chosenHeat as any,
         paid: true
       }
 
-      await updateRegistration(competition.gymId, competition.id, payload)
+      await updateRegistration(competition.id, payload)
       onSuccess()
       handleClose()
     } catch (err) {
@@ -155,7 +269,8 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
   const refresh = async () => {
     if (mode === 'gym') await refreshGym()
     else await refreshClimber()
-    await refreshRegistration(competition.gymId, competition.id)
+    await refreshCompetition(competition.id)
+    await refreshRegistration(competition.id)
   }
 
   useEffect(() => {
@@ -221,22 +336,23 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
                       await handleSearch()
                       setShowResults(true)
                     }}
-                    disabled={loading}
+                    disabled={climberSearchLoading}
                   >
                     <Search size={18} />
-                    <span>{loading ? 'Searching...' : 'Search'}</span>
+                    <span className="relative top-[1px]">{climberSearchLoading ? 'Searching...' : 'Search'}</span>
                   </Button>
                 </div>
 
                 {showResults && (
-                  <ClimberSearchResults
+                  <SearchResults
+                    mode="climber"
                     results={results}
-                    selectedClimberId={selectedClimber?.id ?? null}
+                    selectedId={selectedClimber?.id ?? null}
                     onSelect={(id) => {
                       handleSelectClimber(id)
                       setShowResults(false)
                     }}
-                    loading={loading}
+                    loading={climberSearchLoading}
                   />
                 )}
               </div>
@@ -284,10 +400,7 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
             <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
               <CustomRadioGroup
                 name="group"
-                options={sortedGroups.map(group => ({
-                  value: group,
-                  label: CompetitionEnumMap[group as keyof typeof CompetitionEnumMap]
-                }))}
+                options={groupOptions}
                 selected={selectedGroup}
                 onChange={setSelectedGroup}
               />
@@ -295,20 +408,42 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
           </div>
 
           {/* Division Selection */}
-          {divisions.length > 0 && (
+          {availableDivisions.length > 0 && (
             <div>
               <label className="font-semibold">Gender Division:</label>
               <div className="flex flex-wrap px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
                 <CustomRadioGroup
                   name="division"
-                  options={divisions.map(g => ({
-                    value: g,
-                    label: DivisionEnumMap[g as keyof typeof DivisionEnumMap]
-                  }))}
+                  options={divisionOptions}
                   selected={selectedDivision}
                   onChange={setSelectedDivision}
                 />
               </div>
+            </div>
+          )}
+
+          {selectedGroup && selectedDivision && (
+            <div className="border border-green rounded-md bg-shadow px-3 py-2">
+              <div className="font-semibold mb-1">Your Assigned Heat{selectedGroupHeats.length > 1 ? 's' : ''}:</div>
+              {selectedGroupHeats.length === 0 ? (
+                <div className="text-accent">No eligible heat found for this selection.</div>
+              ) : (
+                <div className="space-y-1">
+                  {selectedGroupHeats.map((heat: any) => (
+                    <div key={heat.id}>
+                      <strong>{heat.heatName || 'Heat'}</strong>
+                      {' • '}
+                      {formatHeatTimeRange(heat.startTime, heat.duration, { showDate: true })}
+                      {heat.capacity ? ` • Capacity ${heat.capacity}` : ''}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {detailedCompetition?.startDate && (
+                <div className="text-sm opacity-80 mt-1">
+                  Competition Start: {displayDateTime(detailedCompetition.startDate)}
+                </div>
+              )}
             </div>
           )}
 

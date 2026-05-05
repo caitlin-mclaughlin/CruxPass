@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   token: null,
   accountType: null,
   login: async () => {},
-  register: async () => null,
+  register: async () => {},
   logout: () => {},
   skipLogin: () => {},
   guest: false
@@ -87,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log("JWT payload:", payload);
 
       const role = (payload.role || payload.type || (payload.roles && payload.roles[0]))?.toString().toUpperCase();
       if (role === 'CLIMBER') return AccountType.CLIMBER;

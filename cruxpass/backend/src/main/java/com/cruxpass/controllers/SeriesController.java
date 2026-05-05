@@ -8,12 +8,14 @@ import com.cruxpass.dtos.responses.SimpleGymDto;
 import com.cruxpass.dtos.responses.SimpleSeriesDto;
 import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
+import com.cruxpass.enums.GroupRefType;
 import com.cruxpass.mappers.CompetitionMapper;
 import com.cruxpass.mappers.GymMapper;
 import com.cruxpass.mappers.SeriesMapper;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
 import com.cruxpass.models.Series;
+import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 import com.cruxpass.services.CompetitionService;
 import com.cruxpass.services.GymService;
 import com.cruxpass.services.SeriesService;
@@ -24,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -101,7 +104,7 @@ public class SeriesController {
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/me/competitions/{competitionId}")
+    /*@PutMapping("/me/competitions/{competitionId}")
     public ResponseEntity<Void> linkCopmetition(
         @PathVariable Long competitionId,
         @CurrentSeries Series series
@@ -111,7 +114,7 @@ public class SeriesController {
         
         seriesService.linkCompetition(series, comp);
         return ResponseEntity.noContent().build();
-    }
+    }*/
 
     @DeleteMapping("/me/gyms/{gymId}")
     public ResponseEntity<Void> unlinkGym(
@@ -127,7 +130,7 @@ public class SeriesController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/me/competitions/{competitionId}")
+    /*@DeleteMapping("/me/competitions/{competitionId}")
     public ResponseEntity<Void> unlinkCompetition(
         @PathVariable Long competitionId,
         @CurrentSeries Series series
@@ -139,15 +142,32 @@ public class SeriesController {
 
         seriesService.unlinkCompetition(series, comp);
         return ResponseEntity.noContent().build();
-    }
+    }*/
 
     @GetMapping("/{seriesId}/leaderboard")
     public List<SeriesLeaderboardEntryDto> getSeriesLeaderboard(
             @PathVariable Long seriesId,
-            @RequestParam DefaultCompetitorGroup group,
+            @RequestParam(defaultValue = "DEFAULT") GroupRefType groupType,
+            @RequestParam(required = false) DefaultCompetitorGroup group,
+            @RequestParam(required = false) Long customGroupId,
             @RequestParam(required = false) Division division
     ) {
-        return seriesService.getLeaderboard(seriesId, group, division);
+        GroupRefEmbeddable groupRef = switch (groupType) {
+            case DEFAULT -> {
+                if (group == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required param: group");
+                }
+                yield new GroupRefEmbeddable(GroupRefType.DEFAULT, group, null);
+            }
+            case CUSTOM -> {
+                if (customGroupId == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required param: customGroupId");
+                }
+                yield new GroupRefEmbeddable(GroupRefType.CUSTOM, null, customGroupId);
+            }
+        };
+
+        return seriesService.getLeaderboard(seriesId, groupRef, division);
     }
 
 }

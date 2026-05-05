@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.cruxpass.enums.CompetitionFormat;
+import com.cruxpass.enums.PricingType;
 import com.cruxpass.enums.CompetitionType;
 import com.cruxpass.models.Address;
 import com.cruxpass.models.GroupRefs.GroupRef;
@@ -17,6 +18,10 @@ public record UpdateCompetitionDto(
     LocalDateTime deadline,
     Set<CompetitionType> types,
     CompetitionFormat compFormat,
+    PricingType pricingType,
+    Integer flatFee,
+    String feeCurrency,
+    List<PricingRuleUpsertDto> pricingRules,
     Set<GroupRef> selectedGroups,
     List<HeatUpsertDto> heats,
     String hostGymName,
