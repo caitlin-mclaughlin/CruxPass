@@ -42,10 +42,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
     testImplementation 'org.testcontainers:postgresql:1.19.0'
-    // Integration test classpath
-    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.0'
-    integrationTestImplementation 'org.testcontainers:postgresql:1.19.0'
 }
 /*
 task generateJwtKey(type: JavaExec) {
@@ -73,6 +69,13 @@ configurations {
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
     integrationTestCompileOnly.extendsFrom testCompileOnly
     integrationTestAnnotationProcessor.extendsFrom testAnnotationProcessor
+}
+
+// Integration test classpath (declared after configurations exist)
+dependencies {
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.0'
+    integrationTestImplementation 'org.testcontainers:postgresql:1.19.0'
 }
 
 tasks.register('integrationTest', Test) {
