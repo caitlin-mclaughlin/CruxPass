@@ -13,11 +13,14 @@ class StripeCheckoutControllerDeepTest {
     @Test
     void handleMissingRegistrationDoesNotThrow() {
         RegistrationRepository repo = mock(RegistrationRepository.class);
-        StripeCheckoutController ctrl = new StripeCheckoutController(repo, null);
-        // controller behavior for checkout creation is tested shallowly: ensure null repo responses are handled
+        RegistrationService registrationService = mock(RegistrationService.class);
+        StripePaymentService stripePaymentService = mock(StripePaymentService.class);
+        CurrentUserService currentUserService = mock(CurrentUserService.class);
+        ClimberService climberService = mock(ClimberService.class);
+
+        StripeCheckoutController ctrl = new StripeCheckoutController(registrationService, stripePaymentService, currentUserService, climberService);
         when(repo.findById(1L)).thenReturn(java.util.Optional.empty());
 
-        // No direct public method to trigger checkout backend-only behavior here; ensure controller constructed OK
         assertNotNull(ctrl);
     }
 }

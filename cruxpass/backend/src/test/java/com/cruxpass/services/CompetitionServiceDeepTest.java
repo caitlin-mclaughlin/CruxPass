@@ -13,7 +13,12 @@ class CompetitionServiceDeepTest {
     @Test
     void getByIdReturnsNullWhenNotFound() {
         CompetitionRepository repo = mock(CompetitionRepository.class);
-        CompetitionService svc = new CompetitionService(repo, null, null, null);
+        CompetitorGroupService groupService = mock(CompetitorGroupService.class);
+        HeatService heatService = mock(HeatService.class);
+        com.cruxpass.mappers.CompetitionMapper compMap = mock(com.cruxpass.mappers.CompetitionMapper.class);
+        com.cruxpass.mappers.HeatMapper heatMap = mock(com.cruxpass.mappers.HeatMapper.class);
+
+        CompetitionService svc = new CompetitionService(repo, groupService, heatService, compMap, heatMap);
         when(repo.findById(2L)).thenReturn(java.util.Optional.empty());
 
         assertNull(svc.getById(2L));
