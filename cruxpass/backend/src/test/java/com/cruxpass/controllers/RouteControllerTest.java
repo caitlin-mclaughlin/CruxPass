@@ -1,6 +1,7 @@
 package com.cruxpass.controllers;
 
 import com.cruxpass.mappers.RouteMapper;
+import com.cruxpass.dtos.responses.RouteResponseDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Route;
 import com.cruxpass.services.RouteService;
@@ -20,11 +21,16 @@ class RouteControllerTest {
         RouteService svc = mock(RouteService.class);
         RouteMapper mapper = mock(RouteMapper.class);
         RouteController ctrl = new RouteController(svc);
-        ctrl.routeMap = mapper;
-
+        try {
+            java.lang.reflect.Field f = RouteController.class.getDeclaredField("routeMap");
+            f.setAccessible(true);
+            f.set(ctrl, mapper);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         when(svc.getByCompetitionId(1L)).thenReturn(null);
 
-        ResponseEntity<List<?>> resp = ctrl.getRoutes(1L);
+        ResponseEntity<List<RouteResponseDto>> resp = ctrl.getRoutes(1L);
         assertEquals(404, resp.getStatusCode().value());
     }
 
@@ -33,7 +39,13 @@ class RouteControllerTest {
         RouteService svc = mock(RouteService.class);
         RouteMapper mapper = mock(RouteMapper.class);
         RouteController ctrl = new RouteController(svc);
-        ctrl.routeMap = mapper;
+        try {
+            java.lang.reflect.Field f = RouteController.class.getDeclaredField("routeMap");
+            f.setAccessible(true);
+            f.set(ctrl, mapper);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         when(svc.getById(10L)).thenReturn(null);
         ResponseEntity<?> resp = ctrl.getById(10L, 1L);
