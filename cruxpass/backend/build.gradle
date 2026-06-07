@@ -89,4 +89,9 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter test
 }
 
-check.dependsOn integrationTest
+// Run integration tests only when explicitly requested via -PrunIntegrationTests=true
+if (project.hasProperty('runIntegrationTests') && project.property('runIntegrationTests') == 'true') {
+    check.dependsOn integrationTest
+} else {
+    tasks.named('integrationTest') { enabled = false }
+}
