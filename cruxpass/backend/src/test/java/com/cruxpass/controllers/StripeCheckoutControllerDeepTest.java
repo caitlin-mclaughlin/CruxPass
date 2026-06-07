@@ -2,6 +2,10 @@ package com.cruxpass.controllers;
 
 import com.cruxpass.models.Registration;
 import com.cruxpass.repositories.RegistrationRepository;
+import com.cruxpass.services.RegistrationService;
+import com.cruxpass.services.StripePaymentService;
+import com.cruxpass.security.CurrentUserService;
+import com.cruxpass.services.ClimberService;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
