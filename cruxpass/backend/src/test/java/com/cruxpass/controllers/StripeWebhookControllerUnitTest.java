@@ -15,7 +15,7 @@ class StripeWebhookControllerUnitTest {
         StripeWebhookController ctrl = new StripeWebhookController(repo, "secret");
 
         ResponseEntity<String> resp = ctrl.handleWebhook(null, "{}");
-        assertEquals(400, resp.getStatusCodeValue());
+        assertEquals(400, resp.getStatusCode().value());
         assertTrue(resp.getBody().contains("Missing"));
     }
 
@@ -25,7 +25,7 @@ class StripeWebhookControllerUnitTest {
         StripeWebhookController ctrl = new StripeWebhookController(repo, "");
 
         ResponseEntity<String> resp = ctrl.handleWebhook("sig", "payload");
-        assertEquals(503, resp.getStatusCodeValue());
+        assertEquals(503, resp.getStatusCode().value());
         assertTrue(resp.getBody().contains("not configured"));
     }
 
@@ -36,7 +36,7 @@ class StripeWebhookControllerUnitTest {
         StripeWebhookController ctrl = new StripeWebhookController(repo, "whsec_test");
 
         ResponseEntity<String> resp = ctrl.handleWebhook("bad-signature", "{}");
-        assertEquals(400, resp.getStatusCodeValue());
-        assertTrue(resp.getBody().contains("verification failed") || resp.getBody().contains("Webhook verification failed"));
+        assertEquals(400, resp.getStatusCode().value());
+        assertTrue(resp.getBody().contains("verification failed") || resp.getBody().contains("Webhook verification failed") || resp.getBody().contains("Webhook verification failed"));
     }
 }
