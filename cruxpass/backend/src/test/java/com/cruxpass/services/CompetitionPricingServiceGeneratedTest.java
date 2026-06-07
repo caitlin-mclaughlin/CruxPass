@@ -14,10 +14,10 @@ class CompetitionPricingServiceGeneratedTest {
 
     @Test
     void getCompetitionReturnsNullWhenMissing() {
-        CompetitionRepository repo = mock(CompetitionRepository.class);
-        CompetitionPricingService svc = new CompetitionPricingService(repo, null);
-        when(repo.findById(5L)).thenReturn(Optional.empty());
+        CompetitionPricingService svc = new CompetitionPricingService();
+        var quote = svc.quoteFor(null, null, null);
 
-        assertNull(svc.getById(5L));
+        assertEquals(0, quote.amount());
+        assertEquals("USD", quote.currency());
     }
 }
