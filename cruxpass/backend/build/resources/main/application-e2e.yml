@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/cruxpass_e2e}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
+      pool-name: CruxE2EHikariPool
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        "[format_sql]": false
+        "[use_sql_comments]": false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  jackson:
+    serialization:
+      "[INDENT_OUTPUT]": true
+
+logging:
+  level:
+    root: INFO
+    "[org.hibernate.SQL]": WARN
+
+jwt:
+  secret: ${JWT_SECRET:cruxpass-e2e-secret-key-must-be-at-least-32-bytes}

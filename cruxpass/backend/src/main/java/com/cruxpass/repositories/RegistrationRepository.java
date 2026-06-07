@@ -16,6 +16,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     boolean existsByClimberAndCompetition(Climber climber, Competition competition);
     Optional<Registration> findByClimberAndCompetition(Climber climber, Competition competition);
     Optional<Registration> findByClimberIdAndCompetitionId(Long climberId, Long competitionId);
+    Optional<Registration> findByCheckoutSessionId(String checkoutSessionId);
     @Query("SELECT r.competition.id FROM Registration r WHERE r.climber.id = :climberId")
     List<Long> findCompetitionIdsByClimberId(@Param("climberId") Long climberId);
     List<Registration> findByCompetition(Competition competition);

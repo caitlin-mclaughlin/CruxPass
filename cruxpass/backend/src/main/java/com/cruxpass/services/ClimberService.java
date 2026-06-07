@@ -188,6 +188,17 @@ public class ClimberService {
         return climberRepo.findAll();
     }
 
+    public Climber getSelfOrDependent(Long requesterId, Long targetClimberId) {
+        if (requesterId.equals(targetClimberId)) {
+            return getById(targetClimberId);
+        }
+
+        return getDependentsOfGuardian(requesterId).stream()
+            .filter(dependent -> dependent.getId().equals(targetClimberId))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Not self or dependent"));
+    }
+
     public Climber getById(Long id) {
         return climberRepo.findById(id).orElse(null);
     }

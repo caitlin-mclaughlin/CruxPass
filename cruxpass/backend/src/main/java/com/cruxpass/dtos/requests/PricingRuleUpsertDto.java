@@ -6,6 +6,7 @@ import java.util.Set;
 
 public record PricingRuleUpsertDto(
     Long id,
+    String name,
     PricingRuleType ruleType,
     Set<GroupRef> groups,
     Integer minAge,

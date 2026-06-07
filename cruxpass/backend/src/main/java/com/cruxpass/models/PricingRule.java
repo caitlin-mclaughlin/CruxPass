@@ -37,6 +37,8 @@ public class PricingRule {
     @ManyToOne
     private Competition competition;
 
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PricingRuleType ruleType;

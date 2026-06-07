@@ -2,17 +2,34 @@
 Climbing competition app
 
 ## MVP
-- [x] Gym signup + comp creation
-- [x] User signup + registration
-- [x] Series signup + registration
-  - [ ] Link competitions to series
-  - [ ] Link climbers to series
-- [ ] Parent account with management of multiple climbers (for under 13)
+- [x] Gym 
+  - [x] Signup
+  - [x] Create competitions (IN PROGRESS)
+  - [ ] Manage competition registrations
+    - [x] Register climbers for competitions
+    - [x] Delete / change registrations
+    - [ ] NEEDS TO BE UPDATED
+  - [ ] Manage competition submissions
+  - [ ] Create custom competitor groups with optional age restrictions (IN PROGRESS)
+- [x] Climber 
+  - [x] Signup
+  - [x] Parent account with management of multiple climbers (for under 13) ("dependents")
+  - [x] Register for competitions / series (no payment right now)
+- [x] Series 
+  - [x] Signup
+  - [x] Link competitions to series
+  - [x] Link climbers to series (bidirectional)
+  - [x] Link gyms to series (bidirectional)
+  - [ ] Create custom competitor groups with optional age restrictions (IN PROGRESS)
 - [ ] Judge account for different comp styles
+- [ ] Registration payment via Stripe
 - [x] Score submission form
-- [ ] Scoring & leaderboard computation
+  - [ ] NEEDS TO BE UPDATED
+- [x] Scoring & leaderboard computation
+  - [ ] NEEDS TO BE UPDATED
 - [ ] Basic mobile app for submission
-- [ ] Public leaderboard on web
+- [x] Public leaderboard on web
+  - [ ] NEEDS TO BE UPDATED
  
 ## Core Features
 Gyms (Admin Role)
@@ -24,9 +41,16 @@ Gyms (Admin Role)
 Users (Competitors)
 - Create account & manage profile
 - Register for comps (with payment)
+- Register for series (with payment)
 - Submit top 5 scores with attempts
   - 6 for tie breaks?
 - View personal comp history & badges
+
+Series (Role)
+- Create/manage series account
+- Define series details (name, start / end dates, registration deadline, groups)
+- Link gyms and competitions to series (bidirectional)
+- View/manage details, competitions, registrations, and comp results
 
 Public / Website Visitors
 - Comp results and rankings
@@ -41,16 +65,20 @@ Backend:
 ```
 backend/
 ├── src/main/java/com/cruxpass/
+│   ├── annotations/
 │   ├── config/
 │   ├── controllers/
 │   ├── dtos/
 │   ├── enums/
+│   ├── events/
 │   ├── exceptions/
 │   ├── mappers/
 │   ├── models/
 │   ├── repositories/
+│   ├── resolvers/
 │   ├── security/
 │   ├── services/
+│   ├── utils/
 │   └── CruxPassApplication.java
 ├── src/main/resources/
 │   └── application.yml
@@ -62,7 +90,9 @@ frontend/
 ├── public/
 │   ├── pwa icons & manifest
 ├── src/
+│   ├── assets/ 
 │   ├── components/ 
+│       ├── forms/
 │       ├── modals/
 │       ├── ui/
 │   ├── constants/
@@ -71,6 +101,7 @@ frontend/
 │   ├── lib/
 │   ├── models/
 │   ├── pages
+│       ├── profiles/
 │   ├── services/
 │   ├── styles/
 │   ├── utils/
@@ -119,9 +150,9 @@ graph LR;
 ```
 ### Tech Stack
 - Frontend: React + TypeScript (with PWA setup)
-- Backend: Spring Boot (you already use this 👍)
-- Database: PostgreSQL (which you already use)
-- Authentication: JWT (already in use, reuseable here)
+- Backend: Spring Boot
+- Database: PostgreSQL
+- Authentication: JWT
 - Payments: Stripe (for easy, secure registration payments)
 - Hosting:
   - Frontend: Vercel, Netlify, or Firebase Hosting

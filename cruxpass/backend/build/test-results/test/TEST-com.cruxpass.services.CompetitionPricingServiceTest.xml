@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.cruxpass.services.CompetitionPricingServiceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-06-07T05:15:29.628Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.008">
+  <properties/>
+  <testcase name="quoteForGroupPricingThrowsWhenNoRuleIncludesSelectedGroup()" classname="com.cruxpass.services.CompetitionPricingServiceTest" time="0.003"/>
+  <testcase name="quoteForAgePricingStillMatchesAgeRules()" classname="com.cruxpass.services.CompetitionPricingServiceTest" time="0.003"/>
+  <testcase name="quoteForGroupPricingUsesHighestPriorityMatchingRule()" classname="com.cruxpass.services.CompetitionPricingServiceTest" time="0.001"/>
+  <testcase name="quoteForGroupPricingMatchesAnyGroupInRule()" classname="com.cruxpass.services.CompetitionPricingServiceTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

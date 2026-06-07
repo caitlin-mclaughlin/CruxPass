@@ -310,6 +310,8 @@ public class CompetitionService {
                 rule.setCompetition(comp);
             }
 
+            String ruleName = ruleDto.name() == null ? null : ruleDto.name().trim();
+            rule.setName(ruleName == null || ruleName.isBlank() ? null : ruleName);
             rule.setRuleType(ruleDto.ruleType());
             rule.setAmount(ruleDto.amount());
             rule.setPriority(ruleDto.priority() == null ? 100 : ruleDto.priority());

@@ -3,6 +3,7 @@ package com.cruxpass.services;
 import com.cruxpass.dtos.requests.RouteUpsertDto;
 import com.cruxpass.models.Competition;
 import com.cruxpass.models.Gym;
+import com.cruxpass.enums.BoulderGrade;
 import com.cruxpass.models.Route;
 import com.cruxpass.repositories.CompetitionRepository;
 import com.cruxpass.repositories.RouteRepository;
@@ -42,28 +43,50 @@ public class RouteService {
 
     @Cacheable(value = "routes", key = "#competitionId")
     public List<Route> getByCompetitionId(Long competitionId) {
-        return routeRepo.findByCompetitionId(competitionId).orElse(null);
+        return routeRepo.findByCompetitionId(competitionId)
+            .map(routes -> routes.stream()
+                .sorted((a, b) -> Integer.compare(a.getNumber(), b.getNumber()))
+                .toList())
+            .orElse(List.of());
     }
 
     private void syncRoutes(Competition comp, List<RouteUpsertDto> dtos) {
+        if (dtos == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Routes list is required.");
+        }
+
+        Map<Integer, Long> duplicates = dtos.stream()
+            .collect(Collectors.groupingBy(RouteUpsertDto::number, Collectors.counting()));
+        if (duplicates.values().stream().anyMatch(count -> count > 1)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duplicate route numbers are not allowed.");
+        }
+
         Map<Integer, Route> existing =
             comp.getRoutes().stream()
                 .collect(Collectors.toMap(Route::getNumber, r -> r));
 
-        List<Route> newList = new ArrayList<>();
+        List<Route> newList = dtos.stream()
+            .peek(dto -> {
+                if (dto.number() <= 0 || dto.pointValue() < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Route number and point value must be non-negative.");
+                }
+            })
+            .map(dto -> {
+                Route route = existing.remove(dto.number());
 
-        for (RouteUpsertDto dto : dtos) {
-            Route route = existing.remove(dto.number());
+                if (route == null) {
+                    route = new Route();
+                    route.setCompetition(comp);
+                    route.setGym(comp.getGym());
+                    route.setNumber(dto.number());
+                }
 
-            if (route == null) {
-                route = new Route();
-                route.setCompetition(comp);
-                route.setNumber(dto.number());
-            }
-
-            route.setPointValue(dto.pointValue());
-            newList.add(route);
-        }
+                route.setPointValue(dto.pointValue());
+                route.setGrade(dto.grade() == null ? BoulderGrade.UNGRADED : dto.grade());
+                return route;
+            })
+            .sorted((a, b) -> Integer.compare(a.getNumber(), b.getNumber()))
+            .toList();
 
         comp.getRoutes().clear();
         comp.getRoutes().addAll(newList);

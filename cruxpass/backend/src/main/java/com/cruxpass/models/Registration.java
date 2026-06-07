@@ -1,6 +1,7 @@
 package com.cruxpass.models;
 
 import com.cruxpass.enums.Division;
+import com.cruxpass.enums.PaymentStatus;
 import com.cruxpass.models.GroupRefs.GroupRefEmbeddable;
 
 import jakarta.persistence.*;
@@ -26,6 +27,11 @@ public class Registration {
 
     @Column(nullable = false)
     private String feeCurrency = "USD";
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    private String checkoutSessionId;
 
     @Embedded
     @AttributeOverrides({

@@ -30,6 +30,16 @@ public class RegistrationService {
         return registrationRepo.findById(id).orElse(null);
     }
 
+    public Registration getByIdWithCheckoutDetails(Long id) {
+        Registration registration = registrationRepo.findById(id).orElse(null);
+        if (registration != null) {
+            // Initialize lazy associations needed for checkout flow
+            registration.getClimber();
+            registration.getCompetition();
+        }
+        return registration;
+    }
+
     public Registration getByClimberAndCompetition(Climber climber, Competition competition) {
         return registrationRepo.findByClimberAndCompetition(climber, competition).orElse(null);
     }
