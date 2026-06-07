@@ -73,7 +73,9 @@ configurations {
 
 // Integration test classpath (declared after configurations exist)
 dependencies {
-    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Pin version explicitly for integrationTest configuration so dependency-management
+    // resolution doesn't depend on plugin-managed configurations.
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test:4.0.6'
     integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.0'
     integrationTestImplementation 'org.testcontainers:postgresql:1.19.0'
 }
