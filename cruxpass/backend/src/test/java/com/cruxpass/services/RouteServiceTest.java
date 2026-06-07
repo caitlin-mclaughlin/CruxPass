@@ -1,31 +1,5 @@
 package com.cruxpass.services;
 
-import com.cruxpass.models.Competition;
-import com.cruxpass.models.Route;
-import com.cruxpass.repositories.RouteRepository;
-import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-class RouteServiceTest {
-
-    @Test
-    void getByCompetitionIdDelegatesToRepository() {
-        RouteRepository repo = mock(RouteRepository.class);
-        RouteService svc = new RouteService(repo);
-        Competition comp = new Competition();
-        when(repo.findByCompetitionId(comp.getId())).thenReturn(Collections.emptyList());
-
-        // safe call: should not throw
-        assertNotNull(svc.getByCompetitionId(comp.getId()));
-    }
-}
-package com.cruxpass.services;
-
 import static com.cruxpass.support.TestFixtures.competition;
 import static com.cruxpass.support.TestFixtures.gym;
 import static org.junit.jupiter.api.Assertions.assertEquals;
