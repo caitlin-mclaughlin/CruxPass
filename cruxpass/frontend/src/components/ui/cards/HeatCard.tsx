@@ -21,7 +21,7 @@ export function HeatCard({
   onDelete,
 }: HeatCardProps) {
   return (
-    <div className="flex flex-col items-center text-center rounded-md min-w-50 border border-green bg-shadow px-3 py-2 shadow-md">
+    <div className="flex flex-col items-center text-center rounded-md min-w-50 border border-green/20 bg-shadow px-3 py-2 shadow-md">
       {/* Name and Time */}
       {heat.heatName && (
         <div className="text-lg font-semibold">

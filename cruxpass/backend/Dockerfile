@@ -1,7 +1,7 @@
 # backend/Dockerfile
 
 ### BUILD STAGE ###
-#FROM gradle:9.5.0-jdk25 AS builder
+#FROM gradle:9.0.0-jdk17 AS builder
 
 #WORKDIR /app
 
@@ -18,7 +18,7 @@
 #RUN ./gradlew clean build -x test --no-daemon
 
 ### RUNTIME STAGE ###
-FROM eclipse-temurin:25-jdk-alpine
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
 

@@ -16,14 +16,14 @@ export function LeaderboardTable({ submissions, group, division }: LeaderboardTa
 
   if (rows.length === 0) {
     return (
-      <div className="p-4 text-center bg-shadow text-green border border-green rounded-md shadow-md">
+      <div className="p-4 text-center bg-shadow text-green border border-green/20 rounded-md shadow-md">
         No submissions yet for <strong>{formatGroupDivision(group, division)}</strong>.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-green shadow-md">
+    <div className="overflow-hidden rounded-md border border-green/20 shadow-md">
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-green text-shadow">

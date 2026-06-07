@@ -10,7 +10,7 @@ const Input = React.forwardRef<
     <input
       type={type}
       className={cn(
-        "flex h-9 w-full rounded-md border border-green bg-shadow px-3 py-1 text-green shadow-md \
+        "flex h-9 w-full rounded-md border border-green/20 bg-shadow px-3 py-1 text-green shadow-md \
         transition-colors duration-200 placeholder:text-prompt placeholder:font-normal text-left \
         focus-visible:outline-none disabled:cursor-not-allowed text-md items-center",
         className

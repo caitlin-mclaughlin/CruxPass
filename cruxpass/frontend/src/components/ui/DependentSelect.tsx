@@ -13,6 +13,7 @@ interface DependentSelectProps {
   onChange: (id: number | null) => void
   defaultLabel?: string
   className?: string
+  includeSelf?: boolean
 }
 
 export default function DependentSelect({
@@ -20,17 +21,18 @@ export default function DependentSelect({
   selectedClimberId,
   onChange,
   defaultLabel = 'Myself',
-  className = ''
+  className = '',
+  includeSelf = true
 }: DependentSelectProps) {
   // Build combined list (includes the "self" placeholder)
   const options = [
-    { id: null, name: `-- ${defaultLabel} --` },
+    ...(includeSelf ? [{ id: null, name: `-- ${defaultLabel} --` }] : []),
     ...dependents.map((c) => ({ id: c.id, name: c.name })),
   ]
 
   const selectedOption =
     options.find((opt) => opt.id === selectedClimberId)?.name ??
-    `-- ${defaultLabel} --`
+    (includeSelf ? `-- ${defaultLabel} --` : options[0]?.name ?? '')
 
   return (
     <div className={`space-y-1 ${className}`}>
@@ -42,7 +44,7 @@ export default function DependentSelect({
         {({ open }) => (
           <div className="relative w-full">
             <ListboxButton
-              className="relative w-full cursor-pointer rounded-md shadow-md bg-shadow border border-green \
+              className="relative w-full cursor-pointer rounded-md shadow-md bg-shadow border border-green/20 \
                          px-3 py-1 pr-10 text-left items-center text-md text-green focus:outline-none"
             >
               {selectedOption}
@@ -56,7 +58,7 @@ export default function DependentSelect({
 
             {open && (
               <ListboxOptions
-                className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10 focus:outline-none"
+                className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-green/20 text-green shadow-lg z-10 focus:outline-none"
               >
                 {options.map((option) => (
                   <ListboxOption key={option.id ?? 'self'} value={option.id}>

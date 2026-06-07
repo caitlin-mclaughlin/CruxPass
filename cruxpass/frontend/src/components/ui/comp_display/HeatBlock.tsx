@@ -169,12 +169,12 @@ export function HeatBlock({
                       divisionsEnabled: !heat.divisionsEnabled,
                     })
                   }
-                  className={`relative inline-flex h-6 w-11 border border-green items-center rounded-full transition-colors focus:outline-none ${
+                  className={`relative inline-flex h-6 w-11 border border-green/20 items-center rounded-full transition-colors focus:outline-none ${
                     heat.divisionsEnabled ? 'bg-green' : 'bg-background'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full border border-green bg-shadow transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full border border-green/20 bg-shadow transition-transform ${
                       heat.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cruxpass.mappers.ResolvedCompetitorGroupMapperTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-06-07T05:15:29.619Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.007">
+<testsuite name="com.cruxpass.mappers.ResolvedCompetitorGroupMapperTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-06-07T20:52:14.048Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.003">
   <properties/>
-  <testcase name="toEmbeddableMapsDefaultResolvedGroupByDisplayLabel()" classname="com.cruxpass.mappers.ResolvedCompetitorGroupMapperTest" time="0.003"/>
+  <testcase name="toEmbeddableMapsDefaultResolvedGroupByDisplayLabel()" classname="com.cruxpass.mappers.ResolvedCompetitorGroupMapperTest" time="0.001"/>
   <testcase name="toTopicTokenUsesStableDefaultAndCustomTokens()" classname="com.cruxpass.mappers.ResolvedCompetitorGroupMapperTest" time="0.0"/>
   <testcase name="toEmbeddableMapsCustomResolvedGroupById()" classname="com.cruxpass.mappers.ResolvedCompetitorGroupMapperTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>

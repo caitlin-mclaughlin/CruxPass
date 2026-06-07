@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cruxpass.services.SubmissionServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-06-07T05:15:29.891Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.055">
-  <properties/>
-  <testcase name="getRankingsOrdersByPointsAttemptsAndKeepsTiesTogether()" classname="com.cruxpass.services.SubmissionServiceTest" time="0.047"/>
-  <testcase name="submitOrUpdateScoresRejectsRoutesFromAnotherCompetition()" classname="com.cruxpass.services.SubmissionServiceTest" time="0.003"/>
-  <testcase name="submitOrUpdateScoresSavesFullScorecardAndRemovesClearedRoutes()" classname="com.cruxpass.services.SubmissionServiceTest" time="0.004"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

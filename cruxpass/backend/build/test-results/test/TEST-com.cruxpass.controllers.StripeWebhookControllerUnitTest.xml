@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cruxpass.controllers.StripeWebhookControllerUnitTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-06-07T05:15:29.548Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.028">
-  <properties/>
-  <testcase name="handleWebhookReturnsServiceUnavailableWhenSecretNotConfigured()" classname="com.cruxpass.controllers.StripeWebhookControllerUnitTest" time="0.002"/>
-  <testcase name="handleWebhookReturnsBadRequestWhenVerificationFails()" classname="com.cruxpass.controllers.StripeWebhookControllerUnitTest" time="0.024"/>
-  <testcase name="handleWebhookReturnsBadRequestWhenSignatureMissing()" classname="com.cruxpass.controllers.StripeWebhookControllerUnitTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

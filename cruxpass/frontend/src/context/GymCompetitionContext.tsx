@@ -1,7 +1,7 @@
 // context/CompetitionContext
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { CompetitionEntity, GymRegistration, HeatData, Registration, Route, SubmittedRoute } from '@/models/domain'
-import { getCompetition, getHeats, getRegistrationsForComp, getRoutesForComp, getSubmissionsForComp, updateCompetitionInfo, updateRegistrationsForComp, updateRoutesForComp } from '@/services/gymCompetitionService';
+import { getCompetition, getHeats, getRegistrationsForComp, getRoutesForComp, getSubmissionsForComp, updateCompetitionInfo, updateRegistrationsForComp, updateRouteGradeVisibility, updateRoutesForComp } from '@/services/gymCompetitionService';
 import { CompetitionDto, CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionRequestDto, SubmissionResponseDto, SubmittedRouteDto, UpdateCompetitionDto } from '@/models/dtos';
 
 interface GymCompetitionContextType {
@@ -21,6 +21,7 @@ interface GymCompetitionContextType {
   updateCompetition: (compId: number, updatedData: UpdateCompetitionDto) => Promise<void>;
   updateRegistrations: (compId: number, updatedData: Registration[]) => Promise<void>;
   updateRoutes: (compId: number, updatedData: RouteDto[]) => Promise<void>;
+  updateRoutesVisible: (compId: number, routeGradesVisible: boolean) => Promise<void>;
   //updateSubmissions: (updatedData: Partial<SubmittedRoute[]>) => Promise<void>;
 }
 
@@ -41,6 +42,7 @@ const GymCompetitionContext = createContext<GymCompetitionContextType>({
   updateCompetition: async () => {},
   updateRegistrations: async () => {},
   updateRoutes: async () => {},
+  updateRoutesVisible: async () => {},
   //updateSubmissions: async () => {},
 });
 
@@ -140,6 +142,7 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
       const data: Route[] = res.map((r: RouteResponseDto) => ({
         id: r.id,
         number: r.number,
+        grade: r.grade,
         pointValue: r.pointValue,
       }));
       setRoutes(data);
@@ -191,6 +194,14 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
     await updateRoutesForComp(targetId, updatedData);
     await refreshRoutes(targetId);
   }
+
+  async function updateRoutesVisible(compId: number, routeGradesVisible: boolean) {
+    const targetId = id ?? compId;
+    if (!targetId) return;
+    const data = await updateRouteGradeVisibility(targetId, routeGradesVisible);
+    setCompetition(data as CompetitionEntity);
+    setHeats(data.heats as HeatData[]);
+  }
 /*
   async function updateSubmissions(gymId: number, updatedData: Partial<SubmittedRoute[]>) {
     await updateSubmissions(id, updatedData);
@@ -224,7 +235,8 @@ export function GymCompetitionProvider({ id, children }: { id?: number, children
       refreshSubmissions,
       updateCompetition,
       updateRegistrations,
-      updateRoutes 
+      updateRoutes,
+      updateRoutesVisible 
       //updateSubmissions 
     }}>
       {children}

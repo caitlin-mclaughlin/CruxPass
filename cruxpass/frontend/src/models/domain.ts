@@ -76,6 +76,7 @@ export interface CompetitionEntity {
   pricingType: PricingType;
   flatFee?: number;
   feeCurrency: string;
+  routeGradesVisible?: boolean;
   pricingRules: PricingRuleData[];
   selectedGroups: ResolvedCompetitorGroup[];
   heats: HeatData[];

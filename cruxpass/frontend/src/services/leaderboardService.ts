@@ -7,7 +7,7 @@ export async function getScoresForComp(
   group: DefaultCompetitorGroup,
   division?: Division
 ): Promise<RankedSubmissionDto[]> {
-  const res = await api.get(`/competitions/${competitionId}/rankings`, {
+  const res = await api.get(`/competitions/${competitionId}/submissions/rankings`, {
     params: { group, division }
   });
   // Defensive normalization

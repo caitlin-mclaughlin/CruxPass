@@ -1,6 +1,7 @@
 import { HeatListResponsive } from "@/components/ui/heat_display/HeatListResponsive"
 import { Button } from "@/components/ui/Button"
 import { CompetitionPreviewCard } from "@/components/ui/cards/CompetitionPreviewCard"
+import PricingRulesDisplay from "@/components/ui/comp_display/PriceRuleDisplay"
 import { CompetitionEntity, HeatData } from "@/models/domain"
 import { ResolvedCompetitorGroup } from "@/models/dtos"
 import { CalendarCheck, PencilLine } from "lucide-react"
@@ -11,7 +12,7 @@ interface Props {
   competition: CompetitionEntity,
   heats: HeatData[],
   gymCustomGroups: ResolvedCompetitorGroup[],
-  setActiveTab: React.Dispatch<React.SetStateAction<"heats" | "registrations" | "overview" | "leaderboard">>,
+  setActiveTab: React.Dispatch<React.SetStateAction<"heats" | "routes" | "registrations" | "overview" | "leaderboard">>,
   setShowRouteModal: React.Dispatch<React.SetStateAction<boolean>>
 }
 
@@ -29,6 +30,13 @@ export function OverviewTab({
     <div className="space-y-4">
       {/* Competition Details Box */}
       <CompetitionPreviewCard competition={competition} />
+
+      <PricingRulesDisplay
+        pricingType={competition.pricingType}
+        flatFee={competition.flatFee}
+        feeCurrency={competition.feeCurrency}
+        pricingRules={competition.pricingRules}
+      />
 
       <div className="relative flex-col">
         <h2 className="text-xl font-bold mb-1">Competitor Groups</h2>

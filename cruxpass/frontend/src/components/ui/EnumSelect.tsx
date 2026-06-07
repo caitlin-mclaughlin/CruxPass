@@ -35,7 +35,7 @@ export function EnumSelect<T extends string>({
         return (
           <div className={`relative w-full ${className}`}>
             <ListboxButton
-              className="relative w-full cursor-pointer rounded-md shadow-md bg-shadow border border-green \
+              className="relative w-full cursor-pointer rounded-md shadow-md bg-shadow border border-green/20 \
                          px-3 py-1 pr-10 text-left items-center text-green h-9 text-md focus:outline-none"
             >
               {!value ? placeholder : (labelMap ? labelMap[value] : value)}
@@ -49,7 +49,7 @@ export function EnumSelect<T extends string>({
 
             {open && (
               <ListboxOptions
-                className="absolute mt-1 max-h-50 w-full overflow-auto rounded-md bg-background border border-green text-green shadow-lg z-10 focus:outline-none"
+                className="absolute mt-1 max-h-50 w-full overflow-auto rounded-md bg-background border border-green/20 text-green shadow-lg z-10 focus:outline-none"
               >
                 {options.map((option) => (
                   <ListboxOption key={option} value={option}>

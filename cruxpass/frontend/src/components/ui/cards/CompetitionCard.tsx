@@ -20,7 +20,7 @@ export function CompetitionCard({ comp }: Props) {
         px-3 py-2
         min-w-[250px] max-w-[350px]
         rounded-md shadow-md
-        bg-background border border-green text-green
+        bg-background border border-green/20 text-green
       "
     >
       <div className="text-med truncate flex justify-center"><strong>{comp.name}</strong></div>

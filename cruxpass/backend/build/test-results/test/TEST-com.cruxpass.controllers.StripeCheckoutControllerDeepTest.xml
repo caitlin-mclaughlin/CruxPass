@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cruxpass.controllers.StripeCheckoutControllerDeepTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-06-07T05:15:29.274Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.246">
-  <properties/>
-  <testcase name="handleMissingRegistrationDoesNotThrow()" classname="com.cruxpass.controllers.StripeCheckoutControllerDeepTest" time="0.246"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

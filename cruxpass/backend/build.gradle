@@ -1,7 +1,7 @@
 // backend/build.gradle
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.6'
+    id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -10,7 +10,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -33,15 +33,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.modelmapper:modelmapper:3.1.1'
     implementation 'com.stripe:stripe-java:21.15.0'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     runtimeOnly 'org.postgresql:postgresql'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
-    testImplementation 'org.testcontainers:postgresql:1.19.0'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
 }
 /*
 task generateJwtKey(type: JavaExec) {
@@ -59,8 +59,8 @@ sourceSets {
     integrationTest {
         java.srcDir file('src/integrationTest/java')
         resources.srcDir file('src/integrationTest/resources')
-        compileClasspath += sourceSets.main.output + configurations.integrationTestCompileClasspath
-        runtimeClasspath += output + compileClasspath + configurations.integrationTestRuntimeClasspath
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += output + compileClasspath
     }
 }
 
@@ -69,15 +69,6 @@ configurations {
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
     integrationTestCompileOnly.extendsFrom testCompileOnly
     integrationTestAnnotationProcessor.extendsFrom testAnnotationProcessor
-}
-
-// Integration test classpath (declared after configurations exist)
-dependencies {
-    // Pin version explicitly for integrationTest configuration so dependency-management
-    // resolution doesn't depend on plugin-managed configurations.
-    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test:4.0.6'
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.0'
-    integrationTestImplementation 'org.testcontainers:postgresql:1.19.0'
 }
 
 tasks.register('integrationTest', Test) {
@@ -89,9 +80,4 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter test
 }
 
-// Run integration tests only when explicitly requested via -PrunIntegrationTests=true
-if (project.hasProperty('runIntegrationTests') && project.property('runIntegrationTests') == 'true') {
-    check.dependsOn integrationTest
-} else {
-    tasks.named('integrationTest') { enabled = false }
-}
+check.dependsOn integrationTest

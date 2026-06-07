@@ -8,7 +8,6 @@ import { useClimberLookup } from '@/context/ClimberLookupContext'
 import { isEligibleForGroup } from '@/utils/ageEligibility'
 import {
   DEFAULT_COMPETITOR_GROUPS,
-  DefaultCompetitorGroup,
   DivisionEnumMap,
   Division,
   DIVISION_OPTIONS,
@@ -16,6 +15,8 @@ import {
   SearchTypeDisplay,
   DefaultCompetitorGroupMap
 } from '@/constants/enum'
+import type { DefaultCompetitorGroup } from '@/constants/enum'
+import { differenceInYears } from 'date-fns'
 import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
 import { Button } from '@/components/ui/Button'
 import { CompetitionEntity, DependentClimber, SimpleClimber } from '@/models/domain'
@@ -26,7 +27,10 @@ import { Search } from 'lucide-react'
 import { formatDate, formatPhoneNumber } from '@/utils/formatters'
 import DependentSelect from '../ui/DependentSelect'
 import { displayDateTime, formatHeatTimeRange } from '@/utils/datetime'
-import { getSummaryDefaultGroups, getSummaryDivisions, heatSupportsGroup } from '@/utils/competitionSummary'
+import { getSummaryDivisions, heatSupportsGroup } from '@/utils/competitionSummary'
+import { updateRegistrationForComp as updateGymRegistration } from '@/services/gymCompetitionService'
+import { createStripeCheckoutSession } from '@/services/stripeService'
+import { updateMyRegistrationForComp } from '@/services/climberCompetitionService'
 
 interface Props {
   open: boolean
@@ -34,10 +38,11 @@ interface Props {
   competition: CompetitionEntity
   onSuccess: () => void
   mode?: 'climber' | 'gym'
+  dependentOnly?: boolean
 }
 
-export default function RegisterModal({ open, onClose, competition, onSuccess, mode = 'climber' }: Props) {
-  const [selectedGroup, setSelectedGroup] = useState<DefaultCompetitorGroup | null>(null)
+export default function RegisterModal({ open, onClose, competition, onSuccess, mode = 'climber', dependentOnly = false }: Props) {
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
   const [selectedDivision, setSelectedDivision] = useState<Division | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedClimberId, setSelectedClimberId] = useState<number | null>(null)
@@ -53,16 +58,15 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
   const {
     competition: detailedCompetition,
     refreshCompetition,
-    updateRegistration,
     refreshRegistration
   } = useClimberCompetition()
   const { results, climberSearchLoading, searchClimbers, getDependents, clearSearch } = useClimberLookup()
 
-  const heats = (detailedCompetition ?? competition)?.heats ?? []
-  const availableGroups = getSummaryDefaultGroups((detailedCompetition ?? competition) as CompetitionEntity)
-  const divisions = getSummaryDivisions((detailedCompetition ?? competition) as CompetitionEntity)
+  const activeCompetition = (detailedCompetition ?? competition) as CompetitionEntity
+  const heats = activeCompetition?.heats ?? []
+  const availableGroups = activeCompetition?.selectedGroups ?? []
+  const divisions = getSummaryDivisions(activeCompetition)
   const availableDivisions = divisions.length > 0 ? divisions : [...DIVISION_OPTIONS]
-  const sortedGroups = DEFAULT_COMPETITOR_GROUPS.filter(group => availableGroups.includes(group))
   const isYouthGroup = (group: string) => group.includes('YOUTH') || group.includes('JUNIOR')
 
   const getTargetClimber = () => {
@@ -81,9 +85,21 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
   }
 
   const targetClimber = getTargetClimber()
+  const climberDependentOptions = dependentOnly ? (climberDependents ?? []) : (climberDependents ?? [])
 
-  const heatHasGroup = (heat: any, group: DefaultCompetitorGroup): boolean => {
-    return heatSupportsGroup(heat, group)
+  const defaultKeyForGroupName = (groupName: string): DefaultCompetitorGroup | null => {
+    if ((DEFAULT_COMPETITOR_GROUPS as readonly string[]).includes(groupName)) {
+      return groupName as DefaultCompetitorGroup
+    }
+
+    return (Object.entries(DefaultCompetitorGroupMap) as Array<[DefaultCompetitorGroup, string]>)
+      .find(([, label]) => label === groupName)?.[0] ?? null
+  }
+
+  const heatHasGroup = (heat: any, groupName: string): boolean => {
+    const defaultKey = defaultKeyForGroupName(groupName)
+    if (defaultKey && heatSupportsGroup(heat, defaultKey)) return true
+    return (heat.groups ?? []).some((group: any) => group?.name === groupName)
   }
 
   const heatAllowsDivision = (heat: any, division: Division): boolean => {
@@ -93,7 +109,7 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
     return heatDivisions.includes(division)
   }
 
-  const matchingHeatsFor = (group: DefaultCompetitorGroup, division?: Division | null) => {
+  const matchingHeatsFor = (group: string, division?: Division | null) => {
     return heats.filter((heat: any) => {
       if (!heatHasGroup(heat, group)) return false
       if (!division) return true
@@ -101,23 +117,47 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
     })
   }
 
-  const hasEligibleHeatForGroup = (group: DefaultCompetitorGroup) => {
+  const hasEligibleHeatForGroup = (group: string) => {
     if (availableDivisions.length === 0) {
       return matchingHeatsFor(group).length > 0
     }
     return availableDivisions.some(d => matchingHeatsFor(group, d).length > 0)
   }
 
-  const groupOptions = sortedGroups.map(group => {
-    const ageEligible = targetClimber ? isEligibleForGroup(targetClimber.dob, group) : true
-    const hasHeat = heats.length > 0 ? hasEligibleHeatForGroup(group) : true
+  const isEligibleForResolvedGroup = (dob: string, group: { name: string; ageRule?: any }) => {
+    if (group.ageRule) {
+      const age = differenceInYears(new Date(), new Date(dob))
+      if (group.ageRule.min != null && age < group.ageRule.min) return false
+      if (group.ageRule.max != null && age > group.ageRule.max) return false
+      return true
+    }
+
+    const defaultKey = defaultKeyForGroupName(group.name)
+    return defaultKey ? isEligibleForGroup(dob, defaultKey) : true
+  }
+
+  const priceForGroup = (groupName: string) => {
+    if (activeCompetition.pricingType === 'FLAT') return activeCompetition.flatFee
+    if (activeCompetition.pricingType !== 'BY_GROUP') return undefined
+
+    return activeCompetition.pricingRules
+      ?.filter(rule => rule.ruleType === 'GROUP')
+      .find(rule => (rule.groups ?? []).some(group => group.name === groupName))
+      ?.amount
+  }
+
+  const groupOptions = availableGroups.map(group => {
+    const ageEligible = targetClimber ? isEligibleForResolvedGroup(targetClimber.dob, group) : true
+    const hasHeat = heats.length > 0 ? hasEligibleHeatForGroup(group.name) : true
+    const price = priceForGroup(group.name)
     return {
-      value: group,
-      label: DefaultCompetitorGroupMap[group as keyof typeof DefaultCompetitorGroupMap],
+      value: group.name,
+      label: price ? `${group.name} $${price}` : group.name,
       disabled: !ageEligible || !hasHeat
     }
   })
   const validGroupOptions = groupOptions.filter(option => !option.disabled)
+  const visibleGroupOptions = mode === 'gym' && !targetClimber ? [] : validGroupOptions
 
   const selectedGroupHeats = selectedGroup ? matchingHeatsFor(selectedGroup, selectedDivision) : []
   const divisionOptions = availableDivisions.map(d => {
@@ -151,12 +191,15 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
 
   useEffect(() => {
     if (!open) return
+    if (dependentOnly && mode === 'climber' && climberDependentOptions.length > 0 && selectedClimberId == null) {
+      setSelectedClimberId(climberDependentOptions[0].id)
+    }
     if (mode === 'gym' && !targetClimber) return
     if (selectedGroup !== null) return
     if (validGroupOptions.length !== 1) return
 
-    setSelectedGroup(validGroupOptions[0].value as DefaultCompetitorGroup)
-  }, [open, mode, targetClimber, selectedGroup, validGroupOptions.length])
+    setSelectedGroup(validGroupOptions[0].value)
+  }, [open, mode, targetClimber, selectedGroup, validGroupOptions.length, dependentOnly, climberDependentOptions.length, selectedClimberId])
 
   useEffect(() => {
     if (!open) return
@@ -210,7 +253,10 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
         return
       }
 
-      const isAgeEligible = isEligibleForGroup(targetClimber.dob, selectedGroup)
+      const selectedGroupData = availableGroups.find(group => group.name === selectedGroup)
+      const isAgeEligible = selectedGroupData
+        ? isEligibleForResolvedGroup(targetClimber.dob, selectedGroupData)
+        : true
       if (!isAgeEligible && isYouthGroup(selectedGroup)) {
         setError("This climber must be within this group's age range.")
         return
@@ -236,16 +282,32 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
         email: (targetClimber as any).email ?? selectedClimber?.email ?? "",
         dob: targetClimber.dob,
         competitorGroup: {
-          id: null,
+          id: availableGroups.find(group => group.name === selectedGroup)?.id ?? null,
           name: selectedGroup,
-          ageRule: null,
+          ageRule: availableGroups.find(group => group.name === selectedGroup)?.ageRule ?? null,
         } as any,
         division: selectedDivision,
         heat: chosenHeat as any,
-        paid: true
+        paid: false
       }
 
-      await updateRegistration(competition.id, payload)
+      if (mode === 'gym') {
+        await updateGymRegistration(competition.id, payload)
+      } else {
+        const savedRegistration = await updateMyRegistrationForComp(competition.id, payload)
+        if (savedRegistration?.id) {
+          const currentUrl = window.location.href.split('?')[0]
+          const session = await createStripeCheckoutSession(
+            savedRegistration.id,
+            `${currentUrl}?payment=success`,
+            `${currentUrl}?payment=cancel`
+          )
+          if (session.sessionUrl) {
+            window.location.assign(session.sessionUrl)
+            return
+          }
+        }
+      }
       onSuccess()
       handleClose()
     } catch (err) {
@@ -278,7 +340,9 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
   }, [open])
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (!nextOpen) handleClose()
+    }}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>
@@ -359,11 +423,11 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
 
               {/* Selected climber info (persistent after dropdown closes) */}
               {selectedClimber && (
-                <div className="grid grid-cols-[auto_auto_105px_70px] items-center gap-2 border border-green bg-shadow rounded-md px-3 py-1 text-green shadow-md">
-                  <span className="border-r border-green font-semibold">{selectedClimber.name}</span>
-                  <span className="border-r border-green text-sm font-semibold">{selectedClimber.email}</span>
+                <div className="grid grid-cols-[auto_auto_105px_70px] items-center gap-2 border border-green/20 bg-shadow rounded-md px-3 py-1 text-green shadow-md">
+                  <span className="border-r border-green/20 font-semibold">{selectedClimber.name}</span>
+                  <span className="border-r border-green/20 text-sm font-semibold">{selectedClimber.email}</span>
                   {selectedClimber.phone && (
-                    <span className="border-r border-green text-sm font-semibold">{formatPhoneNumber(selectedClimber.phone)}</span>
+                    <span className="border-r border-green/20 text-sm font-semibold">{formatPhoneNumber(selectedClimber.phone)}</span>
                   )}
                   {selectedClimber.dob && (
                     <span className="flex text-sm font-semibold">
@@ -388,22 +452,35 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
           {/* Climber Mode: Dependent Selector */}
           {mode === 'climber' && climberDependents?.length > 0 && (
             <DependentSelect
-              dependents={climberDependents}
+              dependents={climberDependentOptions}
               selectedClimberId={selectedClimberId}
               onChange={setSelectedClimberId}
+              includeSelf={!dependentOnly}
             />
+          )}
+
+          {mode === 'climber' && targetClimber && (
+            <div className="text-sm text-muted">
+              Showing groups available to {targetClimber.name}.
+            </div>
           )}
 
           {/* Group Selection */}
           <div>
             <label className="font-semibold">Competitor Group:</label>
-            <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
-              <CustomRadioGroup
-                name="group"
-                options={groupOptions}
-                selected={selectedGroup}
-                onChange={setSelectedGroup}
-              />
+            <div className="px-3 py-1 bg-shadow border border-green/20 rounded-md shadow-md">
+              {mode === 'gym' && !targetClimber ? (
+                <div className="text-sm text-muted">Choose a climber before selecting a group.</div>
+              ) : visibleGroupOptions.length === 0 ? (
+                <div className="text-sm text-muted">No eligible competitor groups are available for this climber.</div>
+              ) : (
+                <CustomRadioGroup
+                  name="group"
+                  options={visibleGroupOptions}
+                  selected={selectedGroup}
+                  onChange={setSelectedGroup}
+                />
+              )}
             </div>
           </div>
 
@@ -411,7 +488,7 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
           {availableDivisions.length > 0 && (
             <div>
               <label className="font-semibold">Gender Division:</label>
-              <div className="flex flex-wrap px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
+              <div className="flex flex-wrap px-3 py-1 bg-shadow border border-green/20 rounded-md shadow-md">
                 <CustomRadioGroup
                   name="division"
                   options={divisionOptions}
@@ -423,7 +500,7 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
           )}
 
           {selectedGroup && selectedDivision && (
-            <div className="border border-green rounded-md bg-shadow px-3 py-2">
+            <div className="border border-green/20 rounded-md bg-shadow px-3 py-2">
               <div className="font-semibold mb-1">Your Assigned Heat{selectedGroupHeats.length > 1 ? 's' : ''}:</div>
               {selectedGroupHeats.length === 0 ? (
                 <div className="text-accent">No eligible heat found for this selection.</div>

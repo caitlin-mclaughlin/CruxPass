@@ -2,7 +2,7 @@ import { CompetitionDto, PublicRegistrationDto, RouteResponseDto } from '@/model
 import api from './apiService';
 
 export async function fetchLeaderboard(competitionId: number) {
-  const res = api.get(`/competitions/${competitionId}/rankings`);
+  const res = api.get(`/competitions/${competitionId}/submissions/rankings`);
   return res;
 }
 

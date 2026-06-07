@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cruxpass.services.RegistrationServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-06-07T05:15:29.778Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.005">
-  <properties/>
-  <testcase name="getAllDelegatesToRepository()" classname="com.cruxpass.services.RegistrationServiceTest" time="0.0"/>
-  <testcase name="saveReturnsSavedEntity()" classname="com.cruxpass.services.RegistrationServiceTest" time="0.002"/>
-  <testcase name="getByIdReturnsNullWhenNotFound()" classname="com.cruxpass.services.RegistrationServiceTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

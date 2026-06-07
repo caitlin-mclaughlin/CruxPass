@@ -13,10 +13,10 @@ export function HeatTable({ heats, customGroups, onEdit, onDelete }: HeatDisplay
   );
 
   return (
-    <div className="bg-shadow border border-green rounded-md shadow-md overflow-hidden">
+    <div data-testid="desktop-view" className="bg-shadow border border-green/20 rounded-md shadow-md overflow-hidden">
       <table className="w-full border-collapse rounded-md">
         <thead>
-          <tr className="border-b border-green bg-green rounded-md text-background text-left text-md">
+          <tr className="border-b border-green/20 bg-green rounded-md text-background text-left text-md">
             {showNameColumn && (
               <th className="py-2 px-3 whitespace-nowrap">Heat</th>
             )}
@@ -29,7 +29,7 @@ export function HeatTable({ heats, customGroups, onEdit, onDelete }: HeatDisplay
 
         <tbody>
           {heats.map((heat, idx) => (
-            <tr key={heat.id ?? idx} className="border-b border-green last:border-b-0">
+            <tr key={heat.id ?? idx} className="border-b border-green/20 last:border-b-0">
               {showNameColumn && (
                 <td className="py-2 px-3 font-medium text-left font-semibold whitespace-nowrap">
                   {heat.heatName || ""}

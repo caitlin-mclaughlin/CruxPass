@@ -118,6 +118,9 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
     try {
       const res = await getRegistrationsForCompetition(competitionId);
       const data: Registration[] = res.map((r: PublicRegistrationDto) => ({
+        id: r.id,
+        compId: r.compId,
+        climberId: r.climberId,
         climberName: r.climberName,
         climberDob: r.climberDob,
         competitorGroup: r.competitorGroup,
@@ -125,6 +128,8 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
         heat: r.heat as HeatData,
         feeamount: r.feeamount,
         feeCurrency: r.feeCurrency,
+        paid: r.paid,
+        paymentStatus: r.paymentStatus,
       }))
       setRegistrations(data);
     } catch (err) {

@@ -19,7 +19,7 @@ export function SortableHeatRow({ heat, children }: { heat: HeatData; children: 
   
 
   return (
-    <tr ref={setNodeRef} style={style} className="border-b border-green last:border-b-0">
+    <tr ref={setNodeRef} style={style} className="border-b border-green/20 last:border-b-0">
       <td
         className="cursor-grab px-2 text-muted"
         {...attributes}

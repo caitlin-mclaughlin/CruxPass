@@ -175,7 +175,7 @@ export default function ClimberProfilePage() {
       {/* Delete Confirmation */}
       {deletingDependent && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/25 z-50">
-          <div className="bg-background p-4 rounded-md shadow-md border border-green flex flex-col gap-2">
+          <div className="bg-background p-4 rounded-md shadow-md border border-green/20 flex flex-col gap-2">
             <div className="text-lg font-semibold leading-none tracking-tight">Confirm Deletion</div>
             <div>Are you sure you want to permanently delete {deletingDependent.name}?</div>
             <div className="flex justify-end gap-2">

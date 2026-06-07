@@ -48,7 +48,7 @@ export function SearchResults({
 
   if (!results.length) {
     return (
-      <div className="absolute left-6 right-6 border border-green bg-shadow rounded-md shadow-lg z-10 p-2 text-center text-green italic text-sm">
+      <div className="absolute left-6 right-6 border border-green/20 bg-shadow rounded-md shadow-lg z-10 p-2 text-center text-green italic text-sm">
         {isSeries ? (
           <span>No {mode} found.</span>
         ) : (
@@ -119,7 +119,7 @@ export function SearchResults({
   const gridTemplateColumns = colWidths.map((w) => `${w}px`).join(" ")
 
   return (
-    <div className="absolute left-6 right-6 max-h-56 overflow-y-auto overflow-x-auto scrollbar-thin-green scroll-smooth border border-green bg-shadow rounded-md shadow-lg z-10 text-sm">
+    <div className="absolute left-6 right-6 max-h-56 overflow-y-auto overflow-x-auto scrollbar-thin-green scroll-smooth border border-green/20 bg-shadow rounded-md shadow-lg z-10 text-sm">
       
       {/* HEADER */}
       <div

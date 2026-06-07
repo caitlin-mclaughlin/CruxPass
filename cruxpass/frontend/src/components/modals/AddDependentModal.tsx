@@ -163,7 +163,7 @@ export default function AddDependentModal({ open, onClose, onSubmit, initialData
       "bg-shadow rounded-md border transition-all",
       invalidFields.has(field)
         ? "border-accent text-accent placeholder:text-accent"
-        : "border-green text-green",
+        : "border-green/20 text-green",
       shake && invalidFields.has(field) && "animate-shake"
     );
 
@@ -236,12 +236,12 @@ export default function AddDependentModal({ open, onClose, onSubmit, initialData
               role="switch"
               aria-checked={useGuardianAsEmergency}
               onClick={() => setUseGuardianAsEmergency(prev => !prev)}
-              className={`relative inline-flex h-6 w-11 border border-green items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 border border-green/20 items-center rounded-full transition-colors ${
                 useGuardianAsEmergency ? "bg-green" : "bg-shadow"
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full border border-green bg-background transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-full border border-green/20 bg-background transition-transform ${
                   useGuardianAsEmergency ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -249,7 +249,7 @@ export default function AddDependentModal({ open, onClose, onSubmit, initialData
           </div>
 
           {useGuardianAsEmergency ? (
-            <div className="px-3 py-1 border border-green bg-shadow shadow-md rounded-md text-green">
+            <div className="px-3 py-1 border border-green/20 bg-shadow shadow-md rounded-md text-green">
               <div className="mb-2">{climber?.name}</div>
               <div>{formatPhoneNumber(climber?.phone ?? "")}</div>
             </div>

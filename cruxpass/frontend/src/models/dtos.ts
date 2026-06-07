@@ -116,6 +116,7 @@ export interface CompetitionDto {
   pricingType: PricingType;
   flatFee?: number;
   feeCurrency: string;
+  routeGradesVisible?: boolean;
   pricingRules: PricingRuleDto[];
   selectedGroups: ResolvedCompetitorGroup[];
   heats: HeatDto[];
@@ -227,6 +228,7 @@ export type LiveSubmissionEventDto = {
 export type PublicRegistrationDto = {
   id: number;
   compId: number;
+  climberId?: number;
   climberName: string;
   climberDob: string;
   competitorGroup: ResolvedCompetitorGroup;
@@ -234,6 +236,8 @@ export type PublicRegistrationDto = {
   heat: HeatDto;
   feeamount: number;
   feeCurrency: string;
+  paid?: boolean;
+  paymentStatus?: 'PENDING' | 'PAID' | 'FAILED' | string;
 }
 
 export type PublicSeriesDto = {

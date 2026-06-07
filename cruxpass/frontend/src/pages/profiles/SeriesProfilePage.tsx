@@ -90,7 +90,7 @@ export default function SeriesProfilePage() {
             ) : (
               <>
                 <h2 className="font-bold text-xl">{"Series Description"}</h2>
-                <div className="px-3 py-2 bg-shadow border border-green rounded-md shadow-md">{formData.description}</div>
+                <div className="px-3 py-2 bg-shadow border border-green/20 rounded-md shadow-md">{formData.description}</div>
               </>
             )}
           </>
@@ -129,11 +129,11 @@ export default function SeriesProfilePage() {
           </Button>
         </div>
         {gyms && gyms.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green bg-shadow rounded-md shadow-md p-3">
+          <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green/20 bg-shadow rounded-md shadow-md p-3">
             {gyms.map((gym) => (
               <div
                 key={gym.id}
-                className="flex-shrink-0 px-3 py-2 min-w-[250px] max-w-[350px] rounded-md shadow-md bg-background border border-green text-green"
+                className="flex-shrink-0 px-3 py-2 min-w-[250px] max-w-[350px] rounded-md shadow-md bg-background border border-green/20 text-green"
               >
                 <div className="text-med truncate"><strong>{gym.name}</strong></div>
                 <div className="text-sm"><strong>Phone: </strong>{formatPhoneNumber(gym.phone)}</div>

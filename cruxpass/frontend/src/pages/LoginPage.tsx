@@ -305,7 +305,7 @@ export default function Login() {
                   <label htmlFor="gender" className="mt-3 mb-1 font-medium text-green" >
                     Gender (For Competition Genders):
                   </label>
-                  <div className="px-3 py-1 bg-shadow border border-green rounded-md shadow-md">
+                  <div className="px-3 py-1 bg-shadow border border-green/20 rounded-md shadow-md">
                     <CustomRadioGroup
                       name="gender"
                       options={GENDER_OPTIONS.map(g => ({ 

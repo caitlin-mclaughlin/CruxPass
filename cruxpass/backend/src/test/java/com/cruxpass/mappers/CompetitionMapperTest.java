@@ -46,6 +46,7 @@ class CompetitionMapperTest {
 
         assertEquals(PricingType.BY_GROUP, dto.pricingType());
         assertEquals(1, dto.pricingRules().size());
+        assertEquals(35, dto.pricingRules().get(0).amount());
         assertEquals(2, dto.pricingRules().get(0).groups().size());
         assertEquals(
             Set.of("ADVANCED", "INTERMEDIATE"),
@@ -57,6 +58,7 @@ class CompetitionMapperTest {
 
     private PricingRule groupPricingRule() {
         PricingRule rule = new PricingRule();
+        rule.setName("Rule 1");
         rule.setRuleType(PricingRuleType.GROUP);
         rule.setAmount(35);
         rule.setPriority(1);

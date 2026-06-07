@@ -19,7 +19,7 @@ test('gym competition page renders overview, heats, and registrations from API d
   await page.getByRole('tab', { name: 'Registrations' }).click();
   await expect(page.getByText('Avery Climber')).toBeVisible();
   await expect(page.getByText('avery@example.com')).toBeVisible();
-  await expect(page.getByText('$ 3500.00')).toBeVisible();
+  await expect(page.getByText('USD 35.00')).toBeVisible();
 
   await page.getByRole('tab', { name: 'Heats' }).click();
   await expect(page.getByTestId('desktop-view').getByText('Morning Heat')).toBeVisible();

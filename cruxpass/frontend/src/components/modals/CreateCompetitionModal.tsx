@@ -215,7 +215,7 @@ export default function CreateCompetitionModal(props: Props) {
 
         <div className="mt-1">
           <label className="font-semibold">Types</label>
-          <div className="flex flex-wrap space-x-5 gap-2 border border-green bg-shadow px-3 py-1 rounded-md shadow-md">
+          <div className="flex flex-wrap space-x-5 gap-2 border border-green/20 bg-shadow px-3 py-1 rounded-md shadow-md">
             {COMPETITION_TYPES.map(type => (
               <div key={type} className="flex items-center space-x-2">
                 <Checkbox
@@ -251,7 +251,7 @@ export default function CreateCompetitionModal(props: Props) {
 
         <div className="mt-1">
           <label className="font-semibold">Competitor Groups</label>
-          <div className="flex flex-wrap space-x-5 gap-2 border border-green bg-shadow px-3 py-1 rounded-md shadow-md">
+          <div className="flex flex-wrap space-x-5 gap-2 border border-green/20 bg-shadow px-3 py-1 rounded-md shadow-md">
             {DEFAULT_COMPETITOR_GROUPS.map(group => (
               <div key={group} className="flex items-center space-x-2">
                 <Checkbox
@@ -281,12 +281,12 @@ export default function CreateCompetitionModal(props: Props) {
                     divisions: !prev.divisionsEnabled ? prev.divisions : [],
                   }))
                 }
-                className={`relative inline-flex h-6 w-11 border border-green items-center rounded-full transition-colors focus:outline-none ${
+                className={`relative inline-flex h-6 w-11 border border-green/20 items-center rounded-full transition-colors focus:outline-none ${
                   form.divisionsEnabled ? 'bg-green' : 'bg-shadow'
                 }`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full border border-green bg-background transition-transform ${
+                  className={`inline-block h-4 w-4 transform rounded-full border border-green/20 bg-background transition-transform ${
                     form.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -298,7 +298,7 @@ export default function CreateCompetitionModal(props: Props) {
           <div
             className={`flex flex-wrap space-x-5 gap-2 border px-3 py-1 rounded-md shadow-md transition-opacity ${
               form.divisionsEnabled
-                ? 'border-green bg-shadow opacity-100'
+                ? 'border-green/20 bg-shadow opacity-100'
                 : 'border-border bg-muted text-muted opacity-50 pointer-events-none'
             }`}
           >
@@ -319,9 +319,9 @@ export default function CreateCompetitionModal(props: Props) {
           </div>
         </div>
 
-        <div className="mt-1 border-t border-green pt-2">
+        <div className="mt-1 border-t border-green/20 pt-2">
           <p className="font-semibold mb-1">Host Gym</p>
-          <div className="px-3 py-1 shadow-md rounded-md border border-green bg-shadow">
+          <div className="px-3 py-1 shadow-md rounded-md border border-green/20 bg-shadow">
             <div>{gymName}</div>
             <div>{gymAddress}</div>
           </div>
