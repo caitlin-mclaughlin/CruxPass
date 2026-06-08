@@ -136,7 +136,7 @@ export default function SegmentedDateInput({
     <div className="relative w-full" ref={containerRef}>
       <div
         className={`flex items-center rounded-md shadow-md pr-3 border bg-transparent
-          ${invalid ? "border-accent text-accent" : "border-green"}
+          ${invalid ? "border-accent text-accent" : "border-green/20"}
         `}
       >
         <Input

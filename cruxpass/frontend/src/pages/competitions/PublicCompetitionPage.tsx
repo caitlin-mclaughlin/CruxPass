@@ -4,10 +4,9 @@ import PageContainer from "@/components/PageContainer";
 import { useLeaderboard } from "@/context/LeaderboardContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { displayDateTime, displayShortDateTime } from "@/utils/datetime";
-import { formatAddress, formatCityState, formatGroupDivision } from "@/utils/formatters";
-import { AccountType, CompetitionFormatMap, CompetitionTypeMap, DivisionEnumMap, GroupDivisionKey } from "@/constants/enum";
-import { LeaderboardTable } from "@/components/LeaderboardTable";
-import { getSummaryDefaultGroups, getSummaryDivisions, summarizeHeats } from "@/utils/competitionSummary";
+import { formatAddress, formatCityState } from "@/utils/formatters";
+import { AccountType, CompetitionFormatMap, CompetitionTypeMap, DivisionEnumMap } from "@/constants/enum";
+import { getSummaryDivisions, summarizeHeats } from "@/utils/competitionSummary";
 import PricingRulesDisplay from "@/components/ui/comp_display/PriceRuleDisplay";
 import { HeatListResponsive } from "@/components/ui/heat_display/HeatListResponsive";
 import { RoutesTab } from "./tabs/RoutesTab";
@@ -19,12 +18,15 @@ import { Button } from "@/components/ui/Button";
 import RegisterModal from "@/components/modals/RegisterModal";
 import { LiveScoreFloatingAction } from "@/components/LiveScoreFloatingAction";
 import { createStripeCheckoutSession } from "@/services/stripeService";
+import { ClimberCompetitionProvider } from "@/context/ClimberCompetitionContext";
+import { LeaderboardSections } from "@/components/LeaderboardSections";
+import { buildLeaderboardSections } from "@/utils/leaderboardSections";
 
 export default function PublicCompetitionPage() {
   const { competition, registrations, scores, leaderboardLoading, error, refreshRegistrations } = useLeaderboard();
   const { accountType, token } = useAuth();
   const { climber, dependents } = useClimberSession();
-  const [activeTab, setActiveTab] = useState<"overview" | "heats" | "routes" | "registrations" | "leaderboard">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "heats" | "routes" | "leaderboard">("overview");
   const [routes, setRoutes] = useState<Route[]>([]);
   const [routesLoading, setRoutesLoading] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -68,13 +70,13 @@ export default function PublicCompetitionPage() {
   const tabStyle = (active: boolean) =>
     `text-xl font-bold ${
       active
-        ? "border-b-2 border-green"
+        ? "border-b-2 border-green/20"
         : "border-b-2 text-prompt border-transparent hover:text-select"
     }`;
 
-  const groups = getSummaryDefaultGroups(competition);
   const groupLabels = (competition.selectedGroups ?? []).map(group => group.name).filter(Boolean);
   const divisions = getSummaryDivisions(competition);
+  const leaderboardSections = buildLeaderboardSections(competition);
   const heatSnapshotParts = summarizeHeats(competition);
   const householdIds = [climber?.id, ...(dependents ?? []).map(dep => dep.id)].filter(
     (id): id is number => typeof id === "number"
@@ -153,9 +155,11 @@ export default function PublicCompetitionPage() {
               <button
                 type="button"
                 className="inline-flex h-9 items-center gap-2 rounded-md bg-green px-3 py-2 text-md font-semibold text-background shadow-md hover:bg-select"
-                onPointerDown={() => openRegistration(false)}
-                onFocus={() => openRegistration(false)}
-                onClick={() => openRegistration(false)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openRegistration(false);
+                }}
               >
                 Register
               </button>
@@ -164,9 +168,11 @@ export default function PublicCompetitionPage() {
               <button
                 type="button"
                 className="inline-flex h-9 items-center gap-2 rounded-md bg-green px-3 py-2 text-md font-semibold text-background shadow-md hover:bg-select"
-                onPointerDown={() => openRegistration(true)}
-                onFocus={() => openRegistration(true)}
-                onClick={() => openRegistration(true)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  openRegistration(true);
+                }}
               >
                 Register Dependent
               </button>
@@ -194,9 +200,6 @@ export default function PublicCompetitionPage() {
             <button type="button" role="tab" aria-selected={activeTab === "routes"} onClick={() => setActiveTab("routes")} className={tabStyle(activeTab === "routes")}>
               Routes
             </button>
-            <button type="button" role="tab" aria-selected={activeTab === "registrations"} onClick={() => setActiveTab("registrations")} className={tabStyle(activeTab === "registrations")}>
-              Registrations
-            </button>
             <button type="button" role="tab" aria-selected={activeTab === "leaderboard"} onClick={() => setActiveTab("leaderboard")} className={tabStyle(activeTab === "leaderboard")}>
               Leaderboard
             </button>
@@ -205,7 +208,7 @@ export default function PublicCompetitionPage() {
 
         {activeTab === "overview" && (
           <div className="space-y-4">
-            <div className="border rounded-md px-3 py-2 bg-shadow shadow-md grid [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-3">
+            <div className="border border-green/20 rounded-md px-3 py-2 bg-shadow shadow-md grid [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-3">
               <div>
                 <div className="font-medium">Date & Time:</div>
                 <div>{displayDateTime(competition.startDate)}</div>
@@ -232,7 +235,7 @@ export default function PublicCompetitionPage() {
               </div>
             </div>
 
-            <div className="rounded-md shadow-md border px-3 py-2 bg-shadow">
+            <div className="rounded-md shadow-md border border-green/20 border-green/20 border-green/20 px-3 py-2 bg-shadow">
               <h2 className="text-xl font-bold mb-1">Eligible Competitor Groups</h2>
               <div>{groupLabels.length > 0 ? groupLabels.join(", ") : "—"}</div>
             </div>
@@ -242,7 +245,7 @@ export default function PublicCompetitionPage() {
               <div>{divisions.map(t => DivisionEnumMap[t as keyof typeof DivisionEnumMap]).join(", ") || "—"}</div>
             </div>
 
-            <div className="rounded-md shadow-md border px-3 py-2 bg-shadow">
+            <div className="rounded-md shadow-md border border-green/20 px-3 py-2 bg-shadow">
               <h2 className="text-xl font-bold mb-1">Heat Snapshot</h2>
               <div>{heatSnapshotParts.length > 0 ? heatSnapshotParts.join(" • ") : "Heat details available after registration."}</div>
             </div>
@@ -273,54 +276,29 @@ export default function PublicCompetitionPage() {
           />
         )}
 
-        {activeTab === "registrations" && (
-          <div className="rounded-md shadow-md border px-3 py-2 bg-shadow">
-            <h2 className="text-xl font-bold mb-1">Registrations</h2>
-            {registrations.length > 0 ? (
-              <ul className="ml-6 list-disc">
-                {registrations.map((registration, index) => (
-                  <li key={`${registration.climberName}-${index}`}>
-                    {registration.climberName}
-                    {" • "}
-                    {registration.competitorGroup.name}
-                    {" • "}
-                    {DivisionEnumMap[registration.division as keyof typeof DivisionEnumMap]}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <span>Registered climbers will appear here.</span>
-            )}
-          </div>
-        )}
-
         {activeTab === "leaderboard" && (
-          <div>
-            {groups.map(group =>
-              divisions.map(division => {
-                const key = `${group}-${division}` as GroupDivisionKey;
-                return (
-                  <div key={key} className="mb-6">
-                    <h2 className="text-lg font-semibold">{formatGroupDivision(group, division)}</h2>
-                    <LeaderboardTable submissions={scores[key]} group={group} division={division} />
-                  </div>
-                );
-              })
-            )}
-          </div>
+          <LeaderboardSections
+            sections={leaderboardSections}
+            scores={scores}
+            highlightClimberIds={householdIds}
+          />
         )}
       </div>
 
-      <RegisterModal
-        open={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        competition={competition}
-        dependentOnly={registerDependentOnly}
-        onSuccess={async () => {
-          await refreshRegistrations(competition.id);
-          setShowRegisterModal(false);
-        }}
-      />
+      {showRegisterModal && (
+        <ClimberCompetitionProvider id={competition.id}>
+          <RegisterModal
+            open={showRegisterModal}
+            onClose={() => setShowRegisterModal(false)}
+            competition={competition}
+            dependentOnly={registerDependentOnly}
+            onSuccess={async () => {
+              await refreshRegistrations(competition.id);
+              setShowRegisterModal(false);
+            }}
+          />
+        </ClimberCompetitionProvider>
+      )}
 
       {token && accountType === AccountType.CLIMBER && (
         <>

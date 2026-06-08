@@ -52,7 +52,7 @@ public class Climber {
     private String username;
     private String passwordHash;
     @Embedded
-    private Address address;
+    private ClimberLocation address;
 
     @Column(nullable = false, updatable = false)
     @CreatedDate

@@ -125,7 +125,7 @@ export function HeatBlock({
           <div>
             <label className="font-semibold">Groups in This Heat</label>
             <div 
-              className={`flex flex-wrap gap-x-4 gap-y-2 border bg-background rounded-md px-3 py-1 ${
+              className={`flex flex-wrap gap-x-4 gap-y-2 border border-green/20 bg-background rounded-md px-3 py-1 ${
                 showErrors && heat.groups.length === 0 ? `${invalidField}` : ''}
               `}
             >
@@ -182,10 +182,10 @@ export function HeatBlock({
               </div>
             </div>
           <div
-            className={`flex flex-wrap space-x-5 gap-2 border px-3 py-1 rounded-md shadow-md transition-opacity ${
+            className={`flex flex-wrap space-x-5 gap-2 border border-green/20 px-3 py-1 rounded-md shadow-md transition-opacity ${
               heat.divisionsEnabled
-                ? 'border bg-background opacity-100'
-                : 'border bg-muted text-muted opacity-50 pointer-events-none'
+                ? 'bg-background opacity-100'
+                : 'bg-muted text-muted opacity-50 pointer-events-none'
             } ${showErrors && (heat.divisionsEnabled && heat.divisions.length === 0) ? `${invalidField}` : ''}`}
           >
             {DIVISION_OPTIONS.map(division => (

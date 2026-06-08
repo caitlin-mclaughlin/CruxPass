@@ -17,7 +17,7 @@ interface Props {
 export default function ClimberProfileForm({ formData, setFormData, editing }: Props) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === "city" || name === "state") {
+    if (name === "city" || name === "state" || name === "zipCode") {
       setFormData((prev) => prev && ({
         ...prev,
         address: { ...prev.address, [name]: value },
@@ -84,7 +84,7 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
               onChange={(g: string) => {
                 setFormData((prev: any) => ({ 
                   ...prev, 
-                  division: g
+                  gender: g
                 }))
               }}
             />
@@ -100,6 +100,13 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
         <div className="text-green">
           {editing ? (
             <div className="grid grid-cols-1 gap-2">
+              <Input
+                name="zipCode"
+                value={formData.address?.zipCode || ""}
+                placeholder="Zip Code"
+                onChange={handleChange}
+                className="bg-background"
+              />
               <Input
                 name="city"
                 value={formData.address?.city || ""}
@@ -125,7 +132,7 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
           ) : (
             <div>
               {formData.address?.city && formData.address?.state
-                ? `${formData.address.city}, ${formData.address.state}`
+                ? `${formData.address.city}, ${formData.address.state}${formData.address.zipCode ? ` ${formData.address.zipCode}` : ""}`
                 : "—"}
             </div>
           )}
@@ -145,7 +152,7 @@ export default function ClimberProfileForm({ formData, setFormData, editing }: P
               />
               <Input
                 name="emergencyPhone"
-                value={formatPhoneNumber(formData.phone ?? "")}
+                value={formatPhoneNumber(formData.emergencyPhone ?? "")}
                 placeholder="Emergency Contact Phone"
                 onChange={handleChange}
                 className="bg-background"

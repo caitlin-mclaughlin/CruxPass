@@ -2,7 +2,7 @@ package com.cruxpass.dtos.responses;
 
 import java.time.LocalDate;
 
-import com.cruxpass.dtos.AddressDto;
+import com.cruxpass.dtos.ClimberLocationDto;
 import com.cruxpass.enums.Gender;
 
 public record SimpleClimberDto(
@@ -12,7 +12,7 @@ public record SimpleClimberDto(
     String phone,
     LocalDate dob,
     Gender gender,
-    AddressDto address,
+    ClimberLocationDto address,
     String emergencyName,
     String emergencyPhone
 ) {

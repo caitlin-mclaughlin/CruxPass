@@ -10,7 +10,11 @@ export async function loginEntity(loginRequest: AuthRequestDto) {
 
 // --- Registration ---
 export async function registerEntity(role: AccountType, data: RegisterRequestDto): Promise<any>{
-  const res = await api.post(`/auth/register/${role}`, data);
+  const endpoint = {
+    [AccountType.CLIMBER]: 'climber',
+    [AccountType.GYM]: 'gym',
+    [AccountType.SERIES]: 'series',
+  }[role];
+  const res = await api.post(`/auth/register/${endpoint}`, data);
   return res.data; // { token, id}
 }
-

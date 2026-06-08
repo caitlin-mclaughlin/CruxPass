@@ -31,6 +31,9 @@ test('create account form validates password confirmation', async ({ page }) => 
   await page.getByPlaceholder('Email').fill('avery@example.com');
   await page.getByPlaceholder('Password', { exact: true }).fill('password-one');
   await page.getByPlaceholder('Confirm Password').fill('password-two');
+  await page.getByPlaceholder('MM/DD/YYYY').nth(0).fill('03/01/2027');
+  await page.getByPlaceholder('MM/DD/YYYY').nth(1).fill('04/01/2027');
+  await page.getByPlaceholder('MM/DD/YYYY, hh:mm').fill('02/20/2027, 05:00 PM');
 
   await page.getByRole('button', { name: 'Create Account' }).click();
 

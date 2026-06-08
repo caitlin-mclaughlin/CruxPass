@@ -53,7 +53,7 @@ export function GroupBlock({
 }: Props) {
   return (
     <>
-      <div className={`grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] gap-y-2 gap-x-3 border bg-shadow rounded-md shadow-md px-3 py-2 ${
+      <div className={`grid [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] gap-y-2 gap-x-3 border border-green/20 bg-shadow rounded-md shadow-md px-3 py-2 ${
           showErrors && (noGroupsSelected || unusedSelectedGroups) ? `${invalidField}` : ''
       }`}>
         {selectableGroups.map(group => {

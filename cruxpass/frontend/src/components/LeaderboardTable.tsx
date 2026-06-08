@@ -9,9 +9,11 @@ type LeaderboardTableProps = {
   submissions?: (RankedSubmissionDto & { movement?: "up" | "down" | "same" })[] | null;
   group: DefaultCompetitorGroup;
   division: Division;
+  highlightClimberIds?: number[];
+  live?: boolean;
 }
 
-export function LeaderboardTable({ submissions, group, division }: LeaderboardTableProps) {
+export function LeaderboardTable({ submissions, group, division, highlightClimberIds = [], live = false }: LeaderboardTableProps) {
   const rows = Array.isArray(submissions) ? submissions : [];
 
   if (rows.length === 0) {
@@ -34,10 +36,12 @@ export function LeaderboardTable({ submissions, group, division }: LeaderboardTa
           </tr>
         </thead>
         <tbody>
-          {rows.map((sub) => (
+          {rows.map((sub) => {
+            const highlighted = typeof sub.climberId === 'number' && highlightClimberIds.includes(sub.climberId);
+            return (
             <tr
-              key={`${sub.climberName}-${sub.competitorGroup}-${sub.division}`}
-              className="bg-shadow border-t"
+              key={`${sub.climberName}-${sub.climberId ?? ''}-${sub.division}`}
+              className={`${highlighted ? 'bg-highlight text-background' : live ? 'bg-shadow' : 'bg-shadow'} border-t`}
             >
               <td className="p-2 border-r relative text-center">
                 {/* Centered number */}
@@ -63,7 +67,8 @@ export function LeaderboardTable({ submissions, group, division }: LeaderboardTa
               <td className="p-2 text-center border-r">{sub.totalPoints}</td>
               <td className="p-2 text-center">{sub.totalAttempts}</td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

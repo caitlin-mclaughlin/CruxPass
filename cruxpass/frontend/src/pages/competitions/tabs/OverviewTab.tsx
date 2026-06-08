@@ -44,7 +44,7 @@ export function OverviewTab({
           {competition.selectedGroups.map(group => (
               <div
                 key={group.id ?? group.name}
-                className="flex items-center justify-center rounded-md shadow-md border px-3 py-2 text-green text-center bg-shadow"
+                className="flex items-center justify-center rounded-md shadow-md border border-green/20 px-3 py-2 text-green text-center bg-shadow"
               >
                 {group.name}
               </div>

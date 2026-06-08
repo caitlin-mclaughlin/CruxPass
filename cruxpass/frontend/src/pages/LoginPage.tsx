@@ -1,52 +1,63 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { format } from 'date-fns'
+
+import { AccountType, USState } from '@/constants/enum'
 import { useAuth } from '@/context/AuthContext'
 import { useClimberSession } from '@/context/ClimberSessionContext'
 import { useGymSession } from '@/context/GymSessionContext'
-import { Input } from '@/components/ui/Input'
-import { useNavigate } from 'react-router-dom'
-import { EnumSelect } from '@/components/ui/EnumSelect'
-import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
-import CustomRadioGroup from '@/components/ui/CustomRadioGroup'
-import { AccountType, AccountTypeDisplay, Gender, GENDER_OPTIONS, GenderEnumMap, US_STATES, USState, USStateDisplay } from '@/constants/enum'
-import SegmentedDateInput from '@/components/ui/SegmentedDateInput'
 import { useSeriesSession } from '@/context/SeriesSessionContext'
+import { formatPhoneNumber, stripNonDigits } from '@/utils/formatters'
+import { formatForApi } from '@/utils/datetime'
+import { useIsMobile } from '@/hooks/isMobile'
+import { Address, ClimberLocation } from '@/models/domain'
 import logo from '@/assets/logo_transparent.png'
-import { PasswordInput } from '@/utils/uiRendering'
 import { Button } from '@/components/ui/Button'
 import PageContainer from '@/components/PageContainer'
-import { Select, SelectItem } from '@/components/ui/Select'
-import { Address, ClimberLocation } from '@/models/domain'
+import { AccountTypeSelect } from '@/components/auth/AccountTypeSelect'
+import { ClimberSignupForm } from '@/components/auth/ClimberSignupForm'
+import { GymSignupForm } from '@/components/auth/GymSignupForm'
+import { LoginForm } from '@/components/auth/LoginForm'
+import { SeriesSignupForm } from '@/components/auth/SeriesSignupForm'
+import { LoginFormData } from '@/components/auth/types'
+
+const initialFormData: LoginFormData = {
+  accountType: AccountType.CLIMBER,
+  name: "",
+  email: "",
+  username: "",
+  phone: "",
+  dob: null,
+  gender: null,
+  password: "",
+  confirmPassword: "",
+  emailOrUsername: "",
+  address: {
+    streetAddress: "",
+    apartmentNumber: "",
+    city: "",
+    state: "UNSET" as USState,
+    zipCode: ""
+  },
+  emergencyName: "",
+  emergencyPhone: "",
+  seriesDescription: "",
+  seriesStartDate: null,
+  seriesEndDate: null,
+  seriesDeadline: null,
+}
 
 export default function Login() {
   const navigate = useNavigate()
   const [isCreating, setIsCreating] = useState(false)
-  const [formData, setFormData] = useState({
-    accountType: AccountType.CLIMBER,
-    name: "",
-    email: "",
-    username: "",
-    phone: "",
-    dob: null as Date | null,
-    gender: null as Gender | null,
-    password: "",
-    confirmPassword: "",
-    emailOrUsername: "",
-    address: {
-      streetAddress: "",
-      apartmentNumber: "",
-      city: "",
-      state: "UNSET" as USState,
-      zipCode: ""
-    },
-    emergencyName: "",
-    emergencyPhone: ""
-  })
+  const [formData, setFormData] = useState<LoginFormData>(initialFormData)
   const [errorMessage, setErrorMessage] = useState<string>("")
+  const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set())
   const { login, register, skipLogin, token } = useAuth()
   const { refreshClimber } = useClimberSession()
   const { refreshGym } = useGymSession()
   const { refreshSeries } = useSeriesSession()
-  const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set())
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (token) navigate("/")
@@ -57,92 +68,106 @@ export default function Login() {
     setErrorMessage("")
   }, [isCreating])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setErrorMessage("");
-    const { name, value } = e.target;
-
-    // Clear invalid flag
+  const clearInvalidField = (field: string) => {
     setInvalidFields(prev => {
-      const updated = new Set(prev);
-      updated.delete(name);
-      return updated;
-    });
+      const updated = new Set(prev)
+      updated.delete(field)
+      return updated
+    })
+  }
+
+  const handleAccountTypeChange = (accountType: AccountType) => {
+    setFormData(prev => ({
+      ...prev,
+      accountType,
+      dob: accountType === AccountType.CLIMBER ? prev.dob : null,
+      gender: accountType === AccountType.CLIMBER ? prev.gender : null,
+      phone: accountType === AccountType.SERIES ? "" : prev.phone,
+      address: {
+        streetAddress: "",
+        apartmentNumber: "",
+        city: "",
+        state: "UNSET" as USState,
+        zipCode: "",
+      },
+    }))
+    setInvalidFields(new Set())
+    setErrorMessage("")
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setErrorMessage("")
+    const { name, value } = e.target
+    clearInvalidField(name)
 
     if (name.startsWith("address.")) {
-      if (!formData.address) return;
-      const key = name.split(".")[1] as keyof typeof formData.address;
+      const key = name.split(".")[1] as keyof LoginFormData["address"]
       setFormData(prev => ({
         ...prev,
         address: { ...prev.address, [key]: value }
-      }));
-    } else if (name === "city" || name === "state") {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      }))
     } else if (name === "phone" || name === "emergencyPhone") {
-      setFormData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }));
+      setFormData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }))
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => ({ ...prev, [name]: value }))
     }
-  };
-
-  const handleDobChange = (date: Date | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      dob: date,
-    }));
-
-    setInvalidFields((prev) => {
-      const updated = new Set(prev);
-      if (date) updated.delete("dob");
-      return updated;
-    });
-  };
+  }
 
   const getRequiredFields = (): string[] => {
-    if (!isCreating) return ["emailOrUsername", "password"];
+    if (!isCreating) return ["emailOrUsername", "password"]
     if (formData.accountType === AccountType.CLIMBER) {
       return [
         "name", "email", "phone", "password", "confirmPassword", "dob", "gender",
-        "address.city", "address.state"
-      ];
-    } else if (formData.accountType === AccountType.GYM) {
+        "address.city", "address.state", "address.zipCode"
+      ]
+    }
+    if (formData.accountType === AccountType.GYM) {
       return [
         "name", "email", "phone", "password", "confirmPassword",
         "address.streetAddress", "address.city", "address.state", "address.zipCode"
-      ];
-    } else if (formData.accountType === AccountType.SERIES) {
-      return [
-        "name", "email", "password", "confirmPassword",
-      ];
+      ]
     }
-    return [];
-  };
+    return [
+      "name", "email", "password", "confirmPassword", "seriesStartDate", "seriesEndDate", "seriesDeadline",
+    ]
+  }
 
   const getFieldValue = (field: string): string => {
     if (field === "dob") {
-      return formData.dob instanceof Date ? formData.dob.toISOString() : "";
+      return formData.dob instanceof Date ? formData.dob.toISOString() : ""
     }
-
+    if (field === "seriesStartDate" || field === "seriesEndDate" || field === "seriesDeadline") {
+      const value = formData[field]
+      return value instanceof Date ? value.toISOString() : ""
+    }
     if (field.startsWith("address.")) {
-      const key = field.split(".")[1] as keyof typeof formData.address;
-      return formData.address[key];
+      const key = field.split(".")[1] as keyof LoginFormData["address"]
+      return formData.address[key]
     }
-
-    return (formData as any)[field] || "";
-  };
-
+    return (formData as any)[field] || ""
+  }
 
   const validateForm = (): boolean => {
-    const required = getRequiredFields();
-    const invalid = required.filter(field => !getFieldValue(field).trim());
+    const invalid = getRequiredFields().filter(field => !getFieldValue(field).trim())
 
     if (invalid.length > 0) {
-      setInvalidFields(new Set(invalid));
-      return false;
+      setInvalidFields(new Set(invalid))
+      return false
     }
 
-    setInvalidFields(new Set());
-    return true;
-  };
+    setInvalidFields(new Set())
+    return true
+  }
+
+  const refreshActiveSession = async () => {
+    if (formData.accountType === AccountType.CLIMBER) {
+      await refreshClimber()
+    } else if (formData.accountType === AccountType.GYM)  {
+      await refreshGym()
+    } else {
+      await refreshSeries()
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -152,35 +177,32 @@ export default function Login() {
       return
     }
 
-    // --- password match check ---
     if (isCreating && formData.password !== formData.confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      setInvalidFields(prev => new Set([...prev, "password", "confirmPassword"]));
-      return;
+      setErrorMessage("Passwords do not match.")
+      setInvalidFields(prev => new Set([...prev, "password", "confirmPassword"]))
+      return
     }
 
     try {
       if (isCreating) {
-        if (!formData.accountType) return
         if (formData.accountType === AccountType.CLIMBER) {
-          // CLIMBER registration
           await register(AccountType.CLIMBER, {
             name: formData.name,
             email: formData.email,
             username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
             phone: stripNonDigits(formData.phone),
-            dob: formData.dob?.toISOString().split('T')[0],
+            dob: formData.dob?.toISOString().split('T')[0] ?? null,
             gender: formData.gender,
             password: formData.password,
             address: {
               city: formData.address.city.trim(),
               state: formData.address.state,
+              zipCode: formData.address.zipCode.trim(),
             } as ClimberLocation,
             emergencyName: formData.emergencyName,
             emergencyPhone: stripNonDigits(formData.emergencyPhone)
-          });
+          })
         } else if (formData.accountType === AccountType.GYM) {
-          // GYM registration
           await register(AccountType.GYM, {
             name: formData.name,
             email: formData.email,
@@ -188,32 +210,28 @@ export default function Login() {
             phone: stripNonDigits(formData.phone),
             password: formData.password,
             address: formData.address as Address
-          });
+          })
         } else {
-          // SERIES registration
           await register(AccountType.SERIES, {
             name: formData.name,
             email: formData.email,
             username: formData.username?.trim() !== '' ? formData.username.trim() : formData.email,
-            password: formData.password
-          });
+            password: formData.password,
+            description: formData.seriesDescription.trim(),
+            startDate: format(formData.seriesStartDate!, 'yyyy-MM-dd'),
+            endDate: format(formData.seriesEndDate!, 'yyyy-MM-dd'),
+            deadline: formatForApi(formData.seriesDeadline!)
+          })
         }
       } else {
         await login({
           emailOrUsername: formData.emailOrUsername,
           password: formData.password
-        });
+        })
       }
 
-      if (formData.accountType === AccountType.CLIMBER) {
-        await refreshClimber()
-      } else if (formData.accountType === AccountType.GYM)  {
-        await refreshGym()
-      } else {
-        await refreshSeries()
-      }
+      await refreshActiveSession()
       navigate("/")
-
     } catch (err: any) {
       console.error("Login error:", err.response?.data)
       const msg =
@@ -226,207 +244,94 @@ export default function Login() {
     }
   }
 
+  const renderCreateForm = () => {
+    if (formData.accountType === AccountType.CLIMBER) {
+      return (
+        <ClimberSignupForm
+          formData={formData}
+          setFormData={setFormData}
+          onChange={handleChange}
+          clearInvalidField={clearInvalidField}
+        />
+      )
+    }
+
+    if (formData.accountType === AccountType.GYM) {
+      return (
+        <GymSignupForm
+          formData={formData}
+          setFormData={setFormData}
+          onChange={handleChange}
+          clearInvalidField={clearInvalidField}
+        />
+      )
+    }
+
+    return (
+      <SeriesSignupForm
+        formData={formData}
+        setFormData={setFormData}
+        onChange={handleChange}
+        clearInvalidField={clearInvalidField}
+        isMobile={isMobile}
+      />
+    )
+  }
+
   return (
     <PageContainer>
       <div className="h-full w-full flex flex-col items-center justify-center pb-6">
-        <img src={logo} alt="CruxPass Logo" className="h-75 w-auto " />
-        <div className={`w-full max-w-lg flex flex-col items-center max-w-lg overflow-y-auto scrollbar-thin-green scroll-smooth px-4 ${isCreating ? 'h-full' : ''}`}>
-        <h1 className="text-green text-2xl font-bold mb-2" >
-          {isCreating ? "Create Account" : "Login"}
-        </h1>
-
-        <form onSubmit={handleSubmit} noValidate className="w-full px-2 space-y-3 max-w-lg">
-          {isCreating ? (
-            <>
-              {/* Climber / Gym / Series Organizer drop down menu */}
-              <EnumSelect
-                labelMap={AccountTypeDisplay}
-                options={Object.values(AccountType)}
-                value={formData.accountType}
-                onChange={(val: AccountType) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    accountType: val,
-                    ...(val === AccountType.GYM
-                      ? { dob: null, gender: null, city: "", state: "UNSET" as USState }
-                      : val === AccountType.SERIES
-                      ? { dob: null, gender: null, city: "", state: "", phone: "", address: {
-                          streetAddress: "",
-                          apartmentNumber: "",
-                          city: "",
-                          state: "UNSET" as USState,
-                          zipCode: ""
-                        }}
-                      : {}
-                    )
-                  }))
-                }}
-              />
-              {/* Name */}
-              <Input name="name" value={formData.name} onChange={handleChange} 
-                placeholder={
-                  formData.accountType === AccountType.CLIMBER ? "Full Name" :
-                  formData.accountType === AccountType.GYM ? "Gym Name" :
-                  "Series Name"
-                } 
-                required 
-              />
-              {/* Email */}
-              <Input name="email" value={formData.email} onChange={handleChange} placeholder="Email" required />
-              {formData.accountType !== AccountType.SERIES && (
-                <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" required />
-              )}
-              {/* Username */}
-              <Input name="username" value={formData.username} onChange={handleChange} placeholder="Username (optional)" />
-              {/* Password */}
-              <PasswordInput
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-              <PasswordInput
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                placeholder="Confirm Password"
-              />
-
-              {/* Climber Specific Fields: DOB and Gender */}
-              {formData.accountType === AccountType.CLIMBER && (
-                <div className="flex flex-col">
-                  <label htmlFor="dob" className="mb-1 font-medium text-green" >
-                    Date of Birth:
-                  </label>
-                  <div className="w-full bg-shadow rounded-md">
-                    <SegmentedDateInput
-                      mode="birthday"
-                      value={formData.dob}
-                      onChange={handleDobChange}
-                    />
-                  </div>
-                  <label htmlFor="gender" className="mt-3 mb-1 font-medium text-green" >
-                    Gender (For Competition Genders):
-                  </label>
-                  <div className="px-3 py-1 bg-shadow border border-green/20 rounded-md shadow-md">
-                    <CustomRadioGroup
-                      name="gender"
-                      options={GENDER_OPTIONS.map(g => ({ 
-                        value: g, 
-                        label: GenderEnumMap[g as keyof typeof GenderEnumMap]
-                      }))}
-                      selected={formData.gender}
-                      onChange={(g: string) => {
-                        setFormData((prev: any) => ({ 
-                          ...prev, 
-                          gender: g
-                        }))
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-3 mt-3">
-                    <label className="font-medium text-green" >
-                      City & State:
-                    </label>
-                    <Input
-                      name="city"
-                      value={formData.address.city}
-                      onChange={handleChange}
-                      placeholder="City"
-                      required
-                    />
-                    <EnumSelect
-                      labelMap={USStateDisplay}
-                      options={US_STATES}
-                      value={formData.address.state}
-                      onChange={(val: USState) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          address: {
-                            ...prev.address,
-                            state: val,
-                          },
-                        }))
-                      }} 
-                    />
-                  </div>
-
-                  {/* Emergency Contact Name and Phone */}
-                  <div className="space-y-3 mt-3 mb-1 ">
-                    <label className="font-medium text-green" >
-                      Emergency Contact:
-                    </label>
-                    <Input name="emergencyName" value={formData.emergencyName} onChange={handleChange} placeholder="Full Name (Emergency Contact)" required />
-                    <Input name="emergencyPhone" value={formData.emergencyPhone} onChange={handleChange} placeholder="Phone Number (Emergency Contact)" required />
-                  </div>
-                </div>
-              )}
-
-              {formData.accountType === AccountType.GYM && (
-                <>
-                  <label htmlFor="address" className="mt-3 mb-1 font-medium text-green" >
-                    Address:
-                  </label>
-                  <Input name="address.streetAddress" value={formData.address.streetAddress} onChange={handleChange} placeholder="Street Address" required />
-                  <Input name="address.apartmentNumber" value={formData.address.apartmentNumber} onChange={handleChange} placeholder="Apartment (optional)" />
-                  <Input name="address.city" value={formData.address.city} onChange={handleChange} placeholder="City" required />
-                  <EnumSelect
-                    labelMap={USStateDisplay}
-                    options={US_STATES}
-                    value={formData.address.state}
-                    onChange={(val: USState) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        address: {
-                          ...prev.address,
-                          state: val,
-                        },
-                      }))
-                    }} 
-                  />
-                  <Input name="address.zipCode" value={formData.address.zipCode} onChange={handleChange} placeholder="Zip Code" required />
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <Input name="emailOrUsername" value={formData.emailOrUsername} onChange={handleChange} placeholder="Email or Username" required />
-              <Input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" required />
-            </>
-          )}
-
-          {errorMessage && (
-            <div className="bg-background text-accent">{errorMessage}</div>
-          )}
-
-          <Button type="submit" className="mb-1 w-full">
+        <img src={logo} alt="CruxPass Logo" className="h-75 w-auto" />
+        <div className={`w-full max-w-lg flex flex-col items-center overflow-y-auto scrollbar-thin-green scroll-smooth px-4 ${isCreating ? 'h-full' : ''}`}>
+          <h1 className="text-green text-2xl font-bold mb-2">
             {isCreating ? "Create Account" : "Login"}
-          </Button>
+          </h1>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsCreating(!isCreating)
-              setFormData(prev => ({ 
-                ...prev,
-                emailOrUsername: "",
-                password: "",
-              }))
-            }}
-            className="text-green mb-1 underline block hover:text-select"
-          >
-            {isCreating ? "Already have an account?" : "Don't have an account? Create one"}
-          </button>
+          <form onSubmit={handleSubmit} noValidate className="w-full px-2 space-y-4 max-w-lg">
+            {isCreating ? (
+              <>
+                <AccountTypeSelect value={formData.accountType} onChange={handleAccountTypeChange} />
+                {renderCreateForm()}
+              </>
+            ) : (
+              <LoginForm formData={formData} onChange={handleChange} />
+            )}
 
-          <button
-            type="button"
-            onClick={() => {
-              skipLogin()
-              navigate("/")
-            }}
-            className="text-green underline hover:text-select"
-          >
-            Skip login
-          </button>
-        </form>
-      </div>
+            {errorMessage && (
+              <div className="bg-background text-accent">{errorMessage}</div>
+            )}
+
+            <Button type="submit" className="mb-1 w-full">
+              {isCreating ? "Create Account" : "Login"}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsCreating(!isCreating)
+                setFormData(prev => ({
+                  ...prev,
+                  emailOrUsername: "",
+                  password: "",
+                }))
+              }}
+              className="text-green mb-1 underline block hover:text-select"
+            >
+              {isCreating ? "Already have an account?" : "Don't have an account? Create one"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                skipLogin()
+                navigate("/")
+              }}
+              className="text-green underline hover:text-select"
+            >
+              Skip login
+            </button>
+          </form>
+        </div>
       </div>
     </PageContainer>
   )

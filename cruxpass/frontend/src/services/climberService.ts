@@ -3,16 +3,11 @@ import { ClimberData } from '@/models/domain';
 import api from './apiService';
 import { ClimberResponseDto, DependentClimberDto } from '@/models/dtos';
 
-const DEFAULT_CLIMBER_STREET = 'N/A';
-const DEFAULT_CLIMBER_ZIP = '00000';
-
 function normalizeClimberAddress(address: Partial<ClimberData['address']> | undefined) {
   return {
-    streetAddress: DEFAULT_CLIMBER_STREET,
-    apartmentNumber: '',
     city: address?.city ?? '',
     state: address?.state ?? '',
-    zipCode: DEFAULT_CLIMBER_ZIP,
+    zipCode: address?.zipCode ?? '',
   };
 }
 
@@ -24,6 +19,7 @@ export async function getClimberProfile(): Promise<ClimberResponseDto> {
     address: {
       city: data?.address?.city ?? '',
       state: data?.address?.state ?? '',
+      zipCode: data?.address?.zipCode ?? '',
     }
   } as ClimberResponseDto;
 }
@@ -41,6 +37,7 @@ export async function updateClimber(data: Partial<ClimberData>): Promise<Climber
     address: {
       city: responseData?.address?.city ?? '',
       state: responseData?.address?.state ?? '',
+      zipCode: responseData?.address?.zipCode ?? '',
     }
   } as ClimberResponseDto;
 }

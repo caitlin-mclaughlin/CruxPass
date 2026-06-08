@@ -255,6 +255,7 @@ export type PublicSeriesDto = {
 
 export type RankedSubmissionDto = {
   place: number;
+  climberId: number;
   climberName: string;
   totalPoints: number;
   totalAttempts: number;
@@ -262,18 +263,43 @@ export type RankedSubmissionDto = {
   division: Division;
 };
 
-export type RegisterRequestDto = {
+export type ClimberRegisterRequestDto = {
   name: string;
   username: string | null;
   email: string;
-  phone?: string;
-  dob?: string | null;
-  gender?: Gender | null;
+  phone: string;
+  dob: string | null;
+  gender: Gender | null;
   password: string;
-  address?: Address | ClimberLocation | null;
-  emergencyName?: string;
-  emergencyPhone?: string;
+  address: ClimberLocation;
+  emergencyName: string;
+  emergencyPhone: string;
 };
+
+export type GymRegisterRequestDto = {
+  name: string;
+  username: string | null;
+  email: string;
+  phone: string;
+  password: string;
+  address: Address;
+};
+
+export type SeriesRegisterRequestDto = {
+  name: string;
+  username: string | null;
+  email: string;
+  password: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  deadline: string;
+};
+
+export type RegisterRequestDto =
+  | ClimberRegisterRequestDto
+  | GymRegisterRequestDto
+  | SeriesRegisterRequestDto;
 
 export type RouteDto = {
   number: number;

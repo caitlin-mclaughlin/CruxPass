@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.cruxpass.utils.SeriesLeaderboardUtilsTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-06-07T20:52:14.058Z" hostname="caitlin-mclaugh-ThinkPad-X1-Carbon-Gen-11" time="0.001">
-  <properties/>
-  <testcase name="assignRanksSortsBySeriesPointsThenRawPointsThenAttempts()" classname="com.cruxpass.utils.SeriesLeaderboardUtilsTest" time="0.001"/>
-  <testcase name="assignRanksGivesSameRankWhenComparatorCannotSeparateEntries()" classname="com.cruxpass.utils.SeriesLeaderboardUtilsTest" time="0.0"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

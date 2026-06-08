@@ -39,11 +39,11 @@ export function SeriesSignupForm({
         showPhone={false}
       />
 
-      <div className="space-y-3 flex flex-col">
-        <h2 className="font-semibold text-green text-lg border-b border-green/20 pb-1">Series Details (Optional)</h2>
+      <div className="space-y-3">
+        <label className="font-medium text-green">Series Details</label>
         <Textarea
           name="seriesDescription"
-          placeholder="Description (Optional)"
+          placeholder="Description (optional)"
           value={formData.seriesDescription}
           onChange={onChange}
         />
@@ -74,7 +74,6 @@ export function SeriesSignupForm({
           <label className="text-sm font-medium text-green">Registration Deadline</label>
           <div className="relative bg-shadow rounded-md">
             <DatePicker
-              inline
               selected={formData.seriesDeadline}
               onChange={(date) => setDateField("seriesDeadline", date)}
               showTimeSelect={true}

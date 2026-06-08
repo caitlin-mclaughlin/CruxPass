@@ -208,6 +208,8 @@ export type RankedSubmission = {
 }
 
 export type Registration = {
+  id: number;
+  climberId: number;
   climberName: string;
   climberDob: string;
   division: Division;
@@ -215,6 +217,8 @@ export type Registration = {
   heat: HeatData;
   feeamount: number;
   feeCurrency: string;
+  paid: boolean;
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | string;
 }
 
 export type GymRegistration = {

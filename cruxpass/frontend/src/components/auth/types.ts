@@ -1,3 +1,4 @@
+import type React from "react";
 import { AccountType, Gender, USState } from "@/constants/enum";
 
 export type LoginFormData = {
@@ -31,4 +32,3 @@ export type AuthFormChangeHandler = (
 ) => void;
 
 export type AuthFormSetter = React.Dispatch<React.SetStateAction<LoginFormData>>;
-

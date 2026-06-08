@@ -53,6 +53,14 @@ export function formatDate(date: Date): string {
   return `${mm}/${dd}/${yyyy}`;
 }
 
+export function formatCurrency(amount?: number | null, currency = 'USD'): string {
+  const normalizedAmount = typeof amount === 'number' ? amount : 0;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(normalizedAmount / 100);
+}
+
 export function formatDateTimePretty(isoString: string): string {
   const date = new Date(isoString)
 

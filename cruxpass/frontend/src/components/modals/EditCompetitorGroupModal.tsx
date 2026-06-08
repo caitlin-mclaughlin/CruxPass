@@ -85,8 +85,8 @@ export default function EditCompetitorGroupModal({
               }
               setConstrained(!constrained)
             }}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-              constrained ? "bg-green border-green" : "bg-shadow border-green"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full border border-green/20 transition ${
+              constrained ? "bg-green" : "bg-shadow"
             }`}
           >
             <span

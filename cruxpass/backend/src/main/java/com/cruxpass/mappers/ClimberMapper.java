@@ -1,23 +1,19 @@
 package com.cruxpass.mappers;
 
-import com.cruxpass.models.Address;
-import com.cruxpass.models.Climber;
+import com.cruxpass.dtos.ClimberLocationDto;
+import com.cruxpass.dtos.UpdateClimberRequestDto;
+import com.cruxpass.dtos.requests.ClimberRegisterRequest;
 import com.cruxpass.dtos.requests.CreateDependentDto;
-import com.cruxpass.dtos.requests.RegisterRequest;
+import com.cruxpass.dtos.responses.ClimberResponseDto;
 import com.cruxpass.dtos.responses.DependentDto;
 import com.cruxpass.dtos.responses.SimpleClimberDto;
-import com.cruxpass.dtos.responses.ClimberResponseDto;
-
+import com.cruxpass.models.Climber;
+import com.cruxpass.models.ClimberLocation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.cruxpass.dtos.AddressDto;
-import com.cruxpass.dtos.UpdateClimberRequestDto;
-
 @Component
 public class ClimberMapper {
-    private static final String DEFAULT_CLIMBER_STREET = "N/A";
-    private static final String DEFAULT_CLIMBER_ZIP = "00000";
 
     public ClimberResponseDto toDto(Climber climber) {
         if (climber == null) return null;
@@ -30,7 +26,7 @@ public class ClimberMapper {
             climber.getUsername(),
             climber.getDob(),
             climber.getGender(),
-            new AddressDto(climber.getAddress()),
+            new ClimberLocationDto(climber.getAddress()),
             climber.getCreatedAt(),
             climber.getEmergencyName(),
             climber.getEmergencyPhone()
@@ -60,7 +56,7 @@ public class ClimberMapper {
             climber.getPhone(),
             climber.getDob(),
             climber.getGender(),
-            new AddressDto(climber.getAddress()),
+            new ClimberLocationDto(climber.getAddress()),
             climber.getEmergencyName(),
             climber.getEmergencyPhone());
     }
@@ -76,7 +72,7 @@ public class ClimberMapper {
             climber.getEmergencyPhone());
     }
 
-    public Climber toEntity(RegisterRequest dto, PasswordEncoder passwordEncoder) {
+    public Climber toEntity(ClimberRegisterRequest dto, PasswordEncoder passwordEncoder) {
         if (dto == null) return null;
         Climber climber = new Climber();
         climber.setName(dto.name);
@@ -87,7 +83,7 @@ public class ClimberMapper {
         climber.setGender(dto.gender);
         climber.setPasswordHash(passwordEncoder.encode(dto.password));
 
-        climber.setAddress(toClimberAddress(dto.address));
+        climber.setAddress(toClimberLocation(dto.address));
         climber.setEmergencyName(dto.emergencyName);
         climber.setEmergencyPhone(dto.emergencyPhone);
         return climber;
@@ -107,30 +103,32 @@ public class ClimberMapper {
     public void updateEntityFromDto(UpdateClimberRequestDto dto, Climber climber) {
         if (dto == null || climber == null) return;
 
-        if(!dto.name().isBlank()) climber.setName(dto.name());
-        if(!dto.email().isBlank()) climber.setEmail(dto.email());
-        if(!dto.phone().isBlank()) climber.setPhone(dto.phone());
-        if(!dto.username().isBlank()) climber.setUsername(dto.username());
+        if(hasText(dto.name())) climber.setName(dto.name());
+        if(hasText(dto.email())) climber.setEmail(dto.email());
+        if(hasText(dto.phone())) climber.setPhone(dto.phone());
+        if(hasText(dto.username())) climber.setUsername(dto.username());
         if(dto.dob() != null) climber.setDob(dto.dob());
         if(dto.gender() != null) climber.setGender(dto.gender());
-        if(dto.address() != null) climber.setAddress(toClimberAddress(dto.address()));
-        if(!dto.emergencyName().isBlank()) climber.setEmergencyName(dto.emergencyName());
-        if(!dto.emergencyPhone().isBlank()) climber.setEmergencyPhone(dto.emergencyPhone());
+        if(dto.address() != null) climber.setAddress(toClimberLocation(dto.address()));
+        if(hasText(dto.emergencyName())) climber.setEmergencyName(dto.emergencyName());
+        if(hasText(dto.emergencyPhone())) climber.setEmergencyPhone(dto.emergencyPhone());
     }
 
-    private Address toClimberAddress(AddressDto dto) {
+    private ClimberLocation toClimberLocation(ClimberLocationDto dto) {
         if (dto == null) return null;
 
-        final String city = dto.city() == null ? "" : dto.city();
-        final String state = dto.state() == null ? "" : dto.state();
-        final String street = (dto.streetAddress() == null || dto.streetAddress().isBlank())
-            ? DEFAULT_CLIMBER_STREET
-            : dto.streetAddress();
-        final String zip = (dto.zipCode() == null || dto.zipCode().isBlank())
-            ? DEFAULT_CLIMBER_ZIP
-            : dto.zipCode();
-        final String apartment = dto.apartmentNumber() == null ? "" : dto.apartmentNumber();
+        return normalizeLocation(dto.city(), dto.state(), dto.zipCode());
+    }
 
-        return new Address(street, apartment, city, state, zip);
+    private ClimberLocation normalizeLocation(String city, String state, String zipCode) {
+        return new ClimberLocation(
+            city == null ? "" : city,
+            state == null ? "" : state,
+            zipCode == null ? "" : zipCode
+        );
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

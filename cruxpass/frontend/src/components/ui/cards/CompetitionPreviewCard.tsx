@@ -25,7 +25,7 @@ export const CompetitionPreviewCard: React.FC<CompPreviewCardProps> = ({
     })();
 
     return (
-    <div className="border rounded-md px-3 py-2 bg-shadow shadow-md grid [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-3">
+    <div className="border border-green/20 rounded-md px-3 py-2 bg-shadow shadow-md grid [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-3">
       <div className="relative flex-col">
         <div className="font-medium">Date & Time:</div>
         <div>{displayDateTime(competition.startDate)}</div>

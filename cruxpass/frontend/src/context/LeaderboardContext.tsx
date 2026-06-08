@@ -81,6 +81,7 @@ export function LeaderboardProvider({ id, children }: { id?: number; children: R
           const res = await getScoresForComp(competitionId, group, division);
           const mapped: RankedSubmission[] = res.map((r: RankedSubmissionDto) => ({
             place: r.place,
+            climberId: r.climberId,
             climberName: r.climberName,
             totalPoints: r.totalPoints,
             totalAttempts: r.totalAttempts,

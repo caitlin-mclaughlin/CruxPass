@@ -11,8 +11,10 @@ export async function getMyRegistrationForComp(compId: number) {
   return res;
 } 
 
-export async function getMySubmissionsForComp(compId: number): Promise<SubmittedRouteDto[]> {
-  const res = await api.get<SubmittedRouteDto[]>(`/competitions/${compId}/submissions/me`);
+export async function getMySubmissionsForComp(compId: number, climberId?: number): Promise<SubmittedRouteDto[]> {
+  const res = await api.get<SubmittedRouteDto[]>(`/competitions/${compId}/submissions/me`, {
+    params: climberId ? { climberId } : undefined,
+  });
   return res.data;
 }
 
@@ -26,7 +28,9 @@ export async function updateMyRegistrationForComp(compId: number, data: CompRegi
   return res.data;
 }
 
-export async function submitScoresForComp(compId: number, data: SubmissionRequestDto): Promise<SubmissionResponseDto> {
-  const res = await api.put(`/competitions/${compId}/submissions/me`, data);
+export async function submitScoresForComp(compId: number, data: SubmissionRequestDto & { climberId?: number }, climberId?: number): Promise<SubmissionResponseDto> {
+  const res = await api.put(`/competitions/${compId}/submissions/me`, data, {
+    params: climberId ? { climberId } : undefined,
+  });
   return res.data;
 }

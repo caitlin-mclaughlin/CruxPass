@@ -123,7 +123,7 @@ export function SearchResults({
       
       {/* HEADER */}
       <div
-        className="grid gap-2 w-max px-2 py-1 bg-green text-background font-semibold border-b border-green"
+        className="grid gap-2 w-max px-2 py-1 bg-green text-background font-semibold border-b border-green/20"
         style={{ gridTemplateColumns }}
       >
         {headers.map((label, i) => (
@@ -147,7 +147,7 @@ export function SearchResults({
           ? "border-background"
           : isAffiliated
             ? "border-highlight"
-            : "border-green"
+            : "border-green/20"
 
         const textColor = isSelected
           ? "text-background"

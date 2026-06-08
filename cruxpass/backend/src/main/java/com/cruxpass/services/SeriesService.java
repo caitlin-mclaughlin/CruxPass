@@ -2,7 +2,7 @@ package com.cruxpass.services;
 
 import com.cruxpass.dtos.SeriesDto;
 import com.cruxpass.dtos.SeriesLeaderboardEntryDto;
-import com.cruxpass.dtos.requests.RegisterRequest;
+import com.cruxpass.dtos.requests.SeriesRegisterRequest;
 import com.cruxpass.enums.DefaultCompetitorGroup;
 import com.cruxpass.enums.Division;
 import com.cruxpass.enums.GroupRefType;
@@ -93,7 +93,9 @@ public class SeriesService {
     }
 
     @Transactional
-    public Series createSimpleSeries(RegisterRequest dto) {
+    public Series createSimpleSeries(SeriesRegisterRequest dto) {
+        dto.username = normalizedUsername(dto.username, dto.email);
+
         if (seriesRepo.findByEmailIgnoreCaseAndActiveTrue(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         } else if (seriesRepo.findByUsernameAndActiveTrue(dto.username).isPresent()) {
@@ -102,11 +104,19 @@ public class SeriesService {
 
         Series series = new Series();
         series.setName(dto.name);
-        series.setUsername(dto.username == null ? dto.email : dto.username); // Or use a custom field if desired
+        series.setUsername(dto.username);
         series.setEmail(dto.email);
         series.setPasswordHash(passwordEncoder.encode(dto.password));
+        series.setDescription(dto.description);
+        series.setStartDate(dto.startDate);
+        series.setEndDate(dto.endDate);
+        series.setDeadline(dto.deadline);
 
         return seriesRepo.save(series);
+    }
+
+    private String normalizedUsername(String username, String email) {
+        return username == null || username.isBlank() ? email : username.trim();
     }
 
     /**

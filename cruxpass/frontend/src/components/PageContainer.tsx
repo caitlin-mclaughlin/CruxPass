@@ -1,6 +1,8 @@
 // src/components/PageContainer.tsx
+import React from "react";
+
 export default function PageContainer({ children, header }: { children: React.ReactNode, header?: boolean }) {
-  const [main, extra] = Array.isArray(children) ? children : [children];
+  const [main, ...extra] = React.Children.toArray(children);
 
   if (header) {
     return (
@@ -9,7 +11,7 @@ export default function PageContainer({ children, header }: { children: React.Re
         {main}
       </div>
       
-      {extra && <div className="p-4 pt-2 md:p-6 md:pt-2">{extra}</div>}
+      {extra.length > 0 && <div className="p-4 pt-2 md:p-6 md:pt-2">{extra}</div>}
     </div>
 
     );

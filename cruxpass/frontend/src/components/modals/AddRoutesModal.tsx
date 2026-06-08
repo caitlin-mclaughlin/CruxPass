@@ -152,7 +152,7 @@ export default function AddRoutesModal({ open, onClose, onSubmit, initialRoutes 
         </div>
 
         {(typeof numRoutes === 'number' && numRoutes > 0) && (
-          <div className="max-h-80 overflow-y-auto border shadow-md rounded-md scrollbar-thin-green scroll-smooth scroll-smooth mb-2">
+          <div className="max-h-80 overflow-y-auto border border-green/20 shadow-md rounded-md scrollbar-thin-green scroll-smooth scroll-smooth mb-2">
             <table className="w-full text-left bg-shadow border-collapse">
               <thead>
                 <tr className="bg-green text-shadow">

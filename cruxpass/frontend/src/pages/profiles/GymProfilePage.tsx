@@ -117,7 +117,7 @@ export default function GymProfilePage() {
         </div>
 
         {hasAny ? (
-          <div className="border-t-2 border-green">
+          <div className="border-t-2 border-green/20">
             {hasUpcoming && (
               <>
                 <h3 className="text-lg font-medium text-green mt-1 mb-1">Upcoming & Live</h3>
@@ -141,7 +141,7 @@ export default function GymProfilePage() {
             )}
           </div>
         ) : (
-          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
             Host a competition and it will show up here!
           </div>
         )}
@@ -173,7 +173,7 @@ export default function GymProfilePage() {
             ))}
           </div>
         ) : (
-          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
             Series associated with {formData?.name} will show up here!
           </div>
         )}

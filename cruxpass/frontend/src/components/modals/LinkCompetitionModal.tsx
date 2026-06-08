@@ -77,10 +77,10 @@ export default function LinkCompetitionModal({ open, onClose, onSuccess }: Props
                         key={gym.id}
                         onClick={() => handleSelectGym(gym.id)}
                         // make each button a flex row that can shrink; min-w-0 on the button so its children can shrink
-                        className={`w-full flex items-center justify-start gap-3 px-3 py-2 rounded-md border transition-colors min-w-0
+                        className={`w-full flex items-center justify-start gap-3 px-3 py-2 rounded-md border border-green/20 transition-colors min-w-0
                           ${selectedGymId === gym.id
-                            ? "bg-green text-shadow border-green/20 font-semibold"
-                            : "bg-background text-green border-green/20 hover:bg-highlight hover:text-background"
+                            ? "bg-green text-shadow font-semibold"
+                            : "bg-background text-green hover:bg-highlight hover:text-background"
                           }`}
                       >
                         {/* Left content: stacked title + subtitle; allow it to shrink */}

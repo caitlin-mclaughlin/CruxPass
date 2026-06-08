@@ -100,7 +100,7 @@ export default function SeriesProfilePage() {
       {/* Registrations */}
       <div className="relative flex-col">
         <h2 className="text-xl font-bold text-green mb-1">Registrations</h2>
-        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
           Climbers registered for {formData?.name} will show up here!
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function SeriesProfilePage() {
             <span className="relative top-[1px]">New Competition</span>
           </Button>
         </div>
-        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
           Competitions associated with {formData?.name} will show up here!
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function SeriesProfilePage() {
             ))}
           </div>
         ) : (
-          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
             Gyms associated with {formData?.name} will show up here!
           </div>
         )}

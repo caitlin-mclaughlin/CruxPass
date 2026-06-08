@@ -31,6 +31,7 @@ import { getSummaryDivisions, heatSupportsGroup } from '@/utils/competitionSumma
 import { updateRegistrationForComp as updateGymRegistration } from '@/services/gymCompetitionService'
 import { createStripeCheckoutSession } from '@/services/stripeService'
 import { updateMyRegistrationForComp } from '@/services/climberCompetitionService'
+import { useStripePayment } from '@/hooks/useStripePayment'
 
 interface Props {
   open: boolean
@@ -45,6 +46,7 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
   const [selectedDivision, setSelectedDivision] = useState<Division | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedClimberId, setSelectedClimberId] = useState<number | null>(null)
 
   // Gym-specific state
@@ -291,29 +293,53 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
         paid: false
       }
 
-      if (mode === 'gym') {
-        await updateGymRegistration(competition.id, payload)
-      } else {
-        const savedRegistration = await updateMyRegistrationForComp(competition.id, payload)
-        if (savedRegistration?.id) {
-          const currentUrl = window.location.href.split('?')[0]
-          const session = await createStripeCheckoutSession(
-            savedRegistration.id,
-            `${currentUrl}?payment=success`,
-            `${currentUrl}?payment=cancel`
-          )
-          if (session.sessionUrl) {
-            window.location.assign(session.sessionUrl)
-            return
-          }
-        }
+      setIsSubmitting(true)
+      const registrationResponse = mode === 'gym'
+        ? await updateGymRegistration(competition.id, payload)
+        : await updateMyRegistrationForComp(competition.id, payload)
+
+      if (!registrationResponse?.id) {
+        throw new Error('Unable to create registration for payment checkout.')
       }
+
+      await openCheckout(registrationResponse.id)
+    } catch (err: any) {
+      console.error(err)
+      setError(getRegistrationErrorMessage(err))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openCheckout = async (registrationId: number) => {
+    const successUrl = `${window.location.origin}/competitions/${competition.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${window.location.origin}/competitions/${competition.id}?payment=cancel`
+    const session = await createStripeCheckoutSession(registrationId, successUrl, cancelUrl)
+
+    if (!session?.sessionId && !session?.sessionUrl) {
       onSuccess()
       handleClose()
-    } catch (err) {
-      console.error(err)
-      setError('Registration failed. You may already be registered.')
+      return
     }
+
+    await useStripePayment(session.sessionId, session.sessionUrl)
+  }
+
+  const getRegistrationErrorMessage = (err: any) => {
+    const status = err?.response?.status
+    if (status === 503) {
+      return 'Registration was created, but Stripe checkout is not configured. Please check your Stripe API key settings.'
+    }
+    if (status === 403) {
+      return 'Registration was created, but this account cannot start checkout for it.'
+    }
+    if (status === 400) {
+      return 'Registration could not be completed. Please check the selected climber, group, division, and deadline.'
+    }
+    if (err?.message?.toLowerCase?.().includes('stripe')) {
+      return err.message
+    }
+    return 'Registration failed. Please try again or contact support.'
   }
 
   const handleClose = () => {
@@ -526,10 +552,12 @@ export default function RegisterModal({ open, onClose, competition, onSuccess, m
 
           {error && <div className="text-accent mt-2">{error}</div>}
 
-          <Button onClick={handleSubmit} className="w-full mt-2">
-            {mode === 'gym'
-              ? `Register Climber for ${competition.name}`
-              : `Register for ${competition.name}`}
+          <Button onClick={handleSubmit} className="w-full mt-2" disabled={isSubmitting}>
+            {isSubmitting
+              ? 'Processing payment…'
+              : mode === 'gym'
+                ? `Register Climber for ${competition.name}`
+                : `Register for ${competition.name}`}
           </Button>
         </div>
       </DialogContent>

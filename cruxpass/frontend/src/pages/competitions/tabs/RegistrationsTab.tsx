@@ -4,7 +4,7 @@ import { UserPlus } from "lucide-react";
 
 interface Props {
   groupedRegs:Record<string, GymRegistration[]>,
-  openRegisterModal: () => void
+  openRegisterModal: () => void,
 }
 
 export function RegistrationsTab({ 
@@ -17,7 +17,7 @@ export function RegistrationsTab({
     {/* Registration Box */}
       <div className="relative flex-col">
         <h2 className="text-xl mb-1 font-bold">Registrations</h2>
-        <div className="border rounded-md px-3 py-2 bg-shadow shadow-md">
+        <div className="border border-green/20 rounded-md px-3 py-2 bg-shadow shadow-md">
           {groupedRegs && Object.keys(groupedRegs).length > 0 ? (
             <>
               {Object.entries(groupedRegs).map(([groupLabel, climbers]) => (
