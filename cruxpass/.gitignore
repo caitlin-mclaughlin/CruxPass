@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+frontend/node_modules
 dist
 dist-ssr
 *.local
@@ -26,6 +27,15 @@ dist-ssr
 # Build
 ./backend/build/*
 ./backend/build
+./backend/.gradle
 
 ./backend/.env
 .jwt_secret./backend/.jwt_secret
+
+.agents
+.codex
+.vscode
+
+.*
+backend/.*
+frontend/.*
