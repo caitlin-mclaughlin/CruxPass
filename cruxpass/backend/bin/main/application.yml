@@ -34,5 +34,10 @@ spring:
       root: DEBUG
       "[org.hibernate.SQL]": INFO
       "[org.hibernate.type.descriptor.sql]": TRACE
+stripe:
+  api:
+    key: ${STRIPE_API_KEY:}
+  webhook:
+    secret: ${STRIPE_WEBHOOK_SECRET:}
 jwt:
   secret-file: /run/secrets/jwt_secret

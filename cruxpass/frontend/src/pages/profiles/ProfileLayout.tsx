@@ -31,7 +31,7 @@ export default function ProfileLayout({
   return (
     <div>
       <div className="grid [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-3 
-                      rounded-md shadow-md px-3 py-2 bg-shadow border border-green truncate">
+                      rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20 truncate">
         {main}
       </div>
       

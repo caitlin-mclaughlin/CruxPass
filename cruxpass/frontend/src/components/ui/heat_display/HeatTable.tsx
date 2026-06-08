@@ -13,10 +13,10 @@ export function HeatTable({ heats, customGroups, onEdit, onDelete }: HeatDisplay
   );
 
   return (
-    <div className="bg-shadow border border-green rounded-md shadow-md overflow-hidden">
+    <div data-testid="desktop-view" className="bg-shadow border border-green/20 rounded-md shadow-md overflow-hidden">
       <table className="w-full border-collapse rounded-md">
         <thead>
-          <tr className="border-b border-green bg-green rounded-md text-background text-left text-md">
+          <tr className="border-b border-green/20 bg-green rounded-md text-background text-left text-md">
             {showNameColumn && (
               <th className="py-2 px-3 whitespace-nowrap">Heat</th>
             )}
@@ -29,21 +29,21 @@ export function HeatTable({ heats, customGroups, onEdit, onDelete }: HeatDisplay
 
         <tbody>
           {heats.map((heat, idx) => (
-            <tr key={heat.id ?? idx} className="border-b border-green last:border-b-0">
+            <tr key={heat.id ?? idx} className="border-t text-left border-green/20">
               {showNameColumn && (
-                <td className="py-2 px-3 font-medium text-left font-semibold whitespace-nowrap">
+                <td className="py-2 px-3 font-medium font-semibold whitespace-nowrap">
                   {heat.heatName || ""}
                 </td>
               )}
-              <td className="py-2 px-3 text-left whitespace-nowrap">
+              <td className="py-2 px-3 whitespace-nowrap">
                 {formatHeatTimeRange(heat.startTime, heat.duration) ?? '—'}
               </td>
 
-              <td className="py-2 px-3 text-center">
+              <td className="py-2 px-3">
                 {heat.capacity ?? '—'}
               </td>
 
-              <td className="py-1 px-3 text-left">
+              <td className="py-1 px-3">
                 <div className="flex flex-wrap">
                   {heat.groups.map((g) => g.name).join(', ')}
                 </div>

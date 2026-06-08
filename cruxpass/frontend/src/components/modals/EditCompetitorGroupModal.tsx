@@ -85,12 +85,12 @@ export default function EditCompetitorGroupModal({
               }
               setConstrained(!constrained)
             }}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-              constrained ? "bg-green border-green" : "bg-shadow border-green"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full border border-green/20 transition ${
+              constrained ? "bg-green" : "bg-shadow"
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-background border border-green transition-transform ${
+              className={`inline-block h-4 w-4 transform rounded-full bg-background border border-green/20 transition-transform ${
                 constrained ? "translate-x-6" : "translate-x-1"
               }`}
             />
@@ -99,7 +99,7 @@ export default function EditCompetitorGroupModal({
 
         <div className={`bg-shadow border rounded-md shadow-md px-3 py-2 space-y-2 transition-opacity ${
           constrained
-            ? 'border-green bg-background opacity-100'
+            ? 'border-green/20 bg-background opacity-100'
             : 'border-border bg-muted text-muted opacity-50 pointer-events-none'
         }`}>
           {/* AGE TYPE */}

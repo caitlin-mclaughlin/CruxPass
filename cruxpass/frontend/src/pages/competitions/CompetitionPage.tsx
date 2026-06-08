@@ -15,6 +15,8 @@ import { OverviewTab } from './tabs/OverviewTab'
 import { RegistrationsTab } from './tabs/RegistrationsTab'
 import { Dot } from 'lucide-react'
 import { HeatsTab } from './tabs/HeatsTab'
+import { RoutesTab } from './tabs/RoutesTab'
+import RegisterModal from '@/components/modals/RegisterModal'
 
 export default function CompetitionPage() {
   const { competitionId } = useParams<{ competitionId: string }>()
@@ -29,7 +31,8 @@ export default function CompetitionPage() {
     refreshRegistrations,
     refreshRoutes,
     updateRegistrations,
-    updateRoutes
+    updateRoutes,
+    updateRoutesVisible,
   } = useGymCompetition()
   const { gym, gymSessionLoading, gymCustomGroups } = useGymSession()
   const navigate = useNavigate()
@@ -40,7 +43,7 @@ export default function CompetitionPage() {
   const [showRouteModal, setShowRouteModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'heats' | 'leaderboard' | 'registrations'>('overview')
+  const [activeTab, setActiveTab] = useState<"heats" | "routes" | "registrations" | "overview" | "leaderboard">("overview")
 
   // Load registrations on mount or when competition/gym changes
   useEffect(() => {
@@ -56,13 +59,19 @@ export default function CompetitionPage() {
 
     setLoadingRoutes(true)
     try {
-      refreshRoutes(parseInt(competitionId))
+      await refreshRoutes(parseInt(competitionId))
     } catch (err) {
       console.error('Failed to load routes', err)
     } finally {
       setLoadingRoutes(false)
     }
   }
+
+  useEffect(() => {
+    if (activeTab === 'routes') {
+      fetchRoutes()
+    }
+  }, [activeTab, gym?.id, competitionId])
 
   // Group registrations by division and group for display
   const groupByGroupAndDivision = () => {
@@ -88,7 +97,17 @@ export default function CompetitionPage() {
       alert("Could not update routes.")
     }
   }
-  
+
+  const handleRouteGradesVisibleChange = async (visible: boolean) => {
+    try {
+      if (!gym?.id || !competitionId) return
+      await updateRoutesVisible(parseInt(competitionId), visible)
+    } catch (err) {
+      console.error("Failed to update route grades visibility", err)
+      alert("Could not update route grades visibility.")
+    }
+  }
+
   const openRegisterModal = () => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -142,28 +161,39 @@ export default function CompetitionPage() {
         <div className="flex items-center justify-between mt-2 mb-4">
           <div className="flex gap-6">
             <button
+              role="tab"
               onClick={() => setActiveTab('overview')}
               className={tabStyle(activeTab === 'overview')}
             >
               Overview
             </button>
             <button
+              role="tab"
               onClick={() => setActiveTab('heats')}
               className={tabStyle(activeTab === 'heats')}
             >
               Heats
             </button>
             <button
-              onClick={() => setActiveTab('leaderboard')}
-              className={tabStyle(activeTab === 'leaderboard')}
+              role="tab"
+              onClick={() => setActiveTab('routes')}
+              className={tabStyle(activeTab === 'routes')}
             >
-              Leaderboard
+              Routes
             </button>
             <button
+              role="tab"
               onClick={() => setActiveTab('registrations')}
               className={tabStyle(activeTab === 'registrations')}
             >
               Registrations
+            </button>
+            <button
+              role="tab"
+              onClick={() => setActiveTab('leaderboard')}
+              className={tabStyle(activeTab === 'leaderboard')}
+            >
+              Leaderboard
             </button>
           </div>
         </div>
@@ -187,13 +217,22 @@ export default function CompetitionPage() {
           />
         )}
 
+        {activeTab === 'routes' && (
+          <RoutesTab
+            routes={routes}
+            loading={loadingRoutes}
+            onSave={handleEditRoutes}
+            routeGradesVisible={competition.routeGradesVisible}
+            onRouteGradesVisibleChange={handleRouteGradesVisibleChange}
+          />
+        )}
+
         {activeTab === 'registrations' && (
           <RegistrationsTab
             groupedRegs={groupedRegs}
             openRegisterModal={openRegisterModal}
           />
         )}
-
 
         {/* Modals*/}
         <AddRoutesModal
@@ -202,18 +241,17 @@ export default function CompetitionPage() {
           onSubmit={(routes) => handleEditRoutes(routes)}
           initialRoutes={routes ?? []}
         />
-{/* 
+
         <RegisterModal
           open={showRegisterModal}
           mode={'gym'}
           onClose={() => setShowRegisterModal(false)}
           competition={competition}
           onSuccess={async () => {
-            await refreshCompetition(competition.id)
+            await refreshRegistrations(competition.id)
             setShowRegisterModal(false)
           }}
         />
-        */}
       </div>
     </PageContainer>
   )

@@ -5,7 +5,7 @@ import { ResolvedCompetitorGroup } from "@/models/dtos";
 interface Props {
   heats: HeatData[],
   gymCustomGroups: ResolvedCompetitorGroup[],
-  setActiveTab: React.Dispatch<React.SetStateAction<"heats" | "registrations" | "overview" | "leaderboard">>,
+  setActiveTab: React.Dispatch<React.SetStateAction<"heats" | "routes" | "registrations" | "overview" | "leaderboard">>,
 }
 
 export function HeatsTab({ 

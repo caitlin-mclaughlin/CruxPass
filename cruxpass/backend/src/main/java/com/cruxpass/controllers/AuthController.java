@@ -1,8 +1,11 @@
 package com.cruxpass.controllers;
 
 import com.cruxpass.dtos.AddressDto;
+import com.cruxpass.dtos.ClimberLocationDto;
 import com.cruxpass.dtos.requests.AuthRequest;
-import com.cruxpass.dtos.requests.RegisterRequest;
+import com.cruxpass.dtos.requests.ClimberRegisterRequest;
+import com.cruxpass.dtos.requests.GymRegisterRequest;
+import com.cruxpass.dtos.requests.SeriesRegisterRequest;
 import com.cruxpass.dtos.responses.AuthResponse;
 import com.cruxpass.dtos.responses.ClimberResponseDto;
 import com.cruxpass.dtos.responses.GymResponseDto;
@@ -38,42 +41,22 @@ public class AuthController {
     @Autowired
     private final SeriesMapper seriesMap;
 
-    @PostMapping("/register/{type}")
-    public ResponseEntity<AuthResponse> register(
-            @PathVariable AccountType type,
-            @Valid @RequestBody RegisterRequest dto
-    ) {
-        Long id;
-        switch (type) {
-            case CLIMBER -> {
-                Climber climber = climberService.createAdult(dto);
-                id = climber.getId();
-                break;
-            }
-            case GYM-> {
-                Gym gym = gymService.createGym(dto);
-                id = gym.getId();
-                break;
-            }
-            case SERIES-> {
-                Series series = seriesService.createSimpleSeries(dto);
-                id = series.getId();
-                break;
-            }
-            default -> {
-                return ResponseEntity.badRequest().build();
-            }
-        }
+    @PostMapping("/register/climber")
+    public ResponseEntity<AuthResponse> registerClimber(@Valid @RequestBody ClimberRegisterRequest dto) {
+        Climber climber = climberService.createAdult(dto);
+        return ResponseEntity.ok(tokenFor(AccountType.CLIMBER, climber.getId(), climber.getEmail()));
+    }
 
-        String email = switch (type) {
-            case CLIMBER -> climberService.getByUsername(dto.username).getEmail();
-            case GYM -> gymService.getByUsername(dto.username).getEmail();
-            case SERIES -> seriesService.getByUsername(dto.username).getEmail();
-            default -> null;
-        };
+    @PostMapping("/register/gym")
+    public ResponseEntity<AuthResponse> registerGym(@Valid @RequestBody GymRegisterRequest dto) {
+        Gym gym = gymService.createGym(dto);
+        return ResponseEntity.ok(tokenFor(AccountType.GYM, gym.getId(), gym.getEmail()));
+    }
 
-        String token = jwtUtil.generateToken(email, type, id);
-        return ResponseEntity.ok(new AuthResponse(token));
+    @PostMapping("/register/series")
+    public ResponseEntity<AuthResponse> registerSeries(@Valid @RequestBody SeriesRegisterRequest dto) {
+        Series series = seriesService.createSimpleSeries(dto);
+        return ResponseEntity.ok(tokenFor(AccountType.SERIES, series.getId(), series.getEmail()));
     }
 
     @PostMapping("/login")
@@ -132,7 +115,7 @@ public class AuthController {
                         climber.getUsername(),
                         climber.getDob(),
                         climber.getGender(),
-                        new AddressDto(climber.getAddress()),
+                        new ClimberLocationDto(climber.getAddress()),
                         climber.getCreatedAt(),
                         climber.getEmergencyName(),
                         climber.getEmergencyPhone()
@@ -166,5 +149,9 @@ public class AuthController {
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    private AuthResponse tokenFor(AccountType accountType, Long id, String email) {
+        return new AuthResponse(jwtUtil.generateToken(email, accountType, id));
     }
 }

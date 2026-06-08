@@ -234,7 +234,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
 
         {/* SECTION 1: BASIC INFO */}
         <section>
-          <h2 className="text-xl font-semibold border-b-2 border-green">Basic Info</h2>
+          <h2 className="text-xl font-semibold border-b-2 border-green/20">Basic Info</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 mt-2 gap-y-2 gap-x-4">
             <div >
               <label className="font-semibold">Name</label>
@@ -304,7 +304,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
             <div>
               <label className="font-semibold">Competition Types</label>
               <div 
-                className={`flex flex-wrap gap-x-6 gap-y-2 border bg-shadow rounded-md shadow-md px-3 py-1 ${
+                className={`flex flex-wrap gap-x-6 gap-y-2 border border-green/20 bg-shadow rounded-md shadow-md px-3 py-1 ${
                   showErrors && draft.types.length === 0 ? `${invalidField}` : ''
                 }`}
               >
@@ -337,7 +337,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
 
         {/* SECTION 2: COMPETITOR GROUPS */}
         <section className="space-y-2 pt-2">
-          <h2 className="text-xl font-semibold border-b-2 border-green">
+          <h2 className="text-xl font-semibold border-b-2 border-green/20">
             Competitor Groups
           </h2>
 
@@ -393,7 +393,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
 
         {/* SECTION 3: PRICING INFO */}
         <section>
-          <h2 className="text-xl font-semibold border-b-2 border-green">Pricing Info</h2>
+          <h2 className="text-xl font-semibold border-b-2 border-green/20">Pricing Info</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 mt-2 gap-y-2 gap-x-4">
             <div>
               <label className="font-semibold">Pricing Type</label>
@@ -476,7 +476,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
 
         {/* SECTION 4: HEATS */}
         <section className="space-y-2 pt-2">
-          <h2 className="text-xl font-semibold border-b-2 border-green">Heats & Schedule</h2>
+          <h2 className="text-xl font-semibold border-b-2 border-green/20">Heats & Schedule</h2>
           <p className="text-muted">
             Split the competition into time blocks and assign groups to each.
           </p>
@@ -521,7 +521,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
 
           <div className="space-y-4">
             {draft.heats.map((heat) => (
-              <div key={heat.clientId} className="border bg-shadow rounded-md shadow-md px-3 py-2 space-y-2">
+              <div key={heat.clientId} className="border border-green/20 bg-shadow rounded-md shadow-md px-3 py-2 space-y-2">
                 {draft.selectedGroups.length > 0 ? (
                   <HeatBlock 
                     selectedGroupOptions={selectedGroupOptions} 
@@ -549,7 +549,7 @@ export function CreateOrEditCompetitionEditor({ gym }: { gym: GymData }) {
 
         {/* FOOTER ACTIONS */}
         <div className="mt-auto"></div>
-        <footer className="pt-4 border-t-2 border-green">
+        <footer className="pt-4 border-t-2 border-green/20">
           <div className="flex justify-between">
             <Button
               className="bg-accent hover:bg-accentHighlight"

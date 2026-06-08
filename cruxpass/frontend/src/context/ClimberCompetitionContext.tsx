@@ -17,7 +17,7 @@ interface ClimberCompetitionContextType {
   refreshRoutes: (compId: number) => Promise<void>;
   refreshSubmissions: (compId: number) => Promise<void>;
   setSubmissions: React.Dispatch<React.SetStateAction<SubmittedRoute[]>>; 
-  updateRegistration: (compId: number, data: CompRegistrationRequestDto) => Promise<void>;
+  updateRegistration: (compId: number, data: CompRegistrationRequestDto) => Promise<CompRegistrationResponseDto | undefined>;
   updateSubmissions: (compId: number, data: SubmissionRequestDto) => Promise<void>;
 }
 
@@ -34,7 +34,7 @@ const ClimberCompetitionContext = createContext<ClimberCompetitionContextType>({
   refreshRoutes: async () => {},
   refreshSubmissions: async () => {},
   setSubmissions: () => {},
-  updateRegistration: async () => {},
+  updateRegistration: async () => undefined,
   updateSubmissions: async () => {},
 });
 
@@ -135,7 +135,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
     }
   }
 
-  async function updateRegistration(compId: number, data: CompRegistrationRequestDto): Promise<void> {
+  async function updateRegistration(compId: number, data: CompRegistrationRequestDto): Promise<CompRegistrationResponseDto | undefined> {
     const targetId = id ?? compId;
     if (!targetId) return;
     try {
@@ -150,6 +150,7 @@ export function ClimberCompetitionProvider({ id, children }: { id?: number, chil
         feeCurrency: res.feeCurrency,
       } as Registration
       setRegistration(regData);
+      return res;
     } catch (err) {
       console.warn('Could not register climber', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));

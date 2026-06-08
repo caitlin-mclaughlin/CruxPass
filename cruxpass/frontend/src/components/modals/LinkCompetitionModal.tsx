@@ -59,12 +59,12 @@ export default function LinkCompetitionModal({ open, onClose, onSuccess }: Props
         {/* Split view container */}
         <ResizablePanelGroup
           direction="horizontal"
-          className="border border-green rounded-md bg-shadow overflow-hidden"
+          className="border border-green/20 rounded-md bg-shadow overflow-hidden"
         >
           {/* Left Pane – Gyms */}
           <ResizablePanel defaultSize={40} minSize={30} maxSize={60}>
-            <div className="h-[400px] flex flex-col border-r border-green min-w-0">
-              <h3 className="px-3 py-2 font-semibold text-green border-b border-green truncate">
+            <div className="h-[400px] flex flex-col border-r border-green/20 min-w-0">
+              <h3 className="px-3 py-2 font-semibold text-green border-b border-green/20 truncate">
                 Affiliated Gyms
               </h3>
 
@@ -77,10 +77,10 @@ export default function LinkCompetitionModal({ open, onClose, onSuccess }: Props
                         key={gym.id}
                         onClick={() => handleSelectGym(gym.id)}
                         // make each button a flex row that can shrink; min-w-0 on the button so its children can shrink
-                        className={`w-full flex items-center justify-start gap-3 px-3 py-2 rounded-md border transition-colors min-w-0
+                        className={`w-full flex items-center justify-start gap-3 px-3 py-2 rounded-md border border-green/20 transition-colors min-w-0
                           ${selectedGymId === gym.id
-                            ? "bg-green text-shadow border-green font-semibold"
-                            : "bg-background text-green border-green hover:bg-highlight hover:text-background"
+                            ? "bg-green text-shadow font-semibold"
+                            : "bg-background text-green hover:bg-highlight hover:text-background"
                           }`}
                       >
                         {/* Left content: stacked title + subtitle; allow it to shrink */}
@@ -104,7 +104,7 @@ export default function LinkCompetitionModal({ open, onClose, onSuccess }: Props
           {/* Right Pane – Competitions */}
           <ResizablePanel>
             <div className="h-[400px] flex flex-col">
-              <h3 className="px-3 py-2 font-semibold text-green border-b border-green truncate">
+              <h3 className="px-3 py-2 font-semibold text-green border-b border-green/20 truncate">
                 {selectedGymId
                   ? "Competitions at Selected Gym"
                   : "Select a gym to view competitions"}
@@ -116,7 +116,7 @@ export default function LinkCompetitionModal({ open, onClose, onSuccess }: Props
                     filteredComps.map((comp) => (
                       <div
                         key={comp.id}
-                        className="flex justify-between items-center w-full max-w-full p-3 bg-shadow border border-green rounded-md hover:bg-select transition overflow-hidden"
+                        className="flex justify-between items-center w-full max-w-full p-3 bg-shadow border border-green/20 rounded-md hover:bg-select transition overflow-hidden"
                       >
                         <div className="min-w-0 flex-1 overflow-hidden">
                           <div className="font-semibold truncate">

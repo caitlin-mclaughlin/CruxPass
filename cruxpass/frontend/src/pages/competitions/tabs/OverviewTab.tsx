@@ -1,6 +1,7 @@
 import { HeatListResponsive } from "@/components/ui/heat_display/HeatListResponsive"
 import { Button } from "@/components/ui/Button"
 import { CompetitionPreviewCard } from "@/components/ui/cards/CompetitionPreviewCard"
+import PricingRulesDisplay from "@/components/ui/comp_display/PriceRuleDisplay"
 import { CompetitionEntity, HeatData } from "@/models/domain"
 import { ResolvedCompetitorGroup } from "@/models/dtos"
 import { CalendarCheck, PencilLine } from "lucide-react"
@@ -11,7 +12,7 @@ interface Props {
   competition: CompetitionEntity,
   heats: HeatData[],
   gymCustomGroups: ResolvedCompetitorGroup[],
-  setActiveTab: React.Dispatch<React.SetStateAction<"heats" | "registrations" | "overview" | "leaderboard">>,
+  setActiveTab: React.Dispatch<React.SetStateAction<"heats" | "routes" | "registrations" | "overview" | "leaderboard">>,
   setShowRouteModal: React.Dispatch<React.SetStateAction<boolean>>
 }
 
@@ -30,13 +31,20 @@ export function OverviewTab({
       {/* Competition Details Box */}
       <CompetitionPreviewCard competition={competition} />
 
+      <PricingRulesDisplay
+        pricingType={competition.pricingType}
+        flatFee={competition.flatFee}
+        feeCurrency={competition.feeCurrency}
+        pricingRules={competition.pricingRules}
+      />
+
       <div className="relative flex-col">
         <h2 className="text-xl font-bold mb-1">Competitor Groups</h2>
         <div className="grid [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))] gap-2">
           {competition.selectedGroups.map(group => (
               <div
                 key={group.id ?? group.name}
-                className="flex items-center justify-center rounded-md shadow-md border px-3 py-2 text-green text-center bg-shadow"
+                className="flex items-center justify-center rounded-md shadow-md border border-green/20 px-3 py-2 text-green text-center bg-shadow"
               >
                 {group.name}
               </div>

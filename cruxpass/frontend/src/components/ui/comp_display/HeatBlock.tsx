@@ -125,7 +125,7 @@ export function HeatBlock({
           <div>
             <label className="font-semibold">Groups in This Heat</label>
             <div 
-              className={`flex flex-wrap gap-x-4 gap-y-2 border bg-background rounded-md px-3 py-1 ${
+              className={`flex flex-wrap gap-x-4 gap-y-2 border border-green/20 bg-background rounded-md px-3 py-1 ${
                 showErrors && heat.groups.length === 0 ? `${invalidField}` : ''}
               `}
             >
@@ -169,12 +169,12 @@ export function HeatBlock({
                       divisionsEnabled: !heat.divisionsEnabled,
                     })
                   }
-                  className={`relative inline-flex h-6 w-11 border border-green items-center rounded-full transition-colors focus:outline-none ${
+                  className={`relative inline-flex h-6 w-11 border border-green/20 items-center rounded-full transition-colors focus:outline-none ${
                     heat.divisionsEnabled ? 'bg-green' : 'bg-background'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full border border-green bg-shadow transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full border border-green/20 bg-shadow transition-transform ${
                       heat.divisionsEnabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -182,10 +182,10 @@ export function HeatBlock({
               </div>
             </div>
           <div
-            className={`flex flex-wrap space-x-5 gap-2 border px-3 py-1 rounded-md shadow-md transition-opacity ${
+            className={`flex flex-wrap space-x-5 gap-2 border border-green/20 px-3 py-1 rounded-md shadow-md transition-opacity ${
               heat.divisionsEnabled
-                ? 'border bg-background opacity-100'
-                : 'border bg-muted text-muted opacity-50 pointer-events-none'
+                ? 'bg-background opacity-100'
+                : 'bg-muted text-muted opacity-50 pointer-events-none'
             } ${showErrors && (heat.divisionsEnabled && heat.divisions.length === 0) ? `${invalidField}` : ''}`}
           >
             {DIVISION_OPTIONS.map(division => (

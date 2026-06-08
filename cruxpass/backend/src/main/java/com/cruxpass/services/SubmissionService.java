@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -95,24 +96,46 @@ public class SubmissionService {
 
         Map<Long, SubmittedRoute> routeMap = submission.getRoutes().stream()
             .collect(Collectors.toMap(sr -> sr.getRoute().getId(), sr -> sr));
-        
+
+        Map<Long, SubmittedRoute> updatedRoutes = new java.util.LinkedHashMap<>();
+        Set<Long> incomingIds = dto.routes().stream()
+            .map(SubmittedRouteDto::routeId)
+            .collect(Collectors.toSet());
+
         for (SubmittedRouteDto routeDto : dto.routes()) {
             Route route = routeService.getById(routeDto.routeId());
             if (route == null) throw new RuntimeException("Route not found: ID " + routeDto.routeId());
+            if (route.getCompetition() == null || !route.getCompetition().getId().equals(comp.getId())) {
+                throw new IllegalStateException("Route does not belong to this competition.");
+            }
 
             SubmittedRoute existing = routeMap.get(routeDto.routeId());
             if (existing != null) {
+                if (!routeDto.send()) {
+                    continue;
+                }
                 existing.setAttempts(routeDto.attempts());
-                existing.setSend(routeDto.send());
+                existing.setSend(true);
+                updatedRoutes.put(routeDto.routeId(), existing);
             } else {
                 SubmittedRoute newRoute = new SubmittedRoute();
                 newRoute.setRoute(route);
                 newRoute.setAttempts(routeDto.attempts());
                 newRoute.setSend(routeDto.send());
                 newRoute.setSubmission(submission);
-                submission.getRoutes().add(newRoute);
+                updatedRoutes.put(routeDto.routeId(), newRoute);
             }
         }
+
+        for (SubmittedRoute route : submission.getRoutes()) {
+            Long routeId = route.getRoute().getId();
+            if (!incomingIds.contains(routeId) && !updatedRoutes.containsKey(routeId)) {
+                updatedRoutes.put(routeId, route);
+            }
+        }
+
+        submission.getRoutes().clear();
+        submission.getRoutes().addAll(updatedRoutes.values());
 
         // --- compute totals (count only SENT routes) ---
         int totalPoints = submission.getRoutes().stream()

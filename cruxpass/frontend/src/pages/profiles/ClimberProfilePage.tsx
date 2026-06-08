@@ -6,14 +6,24 @@ import ClimberProfileForm from "@/components/forms/ClimberForm";
 import { Button } from "@/components/ui/Button";
 import AddDependentModal from "@/components/modals/AddDependentModal";
 import { Plus, Trash2, UserPen } from "lucide-react";
-import { GenderEnumMap } from "@/constants/enum";
-import { formatDateFromString } from "@/utils/datetime";
+import { DivisionEnumMap, GenderEnumMap } from "@/constants/enum";
+import { displayDateTime, formatDateFromString } from "@/utils/datetime";
 import PageContainer from "@/components/PageContainer";
 import FloatingActionButton from "@/components/ui/FloatingActionButton";
+import { getCompetition, getMyRegistrationForComp } from "@/services/climberCompetitionService";
+import { CompetitionEntity, Registration } from "@/models/domain";
+import { formatCurrency } from "@/utils/formatters";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+
+type ClimberCompetitionSummary = {
+  competition: CompetitionEntity;
+  registration: Registration | null;
+};
 
 export default function ClimberProfilePage() {
   const {
     climber, 
+    competitionIds,
     dependents,
     climberSessionLoading,
     addDependentProfile,
@@ -29,12 +39,56 @@ export default function ClimberProfilePage() {
   const [editingDependent, setEditingDependent] = useState<DependentClimber | null>(null);
   // State for delete confirmation
   const [deletingDependent, setDeletingDependent] = useState<DependentClimber | null>(null);
+  const [competitionSummaries, setCompetitionSummaries] = useState<ClimberCompetitionSummary[]>([]);
+  const [competitionsLoading, setCompetitionsLoading] = useState(false);
   
   useEffect(() => {
     if (climber) {
       setFormData(climber);
     }
   }, [climber]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCompetitions() {
+      if (!competitionIds.length) {
+        setCompetitionSummaries([]);
+        return;
+      }
+
+      setCompetitionsLoading(true);
+      try {
+        const summaries = await Promise.all(
+          competitionIds.map(async (id) => {
+            const [competitionResponse, registrationResponse] = await Promise.all([
+              getCompetition(id),
+              getMyRegistrationForComp(id).catch(() => ({ data: null })),
+            ]);
+
+            return {
+              competition: competitionResponse.data as CompetitionEntity,
+              registration: registrationResponse.data as Registration | null,
+            };
+          })
+        );
+
+        if (!cancelled) {
+          setCompetitionSummaries(summaries);
+        }
+      } finally {
+        if (!cancelled) {
+          setCompetitionsLoading(false);
+        }
+      }
+    }
+
+    loadCompetitions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [competitionIds]);
 
   const handleSubmit = async () => {
     if (!formData) return;
@@ -70,6 +124,49 @@ export default function ClimberProfilePage() {
     }
   };
 
+  const activeCompetitionSummaries = competitionSummaries.filter(
+    summary => summary.competition.compStatus !== "FINISHED"
+  );
+  const finishedCompetitionSummaries = competitionSummaries.filter(
+    summary => summary.competition.compStatus === "FINISHED"
+  );
+
+  const CompetitionSummaryList = ({ summaries }: { summaries: ClimberCompetitionSummary[] }) => (
+    <div className="space-y-3">
+      {summaries.map(({ competition, registration }) => (
+        <div key={competition.id} className="rounded-md border border-green/20 bg-shadow px-3 py-2 shadow-md">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h4 className="text-lg font-semibold">{competition.name}</h4>
+              <div className="text-sm text-muted">{displayDateTime(competition.startDate)}</div>
+            </div>
+            <StatusBadge compStatus={competition.compStatus} />
+          </div>
+          {registration && (
+            <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <div className="font-semibold">Group</div>
+                <div>{registration.competitorGroup?.name ?? "—"}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Division</div>
+                <div>{DivisionEnumMap[registration.division as keyof typeof DivisionEnumMap] ?? registration.division}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Heat</div>
+                <div>{registration.heat?.heatName ?? "—"}</div>
+              </div>
+              <div>
+                <div className="font-semibold">Fee</div>
+                <div>{formatCurrency(registration.feeamount, registration.feeCurrency)}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <PageContainer>
       <h1 className="text-2xl font-bold mb-2">{formData?.name}</h1>
@@ -104,7 +201,7 @@ export default function ClimberProfilePage() {
             {dependents.map((dep) => (
               <div
                 key={dep.id}
-                className="px-3 py-2 flex-1 items-center justify-center rounded-md shadow-md bg-shadow border border-green"
+                className="px-3 py-2 flex-1 items-center justify-center rounded-md shadow-md bg-shadow border border-green/20"
               >
                 <div className="font-medium">{dep.name}</div>
                 <div className="text-sm text-green">
@@ -142,13 +239,32 @@ export default function ClimberProfilePage() {
       {/* Competitions */}
       <div className="relative flex-col mt-4">
         <h2 className="text-xl font-semibold text-green mb-1">My Competitions</h2>
-        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">Register for a competition and it will show up here!</div>
+        {competitionsLoading ? (
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">Loading competitions...</div>
+        ) : competitionSummaries.length === 0 ? (
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">Register for a competition and it will show up here!</div>
+        ) : (
+          <div className="space-y-4">
+            {activeCompetitionSummaries.length > 0 && (
+              <section className="space-y-2">
+                <h3 className="text-lg font-semibold">Upcoming & Live</h3>
+                <CompetitionSummaryList summaries={activeCompetitionSummaries} />
+              </section>
+            )}
+            {finishedCompetitionSummaries.length > 0 && (
+              <section className="space-y-2">
+                <h3 className="text-lg font-semibold">Past</h3>
+                <CompetitionSummaryList summaries={finishedCompetitionSummaries} />
+              </section>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Badges */}
       <div className="relative flex-col mt-4">
         <h2 className="text-xl font-semibold text-green mb-1">My Badges</h2>
-        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">Compete in competitions and series to earn badges!</div>
+        <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">Compete in competitions and series to earn badges!</div>
       </div>
 
       {/* Floating Add Dependent Button */}
@@ -175,7 +291,7 @@ export default function ClimberProfilePage() {
       {/* Delete Confirmation */}
       {deletingDependent && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/25 z-50">
-          <div className="bg-background p-4 rounded-md shadow-md border border-green flex flex-col gap-2">
+          <div className="bg-background p-4 rounded-md shadow-md border border-green/20 flex flex-col gap-2">
             <div className="text-lg font-semibold leading-none tracking-tight">Confirm Deletion</div>
             <div>Are you sure you want to permanently delete {deletingDependent.name}?</div>
             <div className="flex justify-end gap-2">

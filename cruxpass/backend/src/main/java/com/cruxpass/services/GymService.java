@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.cruxpass.dtos.requests.RegisterRequest;
+import com.cruxpass.dtos.requests.GymRegisterRequest;
 import com.cruxpass.models.Address;
 import com.cruxpass.models.Gym;
 import com.cruxpass.repositories.GymRepository;
@@ -23,7 +23,9 @@ public class GymService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Gym createGym(RegisterRequest dto) {
+    public Gym createGym(GymRegisterRequest dto) {
+        dto.username = normalizedUsername(dto.username, dto.email);
+
         if (gymRepo.findByEmailIgnoreCaseAndActiveTrue(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         } else if (gymRepo.findByUsernameAndActiveTrue(dto.username).isPresent()) {
@@ -47,6 +49,10 @@ public class GymService {
         gym.setAddress(addr);
 
         return gymRepo.save(gym);
+    }
+
+    private String normalizedUsername(String username, String email) {
+        return username == null || username.isBlank() ? email : username.trim();
     }
 
     @Transactional

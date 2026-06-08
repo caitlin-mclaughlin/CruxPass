@@ -37,7 +37,7 @@ export function CompetitionSummaryCard({
 
   return (
     <div
-      className={`border px-3 py-2 rounded-md shadow-md flex items-start justify-between gap-4 ${
+      className={`border border-green/20 px-3 py-2 rounded-md shadow-md flex items-start justify-between gap-4 ${
         isHost ? "bg-shadow border-highlight text-highlight" : "bg-shadow text-green"
       }`}
     >

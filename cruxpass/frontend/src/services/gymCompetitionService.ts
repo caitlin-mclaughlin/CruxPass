@@ -1,4 +1,4 @@
-import { CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionResponseDto, CompetitionDto, HeatDto, UpdateCompetitionDto } from '@/models/dtos';
+import { CompRegistrationRequestDto, CompRegistrationResponseDto, RouteDto, RouteResponseDto, SubmissionResponseDto, CompetitionDto, HeatDto, UpdateCompetitionDto } from '@/models/dtos';
 import api from './apiService';
 import { Registration } from '@/models/domain';
 
@@ -37,8 +37,18 @@ export async function updateRegistrationsForComp(compId: number, data: Registrat
   return res;
 }
 
+export async function updateRegistrationForComp(compId: number, data: CompRegistrationRequestDto): Promise<CompRegistrationResponseDto> {
+  const res = await api.put(`/gyms/me/competitions/${compId}/registrations`, data);
+  return res.data;
+}
+
 export async function updateRoutesForComp(compId: number, data: RouteDto[]): Promise<RouteResponseDto[]> {
   const res = await api.put(`gyms/me/competitions/${compId}/routes`, data);
+  return res.data;
+}
+
+export async function updateRouteGradeVisibility(compId: number, routeGradesVisible: boolean): Promise<CompetitionDto> {
+  const res = await api.put(`/gyms/me/competitions/${compId}/route-grade-visibility`, { routeGradesVisible });
   return res.data;
 }
 
@@ -49,4 +59,3 @@ export async function startCompetition(compId: number) {
 export async function stopCompetition(compId: number) {
   return api.post(`/gyms/me/competitions/${compId}/stop`);
 }
-

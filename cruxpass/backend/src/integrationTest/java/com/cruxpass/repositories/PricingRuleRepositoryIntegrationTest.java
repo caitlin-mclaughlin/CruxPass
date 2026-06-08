@@ -44,6 +44,7 @@ class PricingRuleRepositoryIntegrationTest extends PostgresIntegrationTest {
 
         PricingRule pricingRule = new PricingRule();
         pricingRule.setCompetition(competition);
+        pricingRule.setName("Early Bird");
         pricingRule.setRuleType(PricingRuleType.GROUP);
         pricingRule.setAmount(35);
         pricingRule.setPriority(1);
@@ -60,6 +61,7 @@ class PricingRuleRepositoryIntegrationTest extends PostgresIntegrationTest {
         Competition reloaded = competitionRepository.findById(savedCompetition.getId()).orElseThrow();
 
         assertThat(reloaded.getPricingRules()).hasSize(1);
+        assertThat(reloaded.getPricingRules().get(0).getName()).isEqualTo("Early Bird");
         assertThat(reloaded.getPricingRules().get(0).getGroups())
             .extracting(group -> group.getDefaultKey())
             .containsExactlyInAnyOrder(

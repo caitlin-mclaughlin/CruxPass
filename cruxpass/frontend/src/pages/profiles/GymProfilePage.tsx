@@ -117,11 +117,11 @@ export default function GymProfilePage() {
         </div>
 
         {hasAny ? (
-          <div className="border-t-2 border-green">
+          <div className="border-t-2 border-green/20">
             {hasUpcoming && (
               <>
                 <h3 className="text-lg font-medium text-green mt-1 mb-1">Upcoming & Live</h3>
-                <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green bg-shadow rounded-md shadow-md p-3">
+                <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green/20 bg-shadow rounded-md shadow-md p-3">
                   {upcomingOrLive.map(comp => (
                     <CompetitionCard comp={comp} />
                   ))}
@@ -132,7 +132,7 @@ export default function GymProfilePage() {
             {hasPast && (
               <div className="mt-2">
                 <h3 className="text-lg font-medium text-green mb-1">Past</h3>
-                <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green bg-shadow rounded-md shadow-md p-3">
+                <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green/20 bg-shadow rounded-md shadow-md p-3">
                   {past.map(comp => (
                     <CompetitionCard comp={comp} />
                   ))}
@@ -141,7 +141,7 @@ export default function GymProfilePage() {
             )}
           </div>
         ) : (
-          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
             Host a competition and it will show up here!
           </div>
         )}
@@ -157,11 +157,11 @@ export default function GymProfilePage() {
           </Button>
         </div>
         {gymSeries && gymSeries.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green bg-shadow rounded-md shadow-md p-3">
+          <div className="flex gap-3 overflow-x-auto scrollbar-thin-green scroll-smooth border border-green/20 bg-shadow rounded-md shadow-md p-3">
             {gymSeries.map((gymSeries) => (
               <div
                 key={gymSeries.id}
-                className="flex-shrink-0 px-3 py-2 min-w-[250px] max-w-[350px] rounded-md shadow-md bg-background border border-green text-green"
+                className="flex-shrink-0 px-3 py-2 min-w-[250px] max-w-[350px] rounded-md shadow-md bg-background border border-green/20 text-green"
               >
                 <div className="text-med truncate flex justify-center"><strong>{gymSeries.name}</strong></div>
                 <div className="text-sm"><strong>Dates: </strong>
@@ -173,7 +173,7 @@ export default function GymProfilePage() {
             ))}
           </div>
         ) : (
-          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green">
+          <div className="gap-y-3 rounded-md shadow-md px-3 py-2 bg-shadow border border-green/20">
             Series associated with {formData?.name} will show up here!
           </div>
         )}

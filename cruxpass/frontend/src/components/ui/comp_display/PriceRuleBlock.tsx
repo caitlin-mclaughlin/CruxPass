@@ -46,7 +46,7 @@ export function PriceRuleBlock({
 
       <div className="space-y-4">
         {draft.pricingRules.map((rule, idx) => (
-          <div key={rule.clientId} className="rounded-md shadow-md border bg-shadow px-3 py-2 space-y-2">
+          <div key={rule.clientId} className="rounded-md shadow-md border border-green/20 bg-shadow px-3 py-2 space-y-2">
             <div className="grid grid-cols-2 gap-y-2 gap-x-4">
               <div className="flex-1">
                 <label className="font-semibold">Rule Name (Optional)</label>
@@ -86,7 +86,7 @@ export function PriceRuleBlock({
               <div>
                 <label className="font-semibold">Competitor Groups</label>
                 <div
-                  className={`flex flex-wrap gap-x-4 gap-y-2 border bg-background rounded-md px-3 py-1 ${
+                  className={`flex flex-wrap gap-x-4 gap-y-2 border border-green/20 bg-background rounded-md px-3 py-1 ${
                     showErrors && rule.groups.length === 0 ? `${invalidField}` : ''}
                   `}
                 >

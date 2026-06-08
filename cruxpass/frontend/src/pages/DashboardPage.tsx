@@ -19,7 +19,6 @@ import { ClimberCompetitionProvider } from '@/context/ClimberCompetitionContext'
 import { Button } from '@/components/ui/Button'
 import { useSeriesSession } from '@/context/SeriesSessionContext'
 import { useGlobalSeries } from '@/context/GlobalSeriesContext'
-import SeriesOnboardingModal from '@/components/modals/SeriesOnboardingModal'
 import PageContainer from '@/components/PageContainer'
 import FloatingActionButton from '@/components/ui/FloatingActionButton'
 import { CompetitionSummaryCard } from '@/components/ui/cards/CompetitionSummaryCard'
@@ -46,14 +45,7 @@ export default function DashboardPage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [showScoresModal, setShowScoresModal] = useState(false)
   const [registerComp, setRegisterComp] = useState<CompetitionEntity | null>(null)
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const [activeTab, setActiveTab] = useState<'competitions' | 'series'>('competitions')
-
-  useEffect(() => {
-    if (series && (!series.startDate || !series.endDate || !series.deadline)) {
-      setShowOnboarding(true)
-    }
-  }, [series])
 
   useEffect(() => {
     refreshCompetitions()
@@ -256,7 +248,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={s.id}
-                    className={`border px-3 py-2 rounded-md shadow-md flex items-center justify-between ${
+                    className={`border border-green/20 px-3 py-2 rounded-md shadow-md flex items-center justify-between ${
                       isHost ? 'bg-shadow border-highlight text-highlight' : 'bg-shadow text-green'
                     }`}
                   >
@@ -364,15 +356,6 @@ export default function DashboardPage() {
         </ClimberCompetitionProvider>
       )}
 
-      {showOnboarding && series && (
-        <SeriesOnboardingModal
-          open={showOnboarding}
-          onClose={async () => {
-            setShowOnboarding(false)
-            await refreshSeries()
-          }}
-        />
-      )}
     </PageContainer>
   )
 }

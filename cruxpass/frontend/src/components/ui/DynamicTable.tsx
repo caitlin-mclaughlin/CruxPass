@@ -199,7 +199,7 @@ export function DynamicTable<T = string>({
 
   return (
     <div ref={containerRef} className="w-full">
-      <div className="rounded-md bg-shadow border border-green overflow-hidden">
+      <div className="rounded-md bg-shadow border border-green/20 overflow-hidden">
         {finalRows.map((row, rowIndex) => {
           const isFirstRow = rowIndex === 0;
           const isLastRow = rowIndex === finalRows.length - 1;

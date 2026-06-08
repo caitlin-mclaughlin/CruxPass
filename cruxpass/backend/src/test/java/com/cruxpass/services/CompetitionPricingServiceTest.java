@@ -106,6 +106,7 @@ class CompetitionPricingServiceTest {
 
     private PricingRule groupRule(Integer amount, Integer priority, GroupRefEmbeddable... groups) {
         PricingRule rule = new PricingRule();
+        rule.setName("Test Rule");
         rule.setRuleType(PricingRuleType.GROUP);
         rule.setAmount(amount);
         rule.setPriority(priority);

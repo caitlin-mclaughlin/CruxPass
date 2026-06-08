@@ -1,8 +1,8 @@
 package com.cruxpass.services;
 
 import com.cruxpass.dtos.UpdateClimberRequestDto;
+import com.cruxpass.dtos.requests.ClimberRegisterRequest;
 import com.cruxpass.dtos.requests.CreateDependentDto;
-import com.cruxpass.dtos.requests.RegisterRequest;
 import com.cruxpass.mappers.ClimberMapper;
 import com.cruxpass.models.Climber;
 import com.cruxpass.repositories.ClimberRepository;
@@ -34,7 +34,9 @@ public class ClimberService {
     }
 
     @Transactional
-    public Climber createAdult(RegisterRequest dto) {
+    public Climber createAdult(ClimberRegisterRequest dto) {
+        dto.username = normalizedUsername(dto.username, dto.email);
+
         if (climberRepo.findByEmailIgnoreCaseAndActiveTrue(dto.email).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         } else if (climberRepo.findByUsernameAndActiveTrue(dto.username).isPresent()) {
@@ -42,6 +44,10 @@ public class ClimberService {
         }
 
         return climberRepo.save(climberMap.toEntity(dto, passwordEncoder));
+    }
+
+    private String normalizedUsername(String username, String email) {
+        return username == null || username.isBlank() ? email : username.trim();
     }
 
     @Transactional
@@ -186,6 +192,17 @@ public class ClimberService {
 
     public List<Climber> getAll() {
         return climberRepo.findAll();
+    }
+
+    public Climber getSelfOrDependent(Long requesterId, Long targetClimberId) {
+        if (requesterId.equals(targetClimberId)) {
+            return getById(targetClimberId);
+        }
+
+        return getDependentsOfGuardian(requesterId).stream()
+            .filter(dependent -> dependent.getId().equals(targetClimberId))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Not self or dependent"));
     }
 
     public Climber getById(Long id) {
